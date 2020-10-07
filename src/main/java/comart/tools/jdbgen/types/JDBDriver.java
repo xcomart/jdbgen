@@ -1,0 +1,42 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package comart.tools.jdbgen.types;
+
+import java.util.Map;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+/**
+ *
+ * @author comart
+ */
+@Data
+@EqualsAndHashCode(callSuper=false)
+@Builder(toBuilder=true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class JDBDriver extends JDBListBase {
+    private boolean stockItem;
+    private String versionInclude;
+    private String groupId;
+    private String artifactId;
+    private String version;
+    private String urlTemplate;
+    private String jdbcJar;
+    private String driverClass;
+    private Map<String, String> props;
+    private boolean useCatalogSql;
+    private String catalogSql;
+    private boolean useSchemaSql;
+    private String schemaSql;
+    private boolean useTableSql;
+    private String tableSql;
+    private boolean useColumnSql;
+    private String columnSql;
+}

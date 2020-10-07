@@ -15,5 +15,6 @@ import lombok.Data;
 public class JDBTemplate {
     private TemplateType type;
     private String name;
-    private String templateFile;    
+    private String templateFile;
+    private String outTemplate;
 }

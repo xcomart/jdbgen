@@ -8,17 +8,17 @@ package comart.tools.jdbgen.types;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.With;
+import lombok.experimental.SuperBuilder;
 
 /**
  *
  * @author comart
  */
 @Data
-@AllArgsConstructor
+@SuperBuilder(toBuilder=true)
 @NoArgsConstructor
+@AllArgsConstructor
 public class JDBListBase {
-    @With
     private String name;
     private String icon;
 }

@@ -7,10 +7,10 @@ package comart.tools.jdbgen.types;
 
 import java.util.Map;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  *
@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @EqualsAndHashCode(callSuper=false)
-@Builder(toBuilder=true)
+@SuperBuilder(toBuilder=true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class JDBDriver extends JDBListBase {

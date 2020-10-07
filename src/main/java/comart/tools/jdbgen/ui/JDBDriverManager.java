@@ -22,11 +22,9 @@ import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.filechooser.FileFilter;
@@ -46,6 +44,7 @@ public class JDBDriverManager extends JDialog {
     private final List<JDBDriver> drivers;
     private final DefaultListModel<String> listModel;
     private final DefaultTableModel tableModel;
+    public boolean changed = false;
 
     public static synchronized JDBDriverManager getInstance() {
         if (INSTANCE == null) {
@@ -62,6 +61,7 @@ public class JDBDriverManager extends JDialog {
      */
     public JDBDriverManager() {
         initComponents();
+        setModal(true);
 
         applyIcons();
         eventSetup();
@@ -806,6 +806,7 @@ public class JDBDriverManager extends JDialog {
             target.setColumnSql(txtColumn.getText());
             
             JDBGenConfig.saveInstace(this);
+            changed = true;
         }
     }//GEN-LAST:event_btnSaveActionPerformed
 

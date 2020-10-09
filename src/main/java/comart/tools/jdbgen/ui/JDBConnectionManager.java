@@ -8,12 +8,15 @@ package comart.tools.jdbgen.ui;
 import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.types.TemplateType;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.DefaultListModel;
@@ -46,7 +49,10 @@ public class JDBConnectionManager extends JDialog {
         return INSTANCE;
     }
 
-    private List<JDBConnection> connections = new ArrayList<>();
+    private List<JDBConnection> connections = null;
+    private List<JDBDriver> drivers = null;
+    private Map<String, JDBConnection> connMap = new HashMap<>();
+    private Map<String, JDBDriver> driverMap = new HashMap<>();
     private DefaultTableModel propsModel = null;
     private DefaultTableModel tplModel = null;
     private DefaultListModel listModel = null;
@@ -67,25 +73,23 @@ public class JDBConnectionManager extends JDialog {
         listModel = new DefaultListModel();
         lstConnections.setModel(listModel);
         listModel.removeAllElements();
+        drivers = conf.getDrivers();
+        drivers.forEach(d -> driverMap.put(d.getName(), d));
         connections = conf.getConnections();
+        connections.forEach(c -> connMap.put(c.getName(), c));
         if (ObjectUtils.isNotEmpty(connections))
             connections.forEach(c -> listModel.addElement(c.getName()));
-        cboDriver.setRenderer(UIUtils.getListCellRenderer(s -> getDriverFromName(s)));
+        cboDriver.setRenderer(UIUtils.getListCellRenderer(s -> driverMap.get(s)));
         refreshDrivers();
+        cboTemplateType.removeAllItems();
+        for(TemplateType t:TemplateType.values())
+            cboTemplateType.addItem(t.name());
+        resetControls();
     }
     
-    public JDBDriver getDriverFromName(String name) {
-        return name == null ? null:conf.getDrivers().stream()
-                .filter(d -> name.equals(d.getName()))
-                .findFirst().orElse(null);
-    }
-
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
-        lstConnections.setCellRenderer(UIUtils.getListCellRenderer(
-                s -> connections.stream()
-                        .filter(c -> s.equals(c.getName()))
-                        .findFirst().orElse(null)));
+        lstConnections.setCellRenderer(UIUtils.getListCellRenderer(s -> connMap.get(s)));
     }
     
     private void applyIcons() {
@@ -117,7 +121,7 @@ public class JDBConnectionManager extends JDialog {
             }
         });
         DefaultTableModel tmodel = (DefaultTableModel)tabProps.getModel();
-        tmodel.addTableModelListener((e) -> {
+        tmodel.addTableModelListener(e -> {
             int ridx = tmodel.getRowCount() - 1;
             boolean needToAdd = ridx < 0;
 
@@ -150,6 +154,31 @@ public class JDBConnectionManager extends JDialog {
                 idx = i;
         }
         cboDriver.setSelectedIndex(idx);
+    }
+    
+    private void resetControls() {
+        lstConnections.clearSelection();
+        txtAuthor.setText("");
+        txtConnUrl.setText("");
+        txtIcon.setText("");
+        txtKeepAliveQuery.setText("");
+        txtName.setText("");
+        txtOutTemplate.setText("");
+        txtOutputDir.setText("output");
+        txtPassword.setText("");
+        txtTemplateFile.setText("");
+        txtTemplateName.setText("");
+        txtUser.setText("");
+        chkCutFirst.setSelected(false);
+        chkKeepAlive.setSelected(false);
+        chkPathJava.setSelected(true);
+        chkPathMapper.setSelected(true);
+        cboTemplateType.setSelectedIndex(0);
+        cboDriver.setSelectedIndex(0);
+        while (propsModel.getRowCount() > 1)
+            propsModel.removeRow(0);
+        while (tplModel.getRowCount() > 0)
+            tplModel.removeRow(0);
     }
 
     /**
@@ -243,12 +272,22 @@ public class JDBConnectionManager extends JDialog {
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
         });
+        lstConnections.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                lstConnectionsValueChanged(evt);
+            }
+        });
         jscrollpane1.setViewportView(lstConnections);
 
         jPanel3.setLayout(new java.awt.GridLayout(1, 0));
 
         btnNewConn.setText("+");
         btnNewConn.setPreferredSize(new java.awt.Dimension(30, 26));
+        btnNewConn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNewConnActionPerformed(evt);
+            }
+        });
         jPanel3.add(btnNewConn);
 
         btnCloneConn.setText("c");
@@ -580,23 +619,22 @@ public class JDBConnectionManager extends JDialog {
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel6Layout.createSequentialGroup()
-                        .addComponent(jLabel11)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel14)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtOutputDir)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(txtAuthor))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(chkCutFirst)
                             .addComponent(chkPathJava)
                             .addComponent(chkPathMapper))
-                        .addGap(0, 24, Short.MAX_VALUE))
+                        .addGap(0, 30, Short.MAX_VALUE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(jLabel14)
+                        .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtAuthor)))
-                .addContainerGap())
+                        .addComponent(txtOutputDir)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnBrowseOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
         );
 
         jPanel6Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel11, jLabel14});
@@ -685,13 +723,42 @@ public class JDBConnectionManager extends JDialog {
 
     private void cboDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboDriverActionPerformed
         String dname = (String)cboDriver.getSelectedItem();
-        JDBDriver driver = getDriverFromName(dname);
-        txtIcon.setText(driver.getIcon());
+        JDBDriver driver = driverMap.get(dname);
+        if (driver != null)
+            txtIcon.setText(driver.getIcon());
     }//GEN-LAST:event_cboDriverActionPerformed
 
     private void btnCloneConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneConnActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnCloneConnActionPerformed
+
+    private void lstConnectionsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstConnectionsValueChanged
+        int idx = lstConnections.getSelectedIndex();
+        if (idx > -1) {
+            JDBConnection conn = connections.get(idx);
+            txtAuthor.setText(conn.getAuthor());
+            txtConnUrl.setText(conn.getConnectionUrl());
+            txtIcon.setText("");
+            txtKeepAliveQuery.setText("");
+            txtName.setText("");
+            txtOutTemplate.setText("");
+            txtOutputDir.setText("output");
+            txtPassword.setText("");
+            txtTemplateFile.setText("");
+            txtTemplateName.setText("");
+            txtUser.setText("");
+            chkCutFirst.setSelected(false);
+            chkKeepAlive.setSelected(false);
+            chkPathJava.setSelected(true);
+            chkPathMapper.setSelected(true);
+            cboTemplateType.setSelectedIndex(0);
+            cboDriver.setSelectedIndex(0);
+        }
+    }//GEN-LAST:event_lstConnectionsValueChanged
+
+    private void btnNewConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewConnActionPerformed
+        resetControls();
+    }//GEN-LAST:event_btnNewConnActionPerformed
 
     /**
      * @param args the command line arguments

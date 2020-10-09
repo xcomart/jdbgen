@@ -24,15 +24,16 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class JDBConnection extends JDBListBase {
     private String driverType;
+    private String connectionUrl;
     private String userName;
     private String userPassword;
     private Map<String, String> connectionProps;
+    private boolean useKeepAlive;
+    private String keepAliveQuery;
     private List<JDBTemplate> templates;
     private String outputDir;
     private String author;
-    private boolean firstWord;
-    private boolean javaPackage;
-    private boolean sqlNamespace;
-    private boolean useKeepAlive;
-    private String keepAliveQuery;
+    private boolean dropFirstWord;
+    private boolean buildJavaPackage;
+    private boolean buildSqlNamespace;
 }

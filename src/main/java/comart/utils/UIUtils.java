@@ -9,6 +9,7 @@ import comart.utils.tuple.Pair;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.EventQueue;
 import java.awt.Image;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -27,13 +28,17 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.table.DefaultTableModel;
 import jiconfont.IconCode;
 import jiconfont.icons.font_awesome.FontAwesome;
 import jiconfont.swing.IconFontSwing;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class UIUtils {
     private static final Logger logger = Logger.getLogger(UIUtils.class.getName());
@@ -71,8 +76,8 @@ public class UIUtils {
         
         uiDefaults = UIManager.getLookAndFeelDefaults();
 
-        color = UIManager.getColor("Button.foreground");
-        fontSize = UIManager.getFont("Button.font").getSize();
+        color = uiDefaults.getColor("Button.foreground");
+        fontSize = uiDefaults.getFont("Button.font").getSize();
         items.forEach((t) -> {
             addIconPrivate((AbstractButton)t.getFirst(), (IconCode)t.getSecond());
         });
@@ -86,7 +91,7 @@ public class UIUtils {
     }
 
     public static Image resize(Image image) {
-        return image.getScaledInstance((int)((double)fontSize * 1.2D), (int)((double)fontSize * 1.2D), 4);
+        return image.getScaledInstance((int)(fontSize * 1.2), (int)(fontSize * 1.2), 4);
     }
 
     public static void setFlatDarkLaf() {
@@ -120,8 +125,7 @@ public class UIUtils {
     private static void addIconPrivate(AbstractButton button, IconCode code) {
         try {
             button.setIcon(IconFontSwing.buildIcon(code, (float)fontSize, color));
-        } catch (Exception var3) {
-        }
+        } catch (Exception ignored) {}
 
     }
 
@@ -140,9 +144,9 @@ public class UIUtils {
             }
 
             try (InputStream is = isStock ? UIUtils.class.getResourceAsStream(npath) : new FileInputStream(path)) {
-                res = new ImageIcon(UIUtils.resize(ImageIO.read((InputStream)is)));
-            } catch (Exception var18) {
-                logger.log(Level.SEVERE, (String)null, var18);
+                res = new ImageIcon(resize(ImageIO.read((InputStream)is)));
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, (String)null, e);
                 if (!"/icons/generic.png".equals(npath)) {
                     res = getIcon("stock:generic.png");
                 }
@@ -179,5 +183,47 @@ public class UIUtils {
     
     public static <T> ListCellRenderer<T> getListCellRenderer(Function<T,JDBListBase> func) {
         return new MyListCellRenderer(func);
+    }
+    
+    public static void applyTableEdit(JTable table) {
+        DefaultTableModel tmodel = (DefaultTableModel)table.getModel();
+        tmodel.addTableModelListener(e -> {
+            int ridx = tmodel.getRowCount() - 1;
+            boolean needToAdd = ridx < 0;
+
+            if (!needToAdd) {
+                for(int i = 0; i < tmodel.getColumnCount(); ++i) {
+                    if (ObjectUtils.isNotEmpty(tmodel.getValueAt(ridx, i))) {
+                        needToAdd = true;
+                        break;
+                    }
+                }
+            }
+
+            if (needToAdd) {
+                EventQueue.invokeLater(() -> {
+                    tmodel.addRow(new String[tmodel.getColumnCount()]);
+                });
+            }
+        });
+    }
+    
+    public static void error(Component parent, String message) {
+        JOptionPane.showMessageDialog(
+                parent, message, "Error", JOptionPane.ERROR_MESSAGE);
+        logger.warning(message);
+    }
+    
+    public static void info(Component parent, String message) {
+        JOptionPane.showMessageDialog(
+                parent, message, "Information", JOptionPane.INFORMATION_MESSAGE);
+        logger.info(message);
+    }
+    
+    public static boolean confirm(Component parent, String title, String message) {
+        boolean res = JOptionPane.showConfirmDialog(
+                parent, message, "Confirm", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION;
+        logger.log(Level.INFO, "{0}: {1}", new Object[]{message, res});
+        return res;
     }
 }

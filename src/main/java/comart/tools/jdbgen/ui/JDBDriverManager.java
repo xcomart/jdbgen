@@ -32,6 +32,7 @@ import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -53,6 +54,7 @@ public class JDBDriverManager extends JDialog {
         }
 
         INSTANCE.updateComponents();
+        INSTANCE.changed = false;
         return INSTANCE;
     }
 
@@ -65,7 +67,6 @@ public class JDBDriverManager extends JDialog {
 
         applyIcons();
         eventSetup();
-        setModal(true);
         tableModel = (DefaultTableModel)tabProps.getModel();
         listModel = new DefaultListModel();
         lstDrivers.setModel(listModel);
@@ -137,7 +138,7 @@ public class JDBDriverManager extends JDialog {
         lstDrivers.clearSelection();
         txtArtifactId.setText("");
         txtDriverClass.setText("");
-        txtDriverName.setText(nextNameOf("New Driver"));
+        txtDriverName.setText(NamingUtils.nextNameOf(drivers, "New Driver"));
         txtGroupId.setText("");
         txtIcon.setText("stock:generic.png");
         txtJarFile.setText("");
@@ -154,23 +155,6 @@ public class JDBDriverManager extends JDialog {
         txtTable.setText("");
         chkColumn.setSelected(false);
         txtColumn.setText("");
-    }
-
-    private boolean nameExists(String name) {
-        return drivers.stream().anyMatch((d) -> {
-            return name.equals(d.getName());
-        });
-    }
-
-    private String nextNameOf(String name) {
-        int count = 0;
-
-        String ret;
-        for(ret = name; nameExists(ret); ret = name + " - " + count) {
-            ++count;
-        }
-
-        return ret;
     }
 
     /**
@@ -200,14 +184,6 @@ public class JDBDriverManager extends JDialog {
         btnBrowseJar = new javax.swing.JButton();
         txtJarFile = new javax.swing.JTextField();
         btnDownJdbc = new javax.swing.JButton();
-        jLabel5 = new javax.swing.JLabel();
-        txtGroupId = new javax.swing.JTextField();
-        jLabel6 = new javax.swing.JLabel();
-        txtArtifactId = new javax.swing.JTextField();
-        jLabel7 = new javax.swing.JLabel();
-        txtVersion = new javax.swing.JTextField();
-        chkVersion = new javax.swing.JCheckBox();
-        txtVersionInclude = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         txtUrlTemplate = new javax.swing.JTextField();
         jLabel9 = new javax.swing.JLabel();
@@ -219,6 +195,16 @@ public class JDBDriverManager extends JDialog {
         jScrollPane2 = new javax.swing.JScrollPane();
         tabProps = new javax.swing.JTable();
         btnDelProp = new javax.swing.JButton();
+        jPanel6 = new javax.swing.JPanel();
+        chkNoAuth = new javax.swing.JCheckBox();
+        jLabel5 = new javax.swing.JLabel();
+        txtGroupId = new javax.swing.JTextField();
+        txtArtifactId = new javax.swing.JTextField();
+        jLabel6 = new javax.swing.JLabel();
+        jLabel7 = new javax.swing.JLabel();
+        txtVersion = new javax.swing.JTextField();
+        chkVersion = new javax.swing.JCheckBox();
+        txtVersionInclude = new javax.swing.JTextField();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jPanel5 = new javax.swing.JPanel();
@@ -350,19 +336,6 @@ public class JDBDriverManager extends JDialog {
             }
         });
 
-        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel5.setText("Maven GroupID:");
-
-        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel6.setText("Maven ArtifactID:");
-
-        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel7.setText("Maven Version:");
-
-        txtVersion.setEditable(false);
-
-        chkVersion.setText("Maven version must contain");
-
         jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel8.setText("URL Template:");
 
@@ -438,23 +411,6 @@ public class JDBDriverManager extends JDialog {
                                 .addComponent(btnBrowseJar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addComponent(btnDownJdbc, javax.swing.GroupLayout.DEFAULT_SIZE, 384, Short.MAX_VALUE)))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel5)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtGroupId))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel6)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtArtifactId))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel7)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtVersion))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addComponent(chkVersion)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtVersionInclude))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel8)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtUrlTemplate))
@@ -465,19 +421,19 @@ public class JDBDriverManager extends JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnBrowseIcon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel9)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtDriverClass))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel11)
                             .addComponent(btnDelProp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel9)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtDriverClass)))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel3, jLabel4, jLabel5, jLabel6, jLabel7, jLabel8, jLabel9});
+        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel3, jLabel4, jLabel8, jLabel9});
 
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -493,22 +449,6 @@ public class JDBDriverManager extends JDialog {
                     .addComponent(txtJarFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnDownJdbc)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(txtGroupId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel6)
-                    .addComponent(txtArtifactId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel7)
-                    .addComponent(txtVersion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkVersion)
-                    .addComponent(txtVersionInclude, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
@@ -528,12 +468,86 @@ public class JDBDriverManager extends JDialog {
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnDelProp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(0, 68, Short.MAX_VALUE))
+                        .addGap(0, 196, Short.MAX_VALUE))
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
-        jTabbedPane1.addTab("Driver Information", jPanel2);
+        jTabbedPane1.addTab("General", jPanel2);
+
+        chkNoAuth.setText("Authentication not required.");
+
+        jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel5.setText("Maven GroupID:");
+
+        jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel6.setText("Maven ArtifactID:");
+
+        jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel7.setText("Maven Version:");
+
+        txtVersion.setEditable(false);
+
+        chkVersion.setText("Maven version must contain");
+
+        javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
+        jPanel6.setLayout(jPanel6Layout);
+        jPanel6Layout.setHorizontalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(chkNoAuth)
+                        .addGap(0, 333, Short.MAX_VALUE))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtVersion))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addComponent(chkVersion)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtVersionInclude))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel5)
+                            .addComponent(jLabel6))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(txtGroupId)
+                            .addComponent(txtArtifactId))))
+                .addContainerGap())
+        );
+
+        jPanel6Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel5, jLabel6, jLabel7});
+
+        jPanel6Layout.setVerticalGroup(
+            jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel6Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(chkNoAuth)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtGroupId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel5))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtArtifactId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel6))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel7)
+                    .addComponent(txtVersion, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(chkVersion)
+                    .addComponent(txtVersionInclude, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap(286, Short.MAX_VALUE))
+        );
+
+        jTabbedPane1.addTab("Options", jPanel6);
 
         btnCatalog.setText("?");
         btnCatalog.setPreferredSize(new java.awt.Dimension(30, 26));
@@ -720,7 +734,7 @@ public class JDBDriverManager extends JDialog {
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addContainerGap()
-                        .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 477, Short.MAX_VALUE)))
+                        .addComponent(jTabbedPane1)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnCancel)
@@ -740,26 +754,37 @@ public class JDBDriverManager extends JDialog {
         boolean isNameExists;
         JDBDriver target;
         if (idx == -1) {
-            isNameExists = nameExists(txtDriverName.getText());
+            isNameExists = NamingUtils.nameExists(drivers, txtDriverName.getText());
         } else {
             target = (JDBDriver)drivers.get(idx);
-            isNameExists = !target.getName().equals(txtDriverName.getText()) && nameExists(txtDriverName.getText());
+            isNameExists = !target.getName().equals(txtDriverName.getText()) &&
+                    NamingUtils.nameExists(drivers, txtDriverName.getText());
         }
 
         if (isNameExists) {
-            logger.warning("name exists");
-        } else if (ObjectUtils.isEmpty(txtJarFile.getText())) {
-            logger.warning("jar file required");
-        } else if (ObjectUtils.isEmpty(txtDriverClass.getText())) {
-            logger.warning("driver class required");
-        } else if (ObjectUtils.isEmpty(txtCatalog.getText()) && chkCatalog.isSelected()) {
-            logger.warning("custom sql for database catalog required.");
-        } else if (ObjectUtils.isEmpty(txtSchema.getText()) && chkSchema.isSelected()) {
-            logger.warning("custom sql for database schema required.");
-        } else if (ObjectUtils.isEmpty(txtTable.getText()) && chkTable.isSelected()) {
-            logger.warning("custom sql for table required.");
-        } else if (ObjectUtils.isEmpty(txtColumn.getText()) && chkColumn.isSelected()) {
-            logger.warning("custom sql for column required.");
+            UIUtils.error(this, "Name " + txtDriverName.getText() + " exists already.");
+            txtDriverName.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtDriverName.getText())) {
+            UIUtils.error(this, "Driver name required.");
+            txtDriverName.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtJarFile.getText())) {
+            UIUtils.error(this, "JDBC jar file required.");
+            txtJarFile.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtDriverClass.getText())) {
+            UIUtils.error(this, "Driver class required.");
+            txtDriverClass.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtCatalog.getText()) && chkCatalog.isSelected()) {
+            UIUtils.error(this, "Catalog query required.");
+            txtCatalog.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtSchema.getText()) && chkSchema.isSelected()) {
+            UIUtils.error(this, "Schema query required.");
+            txtSchema.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtTable.getText()) && chkTable.isSelected()) {
+            UIUtils.error(this, "Table query required.");
+            txtTable.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtColumn.getText()) && chkColumn.isSelected()) {
+            UIUtils.error(this, "Column query required.");
+            txtColumn.requestFocusInWindow();
         } else {
             if (idx == -1) {
                 target = new JDBDriver();
@@ -866,14 +891,14 @@ public class JDBDriverManager extends JDialog {
     private void btnCloneDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneDriverActionPerformed
         int idx = lstDrivers.getSelectedIndex();
         if (idx >= 0) {
-            JDBDriver driver = (JDBDriver)drivers.get(idx);
-            JDBDriver newOne = driver.toBuilder().build();
-            newOne.setName(nextNameOf("Copy of " + driver.getName()));
-            if (ObjectUtils.isNotEmpty(driver.getProps())) {
+            JDBDriver driver = drivers.get(idx);
+            JDBDriver newOne = driver.toBuilder()
+                    .name(NamingUtils.nextNameOf(drivers, "Copy of " + driver.getName()))
+                    .stockItem(false)
+                    .build();
+            if (ObjectUtils.isNotEmpty(driver.getProps()))
                 newOne.setProps(new LinkedHashMap(driver.getProps()));
-            }
 
-            newOne.setStockItem(false);
             drivers.add(newOne);
             listModel.addElement(newOne.getName());
             lstDrivers.setSelectedIndex(drivers.size() - 1);
@@ -1052,6 +1077,7 @@ public class JDBDriverManager extends JDialog {
     private javax.swing.JButton btnTable;
     private javax.swing.JCheckBox chkCatalog;
     private javax.swing.JCheckBox chkColumn;
+    private javax.swing.JCheckBox chkNoAuth;
     private javax.swing.JCheckBox chkSchema;
     private javax.swing.JCheckBox chkTable;
     private javax.swing.JCheckBox chkVersion;
@@ -1070,6 +1096,7 @@ public class JDBDriverManager extends JDialog {
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
+    private javax.swing.JPanel jPanel6;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;

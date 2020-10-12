@@ -5,13 +5,17 @@
  */
 package comart.tools.jdbgen.types;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
  * @author comart
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class JDBTemplate {
     private TemplateType type;
     private String name;

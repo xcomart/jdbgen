@@ -31,6 +31,7 @@ public class JDBDriver extends JDBListBase {
     private String jdbcJar;
     private String driverClass;
     private Map<String, String> props;
+    private boolean noAuth;
     private boolean useCatalogSql;
     private String catalogSql;
     private boolean useSchemaSql;

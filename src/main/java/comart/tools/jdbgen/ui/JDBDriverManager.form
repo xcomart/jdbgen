@@ -451,10 +451,6 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
-                              <Component id="chkNoAuth" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="0" pref="333" max="32767" attributes="0"/>
-                          </Group>
-                          <Group type="102" alignment="0" attributes="0">
                               <Component id="jLabel7" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="txtVersion" max="32767" attributes="0"/>
@@ -476,6 +472,15 @@
                                   <Component id="txtArtifactId" max="32767" attributes="0"/>
                               </Group>
                           </Group>
+                          <Group type="102" attributes="0">
+                              <Component id="chkNoAuth" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <Component id="chkCustomRepo" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="txtRepository" pref="90" max="32767" attributes="0"/>
+                          </Group>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                   </Group>
@@ -487,8 +492,13 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="chkNoAuth" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="3" attributes="0">
+                          <Component id="txtRepository" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="chkCustomRepo" alignment="3" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="1" attributes="0">
-                          <Group type="102" attributes="0">
+                          <Group type="102" alignment="1" attributes="0">
                               <Group type="103" groupAlignment="3" attributes="0">
                                   <Component id="txtGroupId" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -508,7 +518,7 @@
                           <Component id="chkVersion" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="txtVersionInclude" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace pref="286" max="32767" attributes="0"/>
+                      <EmptySpace pref="254" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -552,6 +562,13 @@
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="txtVersionInclude">
+            </Component>
+            <Component class="javax.swing.JTextField" name="txtRepository">
+            </Component>
+            <Component class="javax.swing.JCheckBox" name="chkCustomRepo">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Use custom repository(must be registerd in mavenrepository.com):"/>
+              </Properties>
             </Component>
           </SubComponents>
         </Container>

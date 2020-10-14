@@ -9,6 +9,7 @@ import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.utils.ClassUtils;
 import comart.utils.MavenUtils;
+import comart.utils.PlatformUtils;
 import comart.utils.UIUtils;
 import comart.utils.tuple.Pair;
 import java.awt.EventQueue;
@@ -205,6 +206,8 @@ public class JDBDriverManager extends JDialog {
         txtVersion = new javax.swing.JTextField();
         chkVersion = new javax.swing.JCheckBox();
         txtVersionInclude = new javax.swing.JTextField();
+        txtRepository = new javax.swing.JTextField();
+        chkCustomRepo = new javax.swing.JCheckBox();
         jPanel4 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jPanel5 = new javax.swing.JPanel();
@@ -490,6 +493,8 @@ public class JDBDriverManager extends JDialog {
 
         chkVersion.setText("Maven version must contain");
 
+        chkCustomRepo.setText("Use custom repository(must be registerd in mavenrepository.com):");
+
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
         jPanel6.setLayout(jPanel6Layout);
         jPanel6Layout.setHorizontalGroup(
@@ -497,9 +502,6 @@ public class JDBDriverManager extends JDialog {
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addComponent(chkNoAuth)
-                        .addGap(0, 333, Short.MAX_VALUE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel7)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -516,17 +518,25 @@ public class JDBDriverManager extends JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(txtGroupId)
-                            .addComponent(txtArtifactId))))
+                            .addComponent(txtArtifactId)))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(chkNoAuth)
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(jPanel6Layout.createSequentialGroup()
+                        .addComponent(chkCustomRepo)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(txtRepository, javax.swing.GroupLayout.DEFAULT_SIZE, 90, Short.MAX_VALUE)))
                 .addContainerGap())
         );
-
-        jPanel6Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel5, jLabel6, jLabel7});
-
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(chkNoAuth)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtRepository, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(chkCustomRepo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel6Layout.createSequentialGroup()
@@ -544,7 +554,7 @@ public class JDBDriverManager extends JDialog {
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(chkVersion)
                     .addComponent(txtVersionInclude, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(286, Short.MAX_VALUE))
+                .addContainerGap(254, Short.MAX_VALUE))
         );
 
         jTabbedPane1.addTab("Options", jPanel6);
@@ -1036,18 +1046,22 @@ public class JDBDriverManager extends JDialog {
 
     private void btnCatalogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCatalogActionPerformed
         // TODO add your handling code here:
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
     }//GEN-LAST:event_btnCatalogActionPerformed
 
     private void btnSchemaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSchemaActionPerformed
         // TODO add your handling code here:
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
     }//GEN-LAST:event_btnSchemaActionPerformed
 
     private void btnTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableActionPerformed
         // TODO add your handling code here:
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
     }//GEN-LAST:event_btnTableActionPerformed
 
     private void btnColumnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnActionPerformed
         // TODO add your handling code here:
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
     }//GEN-LAST:event_btnColumnActionPerformed
 
     /**
@@ -1077,6 +1091,7 @@ public class JDBDriverManager extends JDialog {
     private javax.swing.JButton btnTable;
     private javax.swing.JCheckBox chkCatalog;
     private javax.swing.JCheckBox chkColumn;
+    private javax.swing.JCheckBox chkCustomRepo;
     private javax.swing.JCheckBox chkNoAuth;
     private javax.swing.JCheckBox chkSchema;
     private javax.swing.JCheckBox chkTable;
@@ -1115,6 +1130,7 @@ public class JDBDriverManager extends JDialog {
     private javax.swing.JTextField txtGroupId;
     private javax.swing.JTextField txtIcon;
     private javax.swing.JTextField txtJarFile;
+    private javax.swing.JTextField txtRepository;
     private javax.swing.JTextArea txtSchema;
     private javax.swing.JTextArea txtTable;
     private javax.swing.JTextField txtUrlTemplate;

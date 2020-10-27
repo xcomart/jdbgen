@@ -3,7 +3,6 @@ package comart.utils;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
-import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBListBase;
 import comart.utils.tuple.Pair;
 import java.awt.Color;
@@ -13,9 +12,10 @@ import java.awt.EventQueue;
 import java.awt.Image;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -38,6 +38,9 @@ import javax.swing.table.DefaultTableModel;
 import jiconfont.IconCode;
 import jiconfont.icons.font_awesome.FontAwesome;
 import jiconfont.swing.IconFontSwing;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.apache.commons.lang3.ObjectUtils;
 
 public class UIUtils {
@@ -138,13 +141,24 @@ public class UIUtils {
         Icon res = null;
         if (!cachedIcon.containsKey(path)) {
             boolean isStock = path.startsWith("stock:");
+            boolean isUrl = path.startsWith("http");
             String npath = path;
             if (isStock) {
                 npath = "/icons/" + path.substring(6);
             }
 
-            try (InputStream is = isStock ? UIUtils.class.getResourceAsStream(npath) : new FileInputStream(path)) {
-                res = new ImageIcon(resize(ImageIO.read((InputStream)is)));
+            try {
+                if (isUrl) {
+                    OkHttpClient client = MavenUtils.getHttpClient();
+                    Request req = new Request.Builder().url(path).build();
+                    try (Response response = client.newCall(req).execute()) {
+                        res = new ImageIcon(resize(ImageIO.read(response.body().byteStream())));
+                    }
+                } else {
+                    try (InputStream is = isStock ? UIUtils.class.getResourceAsStream(npath) : new FileInputStream(path)) {
+                        res = new ImageIcon(resize(ImageIO.read((InputStream)is)));
+                    }
+                }
             } catch (Exception e) {
                 logger.log(Level.SEVERE, (String)null, e);
                 if (!"/icons/generic.png".equals(npath)) {

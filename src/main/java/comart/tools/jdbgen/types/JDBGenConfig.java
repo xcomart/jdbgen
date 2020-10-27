@@ -5,8 +5,10 @@
  */
 package comart.tools.jdbgen.types;
 
+import comart.tools.jdbgen.types.maven.MavenConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import comart.utils.UIUtils;
 import java.awt.Component;
 import java.awt.Container;
 import java.io.File;
@@ -35,6 +37,7 @@ public class JDBGenConfig {
     private boolean isDarkUI = false;
     private List<JDBConnection> connections;
     private List<JDBDriver> drivers;
+    private MavenConfig maven;
 
     public static synchronized JDBGenConfig getInstance() {
         if (INSTANCE == null) {
@@ -43,42 +46,21 @@ public class JDBGenConfig {
             if (f.exists() && f.isFile()) {
                 try {
                     INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f), JDBGenConfig.class);
-                } catch (Exception var15) {
-                    logger.log(Level.SEVERE, "cannot load config file.", var15);
-                    JOptionPane.showMessageDialog((Component)null, "Loading configuration failed: " + var15.getLocalizedMessage(), "Load failed", 64);
+                } catch (Exception e) {
+                    UIUtils.error(null, "Loading configuration failed: " +
+                            e.getLocalizedMessage() +
+                            "\nTrying to load default configuration.");
                 }
             }
 
             if (INSTANCE == null) {
                 logger.info("config file not found, creating default one.");
 
-                try {
-                    InputStream is = JDBGenConfig.class.getResourceAsStream("/defaultConfig.json");
-                    Throwable var3 = null;
-
-                    try {
-                        INSTANCE = (JDBGenConfig)gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), JDBGenConfig.class);
-                    } catch (Throwable var14) {
-                        var3 = var14;
-                        throw var14;
-                    } finally {
-                        if (is != null) {
-                            if (var3 != null) {
-                                try {
-                                    is.close();
-                                } catch (Throwable var13) {
-                                    var3.addSuppressed(var13);
-                                }
-                            } else {
-                                is.close();
-                            }
-                        }
-
-                    }
-                } catch (Exception var17) {
-                    logger.log(Level.SEVERE, "cannot load config file.", var17);
-                    JOptionPane.showMessageDialog((Component)null, "Cannot load default configuration: " + var17.getLocalizedMessage(), "Load failed", 64);
-                    logger.log(Level.SEVERE, "cannot recover previous error.", var17);
+                try (InputStream is = JDBGenConfig.class.getResourceAsStream("/defaultConfig.json")) {
+                    INSTANCE = (JDBGenConfig)gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), JDBGenConfig.class);
+                } catch (Exception e) {
+                    UIUtils.error(null, "Cannot load default configuration: " + e.getLocalizedMessage());
+                    logger.log(Level.SEVERE, "cannot recover previous error.", e);
                     System.exit(1);
                 }
             }
@@ -97,8 +79,8 @@ public class JDBGenConfig {
                 fw.write(json);
             }
             return true;
-        } catch (IOException var16) {
-            logger.log(Level.SEVERE, "cannot save config file.", var16);
+        } catch (IOException e) {
+            UIUtils.error(null, "Cannot save configuration: " + e.getLocalizedMessage());
         }
 
         return false;

@@ -42,12 +42,12 @@ import org.apache.commons.lang3.StringUtils;
 public class JDBDriverManager extends JDialog {
 
     private final Logger logger = Logger.getLogger(this.getClass().getName());
-    private static JDBDriverManager INSTANCE = null;
     private final List<JDBDriver> drivers;
     private final DefaultListModel<String> listModel;
     private final DefaultTableModel tableModel;
     public boolean changed = false;
 
+    private static JDBDriverManager INSTANCE = null;
     public static synchronized JDBDriverManager getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new JDBDriverManager();
@@ -983,24 +983,31 @@ public class JDBDriverManager extends JDialog {
     }//GEN-LAST:event_txtDriverClassMouseClicked
 
     private void btnDownJdbcActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownJdbcActionPerformed
-        String groupId = txtGroupId.getText();
-        String artifactId = txtArtifactId.getText();
-        String vInclude = txtVersionInclude.getText();
-        if (ObjectUtils.isNotEmpty(groupId) && ObjectUtils.isNotEmpty(artifactId)) {
-            btnDownJdbc.setEnabled(false);
-            EventQueue.invokeLater(() -> {
-                Pair<String, String> res = MavenUtils.downloadMaven(groupId, artifactId, vInclude);
-                if (res != null) {
-                    txtVersion.setText((String)res.getFirst());
-                    txtJarFile.setText((String)res.getSecond());
-                }
-                btnDownJdbc.setEnabled(true);
-            });
-        }
+        MavenExplorer me = MavenExplorer.getInstance();
+        EventQueue.invokeLater(() -> {
+            me.setVisible(true);
+            if (me.changed)
+                txtJarFile.setText(me.saveLocation);
+        });
+//        String groupId = txtGroupId.getText();
+//        String artifactId = txtArtifactId.getText();
+//        String vInclude = txtVersionInclude.getText();
+//        if (ObjectUtils.isNotEmpty(groupId) && ObjectUtils.isNotEmpty(artifactId)) {
+////            btnDownJdbc.setEnabled(false);
+////            EventQueue.invokeLater(() -> {
+////                Pair<String, String> res = MavenUtils.downloadMaven(groupId, artifactId, vInclude);
+////                if (res != null) {
+////                    txtVersion.setText((String)res.getFirst());
+////                    txtJarFile.setText((String)res.getSecond());
+////                }
+////                btnDownJdbc.setEnabled(true);
+////            });
+//        }
     }//GEN-LAST:event_btnDownJdbcActionPerformed
 
     private void btnBrowseJarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseJarActionPerformed
         JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(new File("drivers"));
         fc.addChoosableFileFilter(new FileFilter() {
             @Override
             public boolean accept(File f) {
@@ -1024,7 +1031,10 @@ public class JDBDriverManager extends JDialog {
             }
         });
         if (fc.showOpenDialog(this) == 0) {
-            this.txtJarFile.setText(fc.getSelectedFile().getPath());
+            String cpath = new File("").getAbsolutePath();
+            String fpath = fc.getSelectedFile().getAbsolutePath();
+            String relative = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
+            this.txtJarFile.setText(relative);
         }
     }//GEN-LAST:event_btnBrowseJarActionPerformed
 

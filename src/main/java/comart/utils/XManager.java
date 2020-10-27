@@ -1,16 +1,25 @@
 package comart.utils;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.PrettyXmlSerializer;
@@ -20,7 +29,7 @@ import org.xml.sax.SAXException;
 
 public class XManager {
 
-    private static final HashMap<String,XNode> _xmls= new HashMap<>();
+    private static final HashMap<String,XNode> xmls= new HashMap<>();
 
     /**
      * load XML and parse from file system.
@@ -44,8 +53,8 @@ public class XManager {
         /*
          * must be synchronized below codes for multi-threaded application.
          */
-        synchronized (_xmls) {
-            doc = (XNode) _xmls.get(resource);
+        synchronized (xmls) {
+            doc = (XNode) xmls.get(resource);
             if (doc == null) {
                 SAXParserFactory factory = SAXParserFactory.newInstance();
                 SAXParser saxParser = factory.newSAXParser();
@@ -53,7 +62,7 @@ public class XManager {
                 URL furl = XManager.class.getResource(resource);
                 saxParser.parse(new File(furl.getFile()), handler);
                 doc = handler.getLast();
-                _xmls.put(resource, doc);
+                xmls.put(resource, doc);
             }
         }
         return doc.duplicate();
@@ -209,5 +218,29 @@ public class XManager {
         String cleaned = new PrettyXmlSerializer(props).getAsString(tnode);
 
         return XManager.toDocument(cleaned);
+    }
+    
+    public static void main(String[] args) throws Exception {
+        OkHttpClient client = new OkHttpClient();
+        Request req = new Request.Builder()
+                .url("https://mvnrepository.com/artifact/cubrid/cubrid-jdbc?repo=cubrid")
+                .build();
+        try (Response response = client.newCall(req).execute()) {
+            System.out.println(htmlToXml(response.body().string()).toString());
+        }
+//        URLConnection c = (new URL("https://mvnrepository.com/search?q=cubrid")).openConnection();
+//
+//        StringWriter sw = new StringWriter();
+//        char[] buf = new char[1024];
+//        try (InputStreamReader isr = new InputStreamReader(c.getInputStream(), StandardCharsets.UTF_8)) {
+//            while (true) {
+//                int sz = isr.read(buf);
+//                if (sz > 0)
+//                    sw.write(buf, 0, sz);
+//                else if (sz < 0)
+//                    break;
+//            }
+//        }
+//        System.out.println(htmlToXml(sw.toString()).toString());
     }
 }

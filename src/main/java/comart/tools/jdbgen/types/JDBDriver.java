@@ -23,10 +23,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class JDBDriver extends JDBListBase {
     private boolean stockItem;
-    private String versionInclude;
-    private String groupId;
-    private String artifactId;
-    private String version;
     private String urlTemplate;
     private String jdbcJar;
     private String driverClass;

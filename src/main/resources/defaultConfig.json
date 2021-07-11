@@ -1,11 +1,9 @@
 {
-    "darkUI": false,
+    "isDarkUI": false,
     "drivers": [
         {
             "stockItem": true,
             "name": "Oracle",
-            "groupId": "com.oracle.database.jdbc",
-            "artifactId": "ojdbc8",
             "driverClass": "oracle.jdbc.driver.OracleDriver",
             "urlTemplate": "jdbc:oracle:thin:@<databaseHost>:1521:<database>",
             "icon": "stock:oracle.png",
@@ -16,8 +14,6 @@
         {
             "stockItem": true,
             "name": "MariaDB",
-            "groupId": "org.mariadb.jdbc",
-            "artifactId": "mariadb-java-client",
             "driverClass": "org.mariadb.jdbc.Driver",
             "urlTemplate": "jdbc:mariadb://<databaseHost>:3306/<database>",
             "icon": "stock:mariadb.png",
@@ -26,8 +22,6 @@
         {
             "stockItem": true,
             "name": "PostgreSQL",
-            "groupId": "org.postgresql",
-            "artifactId": "postgresql",
             "driverClass": "org.postgresql.Driver",
             "urlTemplate": "jdbc:postgresql://<databaseHost>:5740/<database>",
             "icon": "stock:postgresql.png",
@@ -36,8 +30,6 @@
         {
             "stockItem": true,
             "name": "MySQL",
-            "groupId": "mysql",
-            "artifactId": "mysql-connector-java",
             "driverClass": "com.mysql.jdbc.Driver",
             "urlTemplate": "jdbc:mysql://<databaseHost>:3306/<database>",
             "icon": "stock:mysql.png",
@@ -46,10 +38,7 @@
         {
             "stockItem": true,
             "name": "Microsoft SQL Server",
-            "groupId": "com.microsoft.sqlserver",
-            "artifactId": "mssql-jdbc",
             "driverClass": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
-            "versionInclude": "jre8",
             "urlTemplate": "jdbc:sqlserver://<databaseHost>:1433;databaseName=<database>",
             "icon": "stock:mssql.png",
             "props": {}
@@ -57,8 +46,6 @@
         {
             "stockItem": true,
             "name": "CUBRID",
-            "groupId": "cubrid",
-            "artifactId": "cubrid-jdbc",
             "driverClass": "cubrid.jdbc.driver.CUBRIDDriver",
             "urlTemplate": "jdbc:cubrid:<databaseHost>:33000:<database>:public::",
             "icon": "stock:cubrid.png",

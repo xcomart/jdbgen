@@ -9,7 +9,6 @@ import comart.tools.jdbgen.types.maven.MavenConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import comart.utils.UIUtils;
-import java.awt.Component;
 import java.awt.Container;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,7 +21,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JOptionPane;
 import lombok.Data;
 
 /**

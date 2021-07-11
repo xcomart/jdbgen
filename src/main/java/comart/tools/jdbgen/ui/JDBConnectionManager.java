@@ -56,8 +56,9 @@ public class JDBConnectionManager extends JDialog {
     private DefaultTableModel tplModel = null;
     private DefaultListModel listModel = null;
     private JDBGenConfig conf = null;
+    private boolean saveSuccess = false;
     
-    private JDBConnection selectedConnection = null;
+    public JDBConnection selectedConnection = null;
     
     /**
      * Creates new form JDBConnectionManager
@@ -248,6 +249,8 @@ public class JDBConnectionManager extends JDialog {
         jLabel16 = new javax.swing.JLabel();
         jScrollPane4 = new javax.swing.JScrollPane();
         tabVars = new javax.swing.JTable();
+
+        setTitle("Connection Manager");
 
         btnCancel.setText("Cancel");
         btnCancel.addActionListener(new java.awt.event.ActionListener() {
@@ -757,7 +760,7 @@ public class JDBConnectionManager extends JDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jSplitPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 414, Short.MAX_VALUE)
+                .addComponent(jSplitPane1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnCancel)
@@ -770,6 +773,7 @@ public class JDBConnectionManager extends JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
+        selectedConnection = null;
         setVisible(false);
     }//GEN-LAST:event_btnCancelActionPerformed
 
@@ -873,6 +877,7 @@ public class JDBConnectionManager extends JDialog {
         int idx = lstConnections.getSelectedIndex();
         boolean isNameExists;
         JDBConnection target;
+        saveSuccess = false;
         if (idx == -1) {
             target = new JDBConnection();
             isNameExists = NamingUtils.nameExists(connections, txtName.getText());
@@ -909,9 +914,6 @@ public class JDBConnectionManager extends JDialog {
             UIUtils.error(this, "Output directory required.");
             txtOutputDir.requestFocusInWindow();
         } else {
-            if (idx == -1)
-                connections.add(target);
-
             target.setAuthor(txtAuthor.getText());
             target.setConnectionUrl(txtConnUrl.getText());
             target.setIcon(txtIcon.getText());
@@ -928,16 +930,22 @@ public class JDBConnectionManager extends JDialog {
             target.setConnectionProps(applyToPropsMap(target.getConnectionProps()));
             target.setTemplates(applyToTplList(target.getTemplates()));
 
+            if (idx == -1) {
+                connections.add(target);
+                listModel.addElement(target.getName());
+                lstConnections.setSelectedIndex(connections.size() - 1);
+            }
+            
             JDBGenConfig.saveInstace(this);
+            saveSuccess = true;
+            selectedConnection = target;
         }
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
-        int idx = lstConnections.getSelectedIndex();
-        if (idx > -1) {
-            btnSaveActionPerformed(evt);
-            selectedConnection = connections.get(idx);
-        }
+        btnSaveActionPerformed(evt);
+        if (saveSuccess)
+            setVisible(false);
     }//GEN-LAST:event_btnConnectActionPerformed
 
     /**

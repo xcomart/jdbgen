@@ -158,6 +158,8 @@ public class MavenExplorer extends JDialog {
         jLabel2 = new javax.swing.JLabel();
         lblMvnLink = new javax.swing.JLabel();
 
+        setTitle("Maven Repository Explorer");
+
         jLabel1.setText("Search in Maven Repositories:");
 
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -429,7 +431,9 @@ public class MavenExplorer extends JDialog {
     public static void main(String args[]) {
         UIUtils.setFlatDarkLaf();
         EventQueue.invokeLater(() -> {
-            getInstance().setVisible(true);
+            MavenExplorer instance = getInstance();
+            instance.setLocationRelativeTo(null);
+            instance.setVisible(true);
             System.exit(0);
         });
     }

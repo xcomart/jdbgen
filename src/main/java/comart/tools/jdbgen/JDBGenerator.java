@@ -5,12 +5,23 @@
  */
 package comart.tools.jdbgen;
 
+import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.ui.JDBGeneratorMain;
+import comart.utils.UIUtils;
+
 /**
  *
  * @author comart
  */
 public class JDBGenerator {
     public static void main(final String[] args) {
-        
+        if (JDBGenConfig.getInstance().isDarkUI()) {
+            UIUtils.setFlatDarkLaf();
+        } else {
+            UIUtils.setFlatLightLaf();
+        }
+        JDBGeneratorMain win = new JDBGeneratorMain();
+        win.setLocationRelativeTo(null);
+        win.setVisible(true);
     }
 }

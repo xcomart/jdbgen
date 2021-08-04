@@ -41,6 +41,8 @@
                       <Component id="cboConnection" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="btnManageConn" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="lblConnectionInfo" min="-2" max="-2" attributes="0"/>
                       <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
                   </Group>
               </Group>
@@ -56,6 +58,7 @@
                   <Component id="cboConnection" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnManageConn" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="lblConnectionInfo" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jPanel1" max="32767" attributes="0"/>
@@ -243,7 +246,10 @@
                               <Component id="txtAuthor" max="32767" attributes="0"/>
                           </Group>
                           <Group type="102" attributes="0">
-                              <Component id="jLabel16" linkSize="1" min="-2" max="-2" attributes="0"/>
+                              <Group type="103" groupAlignment="1" attributes="0">
+                                  <Component id="jLabel16" linkSize="1" min="-2" max="-2" attributes="0"/>
+                                  <Component id="btnDelVar" min="-2" max="-2" attributes="0"/>
+                              </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="jScrollPane4" pref="0" max="32767" attributes="0"/>
                           </Group>
@@ -270,7 +276,7 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="jLabel6" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jScrollPane3" pref="0" max="32767" attributes="0"/>
+                      <Component id="jScrollPane3" pref="136" max="32767" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="txtOutputDir" alignment="3" min="-2" max="-2" attributes="0"/>
@@ -289,8 +295,12 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="chkPathMapper" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jLabel16" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Group type="102" attributes="0">
+                              <Component id="jLabel16" min="-2" max="-2" attributes="0"/>
+                              <EmptySpace max="32767" attributes="0"/>
+                              <Component id="btnDelVar" min="-2" max="-2" attributes="0"/>
+                          </Group>
                           <Component id="jScrollPane4" min="-2" pref="103" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -403,6 +413,14 @@
                 <Property name="text" type="java.lang.String" value="Templates"/>
               </Properties>
             </Component>
+            <Component class="javax.swing.JButton" name="btnDelVar">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="-"/>
+                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                  <Dimension value="[30, 26]"/>
+                </Property>
+              </Properties>
+            </Component>
           </SubComponents>
         </Container>
       </SubComponents>
@@ -446,6 +464,14 @@
     <Component class="javax.swing.JButton" name="btnManageConn">
       <Properties>
         <Property name="text" type="java.lang.String" value="Manage"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnManageConnActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JLabel" name="lblConnectionInfo">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Connection Information Placeholder"/>
       </Properties>
     </Component>
   </SubComponents>

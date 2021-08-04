@@ -12,10 +12,10 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  * string and byte utilities. This class contains various methods related with
- * <tt>String</tt> and <tt>byte</tt>. Some methods are <tt>static</tt>,
+ * <code>String</code> and <code>byte</code>. Some methods are <code>static</code>,
  * and the others are normal. Static methods are independent with every
  * character-set. If you want process strings in certain character-set, you must
- * instantiate this class by calling of <tt>getInstance</tt> method with
+ * instantiate this class by calling of <code>getInstance</code> method with
  * character-set you want.
  * 
  * @author Soungjin Park
@@ -38,14 +38,14 @@ public class StrUtils
     }
 
     /**
-     * get instance of <tt>StrUtils</tt> which operates bytes with
-     * <tt>charset</tt>. this class caches instance of each character-set.
+     * get instance of <code>StrUtils</code> which operates bytes with
+     * <code>charset</code>. this class caches instance of each character-set.
      * 
      * @param charset
      *            character-set.
-     * @return instance of <tt>StrUtils</tt>.
+     * @return instance of <code>StrUtils</code>.
      * @throws UnsupportedEncodingException
-     *             if the named <tt>charset</tt> is not supported
+     *             if the named <code>charset</code> is not supported
      */
     public synchronized static StrUtils getInstance(String charset)
             throws UnsupportedEncodingException
@@ -60,13 +60,13 @@ public class StrUtils
 
     /**
      * set default character-set. After call of this method,
-     * <tt>getInstance()</tt> method will return <tt>StrUtils</tt> object
-     * which corresponding with given <tt>charset</tt>.
+     * <code>getInstance()</code> method will return <code>StrUtils</code> object
+     * which corresponding with given <code>charset</code>.
      * 
      * @param charset
      *            default character-set.
      * @throws UnsupportedEncodingException
-     *             if the named <tt>charset</tt> is not supported
+     *             if the named <code>charset</code> is not supported
      */
     public static void setDefault(String charset)
             throws UnsupportedEncodingException
@@ -76,9 +76,9 @@ public class StrUtils
     }
 
     /**
-     * get <tt>StrUtils</tt> object with default character-set.
+     * get <code>StrUtils</code> object with default character-set.
      * 
-     * @return <tt>StrUtils</tt> object.
+     * @return <code>StrUtils</code> object.
      */
     public static StrUtils getInstance()
     {
@@ -92,7 +92,7 @@ public class StrUtils
     }
 
     /**
-     * split string with delimiter <tt>delim</tt>.
+     * split string with delimiter <code>delim</code>.
      * 
      * @param src
      *            source string.
@@ -106,7 +106,7 @@ public class StrUtils
     }
 
     /**
-     * split string with delimiter <tt>delim</tt> with trim option.
+     * split string with delimiter <code>delim</code> with trim option.
      * 
      * @param src
      *            source string.
@@ -142,7 +142,7 @@ public class StrUtils
 
     /**
      * get index of subsequence bytes from source byte sequence. returns the
-     * index within <tt>src</tt> of the first occurrence of the specified
+     * index within <code>src</code> of the first occurrence of the specified
      * sub-byte array, starting at the specified index. the integer returned is
      * the smallest value <i>k</i> for which:
      * 
@@ -177,10 +177,10 @@ public class StrUtils
     }
 
     /**
-     * returns a new byte array that is a sub-byte array of <tt>src</tt>. the
-     * sub-byte array begins at the specified <tt>beginindex</tt> and extends
-     * to the byte at index <tt>endindex - 1</tt>. thus the length of the
-     * sub-byte array is <tt>endindex-beginindex</tt>. <br>
+     * returns a new byte array that is a sub-byte array of <code>src</code>. the
+     * sub-byte array begins at the specified <code>beginindex</code> and extends
+     * to the byte at index <code>endindex - 1</code>. thus the length of the
+     * sub-byte array is <code>endindex-beginindex</code>. <br>
      * <br>
      * examples:
      * 
@@ -208,16 +208,16 @@ public class StrUtils
     }
 
     /**
-     * split byte array into multiple byte array using <tt>delim</tt>.
-     * sub-byte array of <tt>src</tt>(<tt>length</tt> bytes from index
-     * <tt>offset</tt>) would be split.
+     * split byte array into multiple byte array using <code>delim</code>.
+     * sub-byte array of <code>src</code>(<code>length</code> bytes from index
+     * <code>offset</code>) would be split.
      * 
      * @param src
      *            source byte array.
      * @param offset
-     *            offset of sub-byte array of <tt>src</tt> to be split.
+     *            offset of sub-byte array of <code>src</code> to be split.
      * @param length
-     *            length of sub-byte array of <tt>src</tt> ot be split.
+     *            length of sub-byte array of <code>src</code> ot be split.
      * @param delim
      *            delimiter.
      * @return array of byte arrays.
@@ -246,8 +246,8 @@ public class StrUtils
     }
 
     /**
-     * replaces each substring of <tt>src</tt> that matches the given
-     * <tt>find</tt> with given <tt>rep</tt>.
+     * replaces each substring of <code>src</code> that matches the given
+     * <code>find</code> with given <code>rep</code>.
      * 
      * @param src
      *            source string.
@@ -277,7 +277,7 @@ public class StrUtils
     }
 
     /**
-     * create byte array with <tt>length</tt> containing <tt>bt</tt>.
+     * create byte array with <code>length</code> containing <code>bt</code>.
      * 
      * @param bt
      *            padding byte.
@@ -293,7 +293,7 @@ public class StrUtils
     }
 
     /**
-     * pad <tt>data</tt> with <tt>length</tt> and <tt>padbyte</tt>.
+     * pad <code>data</code> with <code>length</code> and <code>padbyte</code>.
      * 
      * @param data
      *            source byte array.
@@ -323,8 +323,8 @@ public class StrUtils
     }
 
     /**
-     * create new byte array representing <tt>data</tt> padded with
-     * <tt>length</tt> and <tt>padbyte</tt>.
+     * create new byte array representing <code>data</code> padded with
+     * <code>length</code> and <code>padbyte</code>.
      * 
      * @param data
      *            source data to be padded.
@@ -344,7 +344,7 @@ public class StrUtils
     }
 
     /**
-     * create character array with <tt>length</tt> containing <tt>bt</tt>.
+     * create character array with <code>length</code> containing <code>bt</code>.
      * 
      * @param bt
      *            padding character.
@@ -360,7 +360,7 @@ public class StrUtils
     }
 
     /**
-     * pad string <tt>src</tt> with <tt>length</tt> and <tt>padchar</tt>.
+     * pad string <code>src</code> with <code>length</code> and <code>padchar</code>.
      * 
      * @param src
      *            source string to be padded.
@@ -443,7 +443,7 @@ public class StrUtils
     }
 
     /**
-     * given byte <tt>src</tt> is generic space or not.
+     * given byte <code>src</code> is generic space or not.
      * 
      * @param src
      *            byte to be tested.
@@ -455,13 +455,13 @@ public class StrUtils
     }
 
     /**
-     * given byte <tt>src</tt> is in <tt>spc</tt> or not.
+     * given byte <code>src</code> is in <code>spc</code> or not.
      * 
      * @param src
      *            byte to be tested.
      * @param spc
      *            array of bytes.
-     * @return <tt>src</tt> is in <tt>spc</tt> or not.
+     * @return <code>src</code> is in <code>spc</code> or not.
      */
     public static boolean isSpace(byte src, byte[] spc)
     {
@@ -473,14 +473,14 @@ public class StrUtils
     }
 
     /**
-     * every bytes in <tt>src</tt> are in <tt>spc</tt> return true, any one
-     * of them is not in <tt>spc</tt> return false.
+     * every bytes in <code>src</code> are in <code>spc</code> return true, any one
+     * of them is not in <code>spc</code> return false.
      * 
      * @param src
      *            bytes to be tested.
      * @param spc
      *            array of bytes.
-     * @return all bytes of <tt>src</tt> is space or not.
+     * @return all bytes of <code>src</code> is space or not.
      */
     public static boolean isSpace(byte[] src, byte[] spc)
     {
@@ -492,13 +492,13 @@ public class StrUtils
     }
 
     /**
-     * given character <tt>src</tt> is in <tt>spc</tt> or not.
+     * given character <code>src</code> is in <code>spc</code> or not.
      * 
      * @param src
      *            character to be tested.
      * @param spc
      *            space string.
-     * @return <tt>src</tt> is in <tt>spc</tt> or not.
+     * @return <code>src</code> is in <code>spc</code> or not.
      */
     public static boolean isSpace(char src, String spc)
     {
@@ -510,14 +510,14 @@ public class StrUtils
     }
 
     /**
-     * every character in <tt>src</tt> are in <tt>spc</tt> return true, any
-     * one of them is not in <tt>spc</tt> return false.
+     * every character in <code>src</code> are in <code>spc</code> return true, any
+     * one of them is not in <code>spc</code> return false.
      * 
      * @param src
      *            string to be tested.
      * @param spc
      *            space string.
-     * @return all chracters of <tt>src</tt> is space or not.
+     * @return all chracters of <code>src</code> is space or not.
      */
     public static boolean isSpace(String src, String spc)
     {
@@ -529,19 +529,19 @@ public class StrUtils
     }
 
     /**
-     * tests if <tt>src</tt> starts with the specified <tt>arg</tt>. this
-     * is the same method with <tt>String.startsWith</tt> except applied to
+     * tests if <code>src</code> starts with the specified <code>arg</code>. this
+     * is the same method with <code>String.startsWith</code> except applied to
      * byte arrays.
      * 
      * @param src
      *            source bytes to be tested.
      * @param arg
      *            the prefix.
-     * @return <tt>true</tt> if the byte sequence represented by the
+     * @return <code>true</code> if the byte sequence represented by the
      *         argument is a prefix of the byte sequence represented by
-     *         <tt>src</tt>; false otherwise. Note also that <tt>true</tt>
+     *         <code>src</code>; false otherwise. Note also that <code>true</code>
      *         will be returned if the argument is an empty array. or is equal
-     *         to <tt>src</tt> byte array object as determined by the
+     *         to <code>src</code> byte array object as determined by the
      *         StrUtils.equals method.
      */
     public static boolean startsWith(byte[] src, byte[] arg)
@@ -553,16 +553,16 @@ public class StrUtils
     }
 
     /**
-     * compares <tt>a</tt> to the specified <tt>b</tt>. the result is
-     * <tt>true</tt> if and only if the <tt>b</tt> is not <tt>null</tt>
+     * compares <code>a</code> to the specified <code>b</code>. the result is
+     * <code>true</code> if and only if the <code>b</code> is not <code>null</code>
      * and is a byte array object that represents the same sequence of bytes as
-     * <tt>a</tt>.
+     * <code>a</code>.
      * 
      * @param a
      *            byte array.
      * @param b
      *            byte array.
-     * @return <tt>true</tt> if byte arrays are equal; <tt>false</tt>
+     * @return <code>true</code> if byte arrays are equal; <code>false</code>
      *         otherwise.
      */
     public static boolean equals(byte[] a, byte[] b)
@@ -580,8 +580,8 @@ public class StrUtils
     }
 
     /**
-     * retreive substring of <tt>src</tt> from subsequence <tt>from</tt> to
-     * subsequence <tt>to</tt>.
+     * retreive substring of <code>src</code> from subsequence <code>from</code> to
+     * subsequence <code>to</code>.
      * 
      * <pre>
      * StrUtils.pilloff(&quot;abcd{efg}hi&quot;, &quot;{&quot;, &quot;}&quot;)
@@ -703,12 +703,12 @@ public class StrUtils
     }
 
     /**
-     * alias of <tt>pad(b, size)</tt>.
+     * alias of <code>pad(b, size)</code>.
      * 
      * @param size
      *            length of result byte array.
      * @param b
-     *            result byte array will be filled with <tt>b</tt>.
+     *            result byte array will be filled with <code>b</code>.
      * @return byte array.
      */
     public static byte[] space(int size, byte b)
@@ -717,7 +717,7 @@ public class StrUtils
     }
 
     /**
-     * create a string which length is <tt>size</tt> filled with <tt>c</tt>.
+     * create a string which length is <code>size</code> filled with <code>c</code>.
      * call of this method is exactly same as
      * 
      * <pre>
@@ -727,7 +727,7 @@ public class StrUtils
      * @param size
      *            length of result string.
      * @param c
-     *            result string will be filled with <tt>c</tt>
+     *            result string will be filled with <code>c</code>
      * @return result string.
      */
     public static String space(int size, char c)

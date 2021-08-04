@@ -40,6 +40,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     
     private boolean suppressCboConnEvent = false;
     private void applyConnection(JDBConnection conn, boolean comboOnly) {
+        suppressCboConnEvent = conn == null;
+        String preName = null;
+        if (suppressCboConnEvent)
+            preName = (String)cboConnection.getSelectedItem();
+            
         connMap.clear();
         cboConnection.removeAllItems();
         conf.getConnections().forEach(c -> {
@@ -47,7 +52,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             cboConnection.addItem(c.getName());
         });
         cboConnection.setRenderer(UIUtils.getListCellRenderer(s -> connMap.get(s)));
-        cboConnection.setSelectedItem(conn.getName());
+        if (conn != null)
+            cboConnection.setSelectedItem(conn.getName());
+        else if (suppressCboConnEvent) {
+            cboConnection.setSelectedItem(preName);
+            suppressCboConnEvent = false;
+        }
     }
 
     /**
@@ -86,11 +96,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jScrollPane4 = new javax.swing.JScrollPane();
         tabVars = new javax.swing.JTable();
         jLabel6 = new javax.swing.JLabel();
+        btnDelVar = new javax.swing.JButton();
         chkDarkUI = new javax.swing.JCheckBox();
         jButton2 = new javax.swing.JButton();
         cboConnection = new javax.swing.JComboBox<>();
         jLabel2 = new javax.swing.JLabel();
         btnManageConn = new javax.swing.JButton();
+        lblConnectionInfo = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("DB Generator");
@@ -215,6 +227,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
         jLabel6.setText("Templates");
 
+        btnDelVar.setText("-");
+        btnDelVar.setPreferredSize(new java.awt.Dimension(30, 26));
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -233,7 +248,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(txtAuthor))
                     .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel16)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel16)
+                            .addComponent(btnDelVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                     .addComponent(chkCutFirst, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -257,7 +274,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 136, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtOutputDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -274,8 +291,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkPathMapper)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel16)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabel16)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnDelVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
@@ -316,6 +336,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jLabel2.setText("Connection");
 
         btnManageConn.setText("Manage");
+        btnManageConn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnManageConnActionPerformed(evt);
+            }
+        });
+
+        lblConnectionInfo.setText("Connection Information Placeholder");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -337,6 +364,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         .addComponent(cboConnection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnManageConn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblConnectionInfo)
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
@@ -347,7 +376,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(cboConnection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
-                    .addComponent(btnManageConn))
+                    .addComponent(btnManageConn)
+                    .addComponent(lblConnectionInfo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -372,8 +402,19 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }//GEN-LAST:event_chkDarkUIActionPerformed
 
     private void cboConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboConnectionActionPerformed
-        // TODO add your handling code here:
+        if (!suppressCboConnEvent) {
+            // TODO: get schemas & tables
+            
+        }
     }//GEN-LAST:event_cboConnectionActionPerformed
+
+    private void btnManageConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageConnActionPerformed
+        JDBConnectionManager cm = JDBConnectionManager.getInstance();
+        cm.setModal(true);
+        cm.setLocationRelativeTo(null);
+        cm.setVisible(true);
+        applyConnection(cm.selectedConnection, false);
+    }//GEN-LAST:event_btnManageConnActionPerformed
 
     /**
      * @param args the command line arguments
@@ -390,6 +431,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBrowseOutput;
+    private javax.swing.JButton btnDelVar;
     private javax.swing.JButton btnManageConn;
     private javax.swing.JComboBox<String> cboConnection;
     private javax.swing.JCheckBox chkCutFirst;
@@ -418,6 +460,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTable jTable1;
     private javax.swing.JTree jTree1;
+    private javax.swing.JLabel lblConnectionInfo;
     private javax.swing.JTable tabVars;
     private javax.swing.JTextField txtAuthor;
     private javax.swing.JTextField txtOutputDir;

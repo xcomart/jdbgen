@@ -21,6 +21,7 @@ import java.util.Map;
  * @author comart
  */
 public class ObjUtils {
+    @SuppressWarnings("UseSpecificCatch")
     private static Object getValuePrivate(Object obj, String property) throws Exception {
         if (obj instanceof Map) {
             return ((Map)obj).get(property);
@@ -62,6 +63,7 @@ public class ObjUtils {
         }
     }
     
+    @SuppressWarnings("UseSpecificCatch")
     public static void setValue(Object obj, String property, Object val) throws Exception {
         String setter = "set"+property.substring(0, 1).toUpperCase()+property.substring(1);
         Class c = obj.getClass();
@@ -87,7 +89,7 @@ public class ObjUtils {
         BufferedInputStream bis = null;
         try {
             byte[] buffer = new byte[1024];
-            int rsize = 0;
+            int rsize;
             bis = new BufferedInputStream(new FileInputStream(file));
             while ((rsize = bis.read(buffer)) >= 0) {
                 if (rsize > 0)

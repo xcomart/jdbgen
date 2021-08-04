@@ -17,6 +17,7 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
@@ -753,6 +754,13 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_btnSaveActionPerformed
 
+    private void updateDriver(Consumer<JDBDriver> cons) {
+        int idx = lstDrivers.getSelectedIndex();
+        if (idx < 0) return;
+        JDBDriver driver = (JDBDriver)drivers.get(lstDrivers.getSelectedIndex());
+        cons.accept(driver);
+    }
+    
     private void lstDriversValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstDriversValueChanged
         int idx = lstDrivers.getSelectedIndex();
         if (idx < 0) return;
@@ -873,6 +881,7 @@ public class JDBDriverManager extends JDialog {
                     JMenuItem item = new JMenuItem(c);
                     item.addActionListener((e) -> {
                         txtDriverClass.setText(c);
+                        updateDriver(d -> d.setDriverClass(c));
                     });
                     popup.add(item);
                 });
@@ -884,10 +893,13 @@ public class JDBDriverManager extends JDialog {
     private void btnDownJdbcActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownJdbcActionPerformed
         MavenExplorer me = MavenExplorer.getInstance();
         EventQueue.invokeLater(() -> {
+            me.setModal(true);
             me.setLocationRelativeTo(this);
             me.setVisible(true);
-            if (me.changed)
+            if (me.changed) {
                 txtJarFile.setText(me.saveLocation);
+                updateDriver(d -> d.setJdbcJar(me.saveLocation));
+            }
         });
 //        String groupId = txtGroupId.getText();
 //        String artifactId = txtArtifactId.getText();
@@ -935,6 +947,7 @@ public class JDBDriverManager extends JDialog {
             String fpath = fc.getSelectedFile().getAbsolutePath();
             String relative = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
             this.txtJarFile.setText(relative);
+            updateDriver(d -> d.setJdbcJar(relative));
         }
     }//GEN-LAST:event_btnBrowseJarActionPerformed
 

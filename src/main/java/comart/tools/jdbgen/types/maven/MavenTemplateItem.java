@@ -5,7 +5,7 @@
  */
 package comart.tools.jdbgen.types.maven;
 
-import comart.utils.KVPair;
+import comart.utils.tuple.Pair;
 import lombok.Data;
 
 /**
@@ -22,5 +22,5 @@ public class MavenTemplateItem {
     private String format;
     private String formatData;
     private String delimiter;
-    private KVPair attrPair;
+    private Pair<String, String> attrPair;
 }

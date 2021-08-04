@@ -12,8 +12,6 @@ import java.awt.EventQueue;
 import java.awt.Image;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

@@ -7,6 +7,7 @@ import comart.tools.jdbgen.types.maven.MavenConfigItem;
 import comart.tools.jdbgen.types.maven.MavenSearchItem;
 import comart.tools.jdbgen.types.maven.MavenTemplate;
 import comart.tools.jdbgen.types.maven.MavenTemplateItem;
+import comart.utils.tuple.Pair;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -219,14 +220,14 @@ public class MavenUtils {
     }
     
     private static List<String> getvalueAttribute(MavenTemplateItem titem, XNode node) {
-        KVPair pair = titem.getAttrPair();
+        Pair<String,String> pair = titem.getAttrPair();
         List<String> res = new ArrayList<>();
         if (pair == null) {
             throw new RuntimeException("location or attrPair must be defined in template item.");
         } else {
             node.traverse(n -> {
-                String v = n.getAttribute(pair.getKey());
-                if (pair.getValue().equals(v)) {
+                String v = n.getAttribute(pair.getFirst());
+                if (pair.getSecond().equals(v)) {
                     res.add(getNodeValue(titem, n));
                     if (!titem.isRepeat())
                         return false;

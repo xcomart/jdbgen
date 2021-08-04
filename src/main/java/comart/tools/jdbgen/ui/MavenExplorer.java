@@ -371,7 +371,7 @@ public class MavenExplorer extends JDialog {
                     repos.forEach(r -> cboRepository.addItem(r));
                 } catch (ParseException ex) {
                     logger.log(Level.SEVERE, null, ex);
-                    
+                    UIUtils.error(this, ex.getLocalizedMessage());
                 }
             });
         }
@@ -404,7 +404,7 @@ public class MavenExplorer extends JDialog {
                     }
                 } catch(Exception e) {
                     logger.log(Level.SEVERE, null, e);
-                    
+                    UIUtils.error(this, e.getLocalizedMessage());
                 }
             });
         } else {
@@ -422,6 +422,7 @@ public class MavenExplorer extends JDialog {
                 items.forEach(i -> searchModel.addElement(i.getName()));
             } catch (ParseException ex) {
                 logger.log(Level.SEVERE, null, ex);
+                UIUtils.error(this, ex.getLocalizedMessage());
             }
         });
     }

@@ -3,7 +3,6 @@ package comart.utils;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import org.apache.commons.lang3.ObjectUtils;
 
@@ -122,13 +121,13 @@ public class XNode {
     }
 
     /**
-     * find all elements which tag name is <tt>name</tt>. depth first search
+     * find all elements which tag name is <code>name</code>. depth first search
      * method is used in search. if no element found, result is empty
-     * <tt>ArrayList</tt> object.
+     * <code>ArrayList</code> object.
      * 
      * @param name
      *            tag name to be searched
-     * @return array of <tt>XNode</tt> which tag name is <tt>name</tt>
+     * @return array of <code>XNode</code> which tag name is <code>name</code>
      */
     public ArrayList<XNode> getElementByName(String name)
     {
@@ -190,7 +189,7 @@ public class XNode {
         if (children != null) {
             for (int i = 0; i < children.size(); i++) {
                 XNode child = (XNode) children.get(i);
-                XNode node = null;
+                XNode node;
                 if (child == find) {
                     node = child;
                     children.remove(child);
@@ -220,9 +219,8 @@ public class XNode {
     public boolean traverse(Function<XNode, Boolean> walker) {
         if (walker.apply(this)) {
             if (children != null)
-                for (XNode c: children)
-                    if (!c.traverse(walker))
-                        return false;
+                if (!children.stream().noneMatch(c -> (!c.traverse(walker))))
+                    return false;
             return true;
         } else {
             return false;

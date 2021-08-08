@@ -18,7 +18,7 @@ import lombok.experimental.SuperBuilder;
  * @author comart
  */
 @Data
-@EqualsAndHashCode(callSuper=false)
+@EqualsAndHashCode(callSuper=true)
 @SuperBuilder(toBuilder=true)
 @NoArgsConstructor
 @AllArgsConstructor

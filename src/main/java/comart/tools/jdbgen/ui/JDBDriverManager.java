@@ -40,7 +40,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class JDBDriverManager extends JDialog {
 
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private static final Logger logger = Logger.getLogger(JDBDriverManager.class.getName());
     private final List<JDBDriver> drivers;
     private final DefaultListModel<String> listModel;
     private final DefaultTableModel tableModel;
@@ -61,6 +61,7 @@ public class JDBDriverManager extends JDialog {
     /**
      * Creates new form JDBDriverManager
      */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public JDBDriverManager() {
         initComponents();
         setModal(true);

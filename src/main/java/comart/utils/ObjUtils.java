@@ -27,6 +27,7 @@ public class ObjUtils {
             return ((Map)obj).get(property);
         } else {
             String getter = "get"+property.substring(0, 1).toUpperCase()+property.substring(1);
+            @SuppressWarnings("null")
             Class c = obj.getClass();
             Method m = null;
             while (c != null && m == null) {

@@ -36,6 +36,7 @@ public class MavenUtils {
         return JDBGenConfig.getInstance().getMaven();
     }
     
+    @SuppressWarnings("null")
     private static XNode getContents(String url) {
         Request req = new Request.Builder().url(url).build();
         try (Response response = client.newCall(req).execute()) {
@@ -46,6 +47,7 @@ public class MavenUtils {
         }
     }
     
+    @SuppressWarnings("null")
     private static XNode getNode(MavenTemplate template, XNode root) {
         boolean doRepeat = false;
         if (template.isMatch(root))
@@ -147,6 +149,7 @@ public class MavenUtils {
         return res;
     }
     
+    @SuppressWarnings("UseSpecificCatch")
     private static String getNodeValue(MavenTemplateItem titem, XNode node) {
         if (node != null) {
             String value;
@@ -177,6 +180,7 @@ public class MavenUtils {
         }
     }
     
+    @SuppressWarnings({"null", "UnusedAssignment"})
     private static List<String> getValueLocation(MavenTemplateItem titem, XNode node) {
         XNode loc = getLocation(titem.getLocation());
         List<XNode> srcs = node.getChildren();
@@ -246,6 +250,7 @@ public class MavenUtils {
         }
     }
     
+    @SuppressWarnings("UseSpecificCatch")
     private static void setMapField(MavenTemplateItem titem, XNode node, MavenSearchItem target) {
         try {
             String value = getValue(titem, node).get(0);

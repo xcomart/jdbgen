@@ -21,6 +21,7 @@ public class ClassUtils {
     public ClassUtils() {
     }
     
+    @SuppressWarnings("UseSpecificCatch")
     public static <T> List<String> getClasses(File f, Class<T> type) throws FileNotFoundException, IOException {
         final List<String> classesTobeReturned = new ArrayList<>();
         if (f.exists()) {
@@ -42,7 +43,7 @@ public class ClassUtils {
                                 if (type.isAssignableFrom(myLoadedClass)) {
                                     classesTobeReturned.add(classname);
                                 }
-                            } catch (Throwable ignored) {}
+                            } catch (Exception ignored) {}
                         }
                     }
                 }
@@ -51,6 +52,7 @@ public class ClassUtils {
         return classesTobeReturned;
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     public static List<String> getDrivers(String jarFile) {
         try {
             return getClasses(new File(jarFile), Driver.class);

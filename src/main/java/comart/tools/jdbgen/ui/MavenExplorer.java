@@ -36,7 +36,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author comart
  */
 public class MavenExplorer extends JDialog {
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
+    private static final Logger logger = Logger.getLogger(MavenExplorer.class.getName());
 
     private static MavenExplorer INSTANCE = null;
     public static synchronized MavenExplorer getInstance() {
@@ -74,6 +74,7 @@ public class MavenExplorer extends JDialog {
     /**
      * Creates new form MavenExplorer
      */
+    @SuppressWarnings("OverridableMethodCallInConstructor")
     public MavenExplorer() {
         initComponents();
         setModal(true);
@@ -381,6 +382,7 @@ public class MavenExplorer extends JDialog {
         PlatformUtils.openURL("https://mvnrepository.com");
     }//GEN-LAST:event_lblMvnLinkMouseClicked
 
+    @SuppressWarnings("UseSpecificCatch")
     private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
         int sidx = lstSearchResult.getSelectedIndex();
         int vidx = lstVersion.getSelectedIndex();
@@ -394,6 +396,7 @@ public class MavenExplorer extends JDialog {
                     OkHttpClient client = MavenUtils.getHttpClient();
                     Request req = new Request.Builder().url(url).build();
                     try (Response response = client.newCall(req).execute()) {
+                        @SuppressWarnings("null")
                         byte[] data = response.body().bytes();
                         File f = new File(fname);
                         FileUtils.forceMkdirParent(f);

@@ -1,16 +1,10 @@
 package comart.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
-import java.net.URLConnection;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
@@ -35,8 +29,8 @@ public class XManager {
      * load XML and parse from file system.
      * 
      * @param resource
-     *             XML resource path in <tt>CLASS_PATH</tt>
-     * @return parsed XML in <tt>XNode</tt> type.
+     *             XML resource path in <code>CLASS_PATH</code>
+     * @return parsed XML in <code>XNode</code> type.
      * @throws ParserConfigurationException
      *             if a parser cannot be created which satisfies the requested
      *             configuration.
@@ -69,13 +63,13 @@ public class XManager {
     }
 
     /**
-     * parse XML string to <tt>XNode</tt> type.
+     * parse XML string to <code>XNode</code> type.
      * 
      * @param xmlstr
      *            XML string to be parsed.
-     * @return parsed XML in <tt>XNode</tt> type.
+     * @return parsed XML in <code>XNode</code> type.
      * @throws UnsupportedEncodingException
-     *             If <tt>UTF-8</tt> encoding failed.
+     *             If <code>UTF-8</code> encoding failed.
      * @throws SAXException
      *             for SAX errors.
      * @throws IOException
@@ -92,14 +86,14 @@ public class XManager {
     }
 
     /**
-     * parse XML from <tt>InputStream</tt> to <tt>XNode</tt> object.
+     * parse XML from <code>InputStream</code> to <code>XNode</code> object.
      * 
      * Note, this method does not close input stream.
      * caller must close input stream after execution of this method.
      * 
      * @param is
      *            input stream object to be parsed.
-     * @return parsed XML in <tt>XNode</tt> type.
+     * @return parsed XML in <code>XNode</code> type.
      * @throws ParserConfigurationException
      *             if a parser cannot be created which satisfies the requested
      *             configuration.
@@ -119,10 +113,10 @@ public class XManager {
     }
 
     /**
-     * generate XML string from <tt>XNode</tt> object.
+     * generate XML string from <code>XNode</code> object.
      * 
      * @param doc
-     *            <tt>XNode</tt> object
+     *            <code>XNode</code> object
      * @return generated XML string.
      */
     public static String docToString(XNode doc)
@@ -220,6 +214,7 @@ public class XManager {
         return XManager.toDocument(cleaned);
     }
     
+    @SuppressWarnings("null")
     public static void main(String[] args) throws Exception {
         OkHttpClient client = new OkHttpClient();
         Request req = new Request.Builder()

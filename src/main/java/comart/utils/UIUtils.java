@@ -57,6 +57,7 @@ public class UIUtils {
     public UIUtils() {
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     public static void setLAF(String className) {
         boolean hasSet = false;
 
@@ -135,6 +136,7 @@ public class UIUtils {
         items.add(new Pair(button, code));
     }
     
+    @SuppressWarnings({"null", "UseSpecificCatch"})
     public static synchronized Icon getIcon(String path) {
         Icon res = null;
         if (!cachedIcon.containsKey(path)) {

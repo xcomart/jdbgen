@@ -552,6 +552,11 @@ public class JDBConnectionManager extends JDialog {
         jLabel13.setText("Output Name Template:");
 
         btnPresets.setText("Presets");
+        btnPresets.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPresetsActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -952,6 +957,10 @@ public class JDBConnectionManager extends JDialog {
         if (saveSuccess)
             setVisible(false);
     }//GEN-LAST:event_btnConnectActionPerformed
+
+    private void btnPresetsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPresetsActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnPresetsActionPerformed
 
     /**
      * @param args the command line arguments

@@ -5,6 +5,8 @@ import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -23,13 +25,13 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class StrUtils
 {
-
+    private static final Logger logger = Logger.getLogger(StrUtils.class.getName());
     private final static byte[] SPACE_CHARS     = " \t\r\n".getBytes();
     private static String       _defaultCharset = "UTF-8";
     private String              _charset        = _defaultCharset;
-    private static Hashtable<String,StrUtils>    _instances=
-            new Hashtable<String,StrUtils>();
+    private static final HashMap<String,StrUtils>    _instances = new HashMap<>();
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private StrUtils(String charset) throws UnsupportedEncodingException
     {
         _charset = charset;
@@ -86,7 +88,7 @@ public class StrUtils
             return getInstance(_defaultCharset);
         } catch (UnsupportedEncodingException e) {
             // cannot enter here(is it happen?)
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "cannot be here!!!", e);
             return null;
         }
     }
@@ -119,12 +121,12 @@ public class StrUtils
     public static String[] split(String src, String delim, boolean trim)
     {
         String retStrs[] = null;
-        ArrayList<String> res = new ArrayList<String>();
+        ArrayList<String> res = new ArrayList<>();
         int idx, prevIdx = 0;
         if (src != null && delim != null) {
             int delimlen = delim.length();
 
-            if (src.indexOf(delim) > -1) {
+            if (src.contains(delim)) {
                 while ((idx = src.indexOf(delim, prevIdx)) > -1) {
                     String item = src.substring(prevIdx, idx);
                     if (trim)
@@ -162,6 +164,7 @@ public class StrUtils
      * @return the index within this byte array of the first occurrence of the
      *         specified sub-byte array, starting at the specified index.
      */
+    @SuppressWarnings("empty-statement")
     public static int indexOf(byte[] src, byte[] delim, int offset)
     {
         int i, j;
@@ -226,7 +229,7 @@ public class StrUtils
             byte[] delim)
     {
         byte retbytes[][] = null;
-        ArrayList<byte[]> res = new ArrayList<byte[]>();
+        ArrayList<byte[]> res = new ArrayList<>();
         int idx, prevIdx = offset;
         if (src != null && delim != null) {
             int delimlen = delim.length;
@@ -259,12 +262,12 @@ public class StrUtils
      */
     public static String replace(String src, String find, String rep)
     {
-        StringBuffer res = new StringBuffer();
+        StringBuilder res = new StringBuilder();
         int idx, prevIdx = 0;
         if (src != null && find != null) {
             int delimlen = find.length();
 
-            if (src.indexOf(find) > -1) {
+            if (src.contains(find)) {
                 while ((idx = src.indexOf(find, prevIdx)) > -1) {
                     res.append(src.substring(prevIdx, idx));
                     res.append(rep);
@@ -603,14 +606,12 @@ public class StrUtils
     public static String pilloff(String src, String from, String to)
     {
         int start, end;
-        String res = src;
         start = src.indexOf(from);
         if (start >= 0) {
             start++;
             end = src.indexOf(to, start);
             if (end >= 0) {
-                res = src.substring(start, end);
-                return res;
+                return src.substring(start, end);
             }
         }
         return null;
@@ -618,17 +619,15 @@ public class StrUtils
     
     public static String[] pillAllOff(String src, String from, String to)
     {
-        ArrayList<String> vec = new ArrayList<String>();
+        ArrayList<String> vec = new ArrayList<>();
         int start, end = 0;
         while (true) {
-            String res = src;
             start = src.indexOf(from, end);
             if (start >= 0) {
                 start++;
                 end = src.indexOf(to, start);
                 if (end >= 0) {
-                    res = src.substring(start, end);
-                    vec.add(res);
+                    vec.add(src.substring(start, end));
                     if (src.length() > end)
                         end++;
                 } else {
@@ -678,17 +677,19 @@ public class StrUtils
     }
 
     /**
-     * convert bytes to hexadecimal string. each bytes are converted two
-     * hexadecimal digits, conversion of upper 4-bits are located former, and
-     * lower 4-bits are latter.
+     * convert bytes to hexadecimal string.each bytes are converted two
+ hexadecimal digits, conversion of upper 4-bits are located former, and
+ lower 4-bits are latter.
      * 
      * @param bytes
      *            bytes to be converted to hexadecimal.
+     * @param offset
+     * @param length
      * @return hexadecimal string.
      */
     public static String bytesToHex(byte[] bytes, int offset, int length)
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < length; i++) {
             int upper = (((int) bytes[offset+i]) >> 4) & 0xF;
             int lower = ((int) bytes[offset+i]) & 0xF;
@@ -739,7 +740,7 @@ public class StrUtils
             String mapper, String source, String sub, String delim
             ) throws ParseException
     {
-        ArrayList<String> arrs = new ArrayList<String>();
+        ArrayList<String> arrs = new ArrayList<>();
         if (mapper != null && source != null && sub != null) {
             int baseidx = 0, srcbase = 0;
             while (true) {
@@ -761,7 +762,7 @@ public class StrUtils
                     prefix = mapper.substring(fridx, stidx);
                     postfix = mapper.substring(stidx+sub.length(), toidx);
                     
-                    int stpos = -1, edpos = -1;
+                    int stpos, edpos;
                     if ("".equals(prefix)) {
                         stpos = 0;
                     } else {
@@ -850,7 +851,7 @@ public class StrUtils
     private final static String NUM_DIGITS = "+-0123456789";
     public static String parseInt(String intval) throws ParseException
     {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (intval != null) {
 //            OUTBLOCK: {
                 for (int i=0; i < intval.length(); i++) {
@@ -878,11 +879,12 @@ public class StrUtils
         return sb.toString();
     }
     
+    @SuppressWarnings("UseSpecificCatch")
     public static int toInt(String intval)
     {
         try {
             return Integer.parseInt(parseInt(intval));
-        } catch(Throwable t) {
+        } catch(Exception t) {
             return 0;
         }
     }
@@ -946,8 +948,8 @@ public class StrUtils
         return dtvals[0]+dtvals[1]+dtvals[2];
     }
 
-    private static Hashtable<String, SimpleDateFormat> _sdfs =
-            new Hashtable<String, SimpleDateFormat>();
+    private static final HashMap<String, SimpleDateFormat> _sdfs =
+            new HashMap<>();
     
     public synchronized static String dateFormat(String format, Date dt)
     {
@@ -970,7 +972,7 @@ public class StrUtils
         'r', 'e', 't', 'K', 'e',
         'y'};
 
-    static SecureRandom rnd = new SecureRandom();
+    final static SecureRandom rnd = new SecureRandom();
 
     static IvParameterSpec iv = new IvParameterSpec(rnd.generateSeed(16));
 
@@ -978,12 +980,12 @@ public class StrUtils
         try {
             return encrypt(raw, value.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "source string is not UTF-8 encoding", e);
         }
         return null;
     }
 
+    @SuppressWarnings("UseSpecificCatch")
     public static String encrypt(byte[] key, byte[] data) {
         try {
             SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
@@ -992,7 +994,7 @@ public class StrUtils
             byte[] encrypted = cipher.doFinal(data);
             return Base64.getEncoder().encodeToString(encrypted);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "encryption failed", ex);
         }
         return null;
     }
@@ -1003,12 +1005,12 @@ public class StrUtils
             try {
                 return new String(orig, "UTF-8");
             } catch (UnsupportedEncodingException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                logger.log(Level.SEVERE, "source string is not UTF-8 encoding", e);
             }
         return null;
     }
     
+    @SuppressWarnings("UseSpecificCatch")
     public static byte[] decrypt(byte[] key, String encrypted) {
         try {
             SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
@@ -1017,7 +1019,7 @@ public class StrUtils
             
             return cipher.doFinal(Base64.getDecoder().decode(encrypted));
         } catch (Exception ex) {
-            ex.printStackTrace();
+            logger.log(Level.SEVERE, "decryption failed", ex);
         }
         return null;
     }

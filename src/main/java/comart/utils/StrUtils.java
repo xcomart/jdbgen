@@ -1,6 +1,8 @@
 package comart.utils;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,18 +29,16 @@ public class StrUtils
 {
     private static final Logger logger = Logger.getLogger(StrUtils.class.getName());
     private final static byte[] SPACE_CHARS     = " \t\r\n".getBytes();
-    private static String       _defaultCharset = "UTF-8";
-    private String              _charset        = _defaultCharset;
-    private static final HashMap<String,StrUtils>    _instances = new HashMap<>();
+    private static Charset      _defaultCharset = StandardCharsets.UTF_8;
+    private Charset             _charset        = _defaultCharset;
+    private static final HashMap<Charset,StrUtils>    _instances = new HashMap<>();
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private StrUtils(String charset) throws UnsupportedEncodingException
+    private StrUtils(Charset charset)
     {
         _charset = charset;
-        // test this character-set is supported or not
-        "forTest".getBytes(_charset);
     }
-
+    
+    
     /**
      * get instance of <code>StrUtils</code> which operates bytes with
      * <code>charset</code>. this class caches instance of each character-set.
@@ -52,14 +52,27 @@ public class StrUtils
     public synchronized static StrUtils getInstance(String charset)
             throws UnsupportedEncodingException
     {
-        StrUtils instance = (StrUtils) _instances.get(charset.toUpperCase());
+        return getInstance(Charset.forName(charset));
+    }
+
+    /**
+     * get instance of <code>StrUtils</code> which operates bytes with
+     * <code>charset</code>. this class caches instance of each character-set.
+     * 
+     * @param charset
+     *            character-set.
+     * @return instance of <code>StrUtils</code>.
+     */
+    public synchronized static StrUtils getInstance(Charset charset)
+    {
+        StrUtils instance = (StrUtils) _instances.get(charset);
         if (instance == null) {
             instance = new StrUtils(charset);
-            _instances.put(charset.toUpperCase(), new StrUtils(charset));
+            _instances.put(charset, new StrUtils(charset));
         }
         return instance;
     }
-
+    
     /**
      * set default character-set. After call of this method,
      * <code>getInstance()</code> method will return <code>StrUtils</code> object
@@ -67,13 +80,9 @@ public class StrUtils
      * 
      * @param charset
      *            default character-set.
-     * @throws UnsupportedEncodingException
-     *             if the named <code>charset</code> is not supported
      */
-    public static void setDefault(String charset)
-            throws UnsupportedEncodingException
+    public static void setDefault(Charset charset)
     {
-        getInstance(charset);
         _defaultCharset = charset;
     }
 
@@ -84,13 +93,7 @@ public class StrUtils
      */
     public static StrUtils getInstance()
     {
-        try {
-            return getInstance(_defaultCharset);
-        } catch (UnsupportedEncodingException e) {
-            // cannot enter here(is it happen?)
-            logger.log(Level.SEVERE, "cannot be here!!!", e);
-            return null;
-        }
+        return getInstance(_defaultCharset);
     }
 
     /**
@@ -418,12 +421,7 @@ public class StrUtils
      */
     public String toString(byte[] src, int offset, int length)
     {
-        try {
-            return new String(src, offset, length, _charset);
-        } catch (UnsupportedEncodingException e) {
-            // already tested about this character-set is supported or not
-            return null;
-        }
+        return new String(src, offset, length, _charset);
     }
 
     /**
@@ -437,12 +435,7 @@ public class StrUtils
     {
         if (src == null)
             return null;
-        try {
-            return src.getBytes(_charset);
-        } catch (UnsupportedEncodingException e) {
-            // already tested about this character-set is supported or not
-            return null;
-        }
+        return src.getBytes(_charset);
     }
 
     /**
@@ -637,7 +630,7 @@ public class StrUtils
                 break;
             }
         }
-        if (vec.size() > 0) {
+        if (!vec.isEmpty()) {
             String arr[] = new String[vec.size()];
             arr = (String[])vec.toArray(arr);
             return arr;

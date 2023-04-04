@@ -25,31 +25,38 @@ public class ObjUtils {
     private static Object getValuePrivate(Object obj, String property) throws Exception {
         if (obj instanceof Map) {
             return ((Map)obj).get(property);
-        } else {
-            String getter = "get"+property.substring(0, 1).toUpperCase()+property.substring(1);
-            @SuppressWarnings("null")
+        } else if (obj != null) {
             Class c = obj.getClass();
-            Method m = null;
-            while (c != null && m == null) {
-                try {
-                    m = c.getMethod(getter, new Class[]{});
-                } catch (Exception ignored) {}
-                try {
-                    if (m == null)
-                        m = c.getMethod(property, new Class[]{});
-                } catch (Exception ignored) {}
-                try {
-                    getter = "is"+getter.substring(3);
-                    if (m == null)
+            Field f = c.getField(property);
+            try {
+                return f.get(obj);
+            } catch(Exception fieldNotVisible) {
+                String getter = "get"+property.substring(0, 1).toUpperCase()+property.substring(1);
+                @SuppressWarnings("null")
+                Method m = null;
+                while (c != null && m == null) {
+                    try {
                         m = c.getMethod(getter, new Class[]{});
-                } catch (Exception ignored) {}
-                if (m == null)
-                    c = c.getSuperclass();
-            }
+                    } catch (Exception ignored) {}
+                    try {
+                        if (m == null)
+                            m = c.getMethod(property, new Class[]{});
+                    } catch (Exception ignored) {}
+                    try {
+                        getter = "is"+getter.substring(3);
+                        if (m == null)
+                            m = c.getMethod(getter, new Class[]{});
+                    } catch (Exception ignored) {}
+                    if (m == null)
+                        c = c.getSuperclass();
+                }
 
-            if (m == null)
-                return null;
-            return m.invoke(obj, new Object[]{});
+                if (m == null)
+                    return null;
+                return m.invoke(obj, new Object[]{});
+            }
+        } else {
+            return null;
         }
     }
     

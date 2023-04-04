@@ -59,11 +59,10 @@ public class MavenREST {
                 JSONObject jobj = new JSONObject(response.body().string());
             } catch(Exception e) {
                 logger.log(Level.SEVERE, "cannot get url contents: " + e.getLocalizedMessage(), e);
-                throw new RuntimeException(e.getLocalizedMessage(), e);
+                throw e;
             }
         } catch(Exception e) {
-            e.printStackTrace();
-            
+            UIUtils.error(null, e.getLocalizedMessage());
         }
         return null;
     }

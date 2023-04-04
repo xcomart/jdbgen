@@ -941,16 +941,9 @@ public class StrUtils
         return dtvals[0]+dtvals[1]+dtvals[2];
     }
 
-    private static final HashMap<String, SimpleDateFormat> _sdfs =
-            new HashMap<>();
-    
     public synchronized static String dateFormat(String format, Date dt)
     {
-        SimpleDateFormat sdf = (SimpleDateFormat) _sdfs.get(format);
-        if ( sdf == null ) {
-            sdf = new SimpleDateFormat(format);
-            _sdfs.put(format, sdf);
-        }
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
         return sdf.format(dt);
     }
     

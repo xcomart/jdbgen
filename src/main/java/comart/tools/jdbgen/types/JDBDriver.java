@@ -26,6 +26,7 @@ public class JDBDriver extends JDBListBase {
     private String urlTemplate;
     private String jdbcJar;
     private String driverClass;
+    private String defaultQuery;
     private Map<String, String> props;
     private boolean noAuth;
     private boolean useCatalogSql;

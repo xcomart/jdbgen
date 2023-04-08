@@ -4,8 +4,9 @@
         {
             "stockItem": true,
             "name": "Oracle",
-            "driverClass": "oracle.jdbc.driver.OracleDriver",
+            "driverClass": "oracle.jdbc.OracleDriver",
             "urlTemplate": "jdbc:oracle:thin:@<databaseHost>:1521:<database>",
+            "defaultQuery": "ojdbc8",
             "icon": "stock:oracle.png",
             "props": {
                 "remarksReporting": "true"
@@ -13,17 +14,10 @@
         },
         {
             "stockItem": true,
-            "name": "MariaDB",
-            "driverClass": "org.mariadb.jdbc.Driver",
-            "urlTemplate": "jdbc:mariadb://<databaseHost>:3306/<database>",
-            "icon": "stock:mariadb.png",
-            "props": {}
-        },
-        {
-            "stockItem": true,
             "name": "PostgreSQL",
             "driverClass": "org.postgresql.Driver",
-            "urlTemplate": "jdbc:postgresql://<databaseHost>:5740/<database>",
+            "urlTemplate": "jdbc:postgresql://<databaseHost>:5432/<database>",
+            "defaultQuery": "postgresql",
             "icon": "stock:postgresql.png",
             "props": {}
         },
@@ -32,6 +26,7 @@
             "name": "MySQL",
             "driverClass": "com.mysql.jdbc.Driver",
             "urlTemplate": "jdbc:mysql://<databaseHost>:3306/<database>",
+            "defaultQuery": "mysql-connector-java",
             "icon": "stock:mysql.png",
             "props": {}
         },
@@ -40,7 +35,26 @@
             "name": "Microsoft SQL Server",
             "driverClass": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
             "urlTemplate": "jdbc:sqlserver://<databaseHost>:1433;databaseName=<database>",
+            "defaultQuery": "mssql-jdbc",
             "icon": "stock:mssql.png",
+            "props": {}
+        },
+        {
+            "stockItem": true,
+            "name": "MariaDB",
+            "driverClass": "org.mariadb.jdbc.Driver",
+            "urlTemplate": "jdbc:mariadb://<databaseHost>:3306/<database>",
+            "defaultQuery": "mariadb-java-client",
+            "icon": "stock:mariadb.png",
+            "props": {}
+        },
+        {
+            "stockItem": true,
+            "name": "MongoDB",
+            "driverClass": "com.mongodb.jdbc.MongoDriver",
+            "urlTemplate": "jdbc:mongodb://<databaseHost>:3306/<database>",
+            "defaultQuery": "mongodb-jdbc",
+            "icon": "stock:mongodb.png",
             "props": {}
         },
         {
@@ -48,108 +62,16 @@
             "name": "CUBRID",
             "driverClass": "cubrid.jdbc.driver.CUBRIDDriver",
             "urlTemplate": "jdbc:cubrid:<databaseHost>:33000:<database>:public::",
+            "defaultQuery": "cubrid-jdbc-driver",
             "icon": "stock:cubrid.png",
             "props": {}
         }
     ],
     "connections":[],
     "maven": {
-        "urlBase": "https://mvnrepository.com",
-        "search": {
-            "url": "/search?q=$J{query}&p=$J{page}",
-            "templates": [{
-                "name": "count",
-                "type": "findAttr",
-                "attr": "id",
-                "key": "maincontent",
-                "items": [{
-                    "name": "count",
-                    "type": "text",
-                    "location": "[h2[b]]"
-                }]
-            },{
-                "name": "item",
-                "type": "findAttr",
-                "attr": "class",
-                "key": "im",
-                "repeat": true,
-                "items": [{
-                    "name": "image",
-                    "type": "attribute",
-                    "attr": "src",
-                    "location": "[a[picture[audio[source,img]]]]"
-                },{
-                    "name": "title",
-                    "type": "text",
-                    "location": "[a,div[h2[span,a]]]"
-                },{
-                    "name": "groupId",
-                    "type": "text",
-                    "location": "[a,div[h2,p[a]]]"
-                },{
-                    "name": "artifactId",
-                    "type": "text",
-                    "location": "[a,div[h2,p[a,a]]]"
-                },{
-                    "name": "description",
-                    "type": "text",
-                    "location": "[a,div,div]"
-                }]
-            }]
-        },
-        "repository": {
-            "url": "/artifact/$J{groupId}/$J{artifactId}",
-            "templates": [{
-                "name": "group",
-                "type": "findAttr",
-                "attr": "class",
-                "key": "tabs",
-                "items": [{
-                    "name": "group",
-                    "type": "text",
-                    "repeat": true,
-                    "location": "[li[a]]",
-                    "format": "$data$ $dummy$",
-                    "formatData": "$data$",
-                    "delimiter": "$"
-                }]
-            }]
-        },
-        "version": {
-            "url": "/artifact/$J{groupId}/$J{artifactId}?repo=$J{repository}",
-            "templates": [{
-                "name": "version",
-                "type": "findAttr",
-                "attr": "class",
-                "key": "grid versions",
-                "items": [{
-                    "name": "version",
-                    "type": "text",
-                    "repeat": true,
-                    "attrPair": {
-                        "key": "class",
-                        "value": "vbtn release"
-                    }
-                }]
-            }]
-        },
-        "download": {
-            "url": "/artifact/$J{groupId}/$J{artifactId}/$J{version}",
-            "templates": [{
-                "name": "jar",
-                "type": "findAttr",
-                "attr": "class",
-                "key": "grid",
-                "items": [{
-                    "name": "jar",
-                    "type": "attribute",
-                    "attr": "href",
-                    "attrPair": {
-                        "key": "class",
-                        "value": "vbtn"
-                    }
-                }]
-            }]
-        }
+        "urlBase": "https://search.maven.org",
+        "search": "/solrsearch/select?q=${q}&rows=${rows}&start=${start}&wt=json",
+        "version": "/solrsearch/select?q=g:${g}+AND+a:${a}+p:jar&core=gav&rows=${rows}&start=${start}&wt=json",
+        "download": "/remotecontent?filepath=${fpath}"
     }
 }

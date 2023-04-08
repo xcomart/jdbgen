@@ -18,7 +18,17 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder=true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class JDBListBase {
+public class JDBListBase implements HasIcon, HasTitle {
     private String name;
     private String icon;
+    
+    @Override
+    public String getTitle() {
+        return getName();
+    }
+    
+    @Override
+    public String toString() {
+        return getTitle();
+    }
 }

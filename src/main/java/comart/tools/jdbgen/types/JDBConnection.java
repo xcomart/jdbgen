@@ -5,6 +5,8 @@
  */
 package comart.tools.jdbgen.types;
 
+import com.google.gson.annotations.JsonAdapter;
+import comart.utils.EncryptionAdapter;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -24,8 +26,11 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class JDBConnection extends JDBListBase {
     private String driverType;
+    @JsonAdapter(EncryptionAdapter.class)
     private String connectionUrl;
+    @JsonAdapter(EncryptionAdapter.class)
     private String userName;
+    @JsonAdapter(EncryptionAdapter.class)
     private String userPassword;
     private Map<String, String> connectionProps;
     private boolean useKeepAlive;

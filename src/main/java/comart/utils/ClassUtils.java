@@ -35,15 +35,19 @@ public class ClassUtils {
                     if (jarEntry == null)
                         break;
                     if (jarEntry.getName().endsWith(".class")) {
-                        String classname = jarEntry.getName().replaceAll("/", "\\.");
+                        String classname = jarEntry.getName();
                         classname = classname.substring(0, classname.length() - 6);
+                        classname = classname.replaceAll("/", "\\.");
+                        logger.severe(classname);
                         if (!classname.contains("$")) {
                             try {
                                 final Class<?> myLoadedClass = Class.forName(classname, false, ucl);
                                 if (type.isAssignableFrom(myLoadedClass)) {
                                     classesTobeReturned.add(classname);
                                 }
-                            } catch (Exception ignored) {}
+                            } catch (Throwable ignored) {
+                                logger.severe(classname + " -> " + ignored.getLocalizedMessage());
+                            }
                         }
                     }
                 }

@@ -3,6 +3,8 @@ package comart.utils;
 
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
+import comart.tools.jdbgen.types.HasIcon;
+import comart.tools.jdbgen.types.HasTitle;
 import comart.tools.jdbgen.types.JDBListBase;
 import comart.utils.tuple.Pair;
 import java.awt.Color;
@@ -149,7 +151,7 @@ public class UIUtils {
 
             try {
                 if (isUrl) {
-                    OkHttpClient client = MavenUtils.getHttpClient();
+                    OkHttpClient client = MavenREST.getHttpClient();
                     Request req = new Request.Builder().url(path).build();
                     try (Response response = client.newCall(req).execute()) {
                         res = new ImageIcon(resize(ImageIO.read(response.body().byteStream())));
@@ -177,25 +179,28 @@ public class UIUtils {
     }
     
     private static class MyListCellRenderer<T> extends DefaultListCellRenderer {
-        private final Function<T,JDBListBase> func;
-        public MyListCellRenderer(Function<T,JDBListBase> func) {
+        private final Function<T,HasTitle> func;
+        public MyListCellRenderer(Function<T,HasTitle> func) {
             this.func = func;
         }
         
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
             JLabel label = (JLabel)super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            JDBListBase lb = func.apply((T)value);
+            HasTitle lb = func.apply((T)value);
             if (lb != null) {
-                label.setIcon(UIUtils.getIcon(lb.getIcon()));
-                label.setText(lb.getName());
+                if (lb instanceof HasIcon) {
+                    HasIcon hi = (HasIcon)lb;
+                    label.setIcon(UIUtils.getIcon(hi.getIcon()));
+                }
+                label.setText(lb.getTitle());
             }
             return label;
         }
         
     }
     
-    public static <T> ListCellRenderer<T> getListCellRenderer(Function<T,JDBListBase> func) {
+    public static <T> ListCellRenderer<T> getListCellRenderer(Function<T,HasTitle> func) {
         return new MyListCellRenderer(func);
     }
     

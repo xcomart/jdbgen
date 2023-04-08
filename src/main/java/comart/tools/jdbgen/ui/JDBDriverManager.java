@@ -111,6 +111,10 @@ public class JDBDriverManager extends JDialog {
             public void windowClosing(WindowEvent e) {
                 btnCancelActionPerformed(null);
             }
+            @Override
+            public void windowActivated(WindowEvent e) {
+                toFront();
+            }
         });
         DefaultTableModel tmodel = (DefaultTableModel)tabProps.getModel();
         tmodel.addTableModelListener((e) -> {
@@ -134,7 +138,7 @@ public class JDBDriverManager extends JDialog {
 
         });
     }
-
+    
     private void resetControls() {
         lstDrivers.clearSelection();
         txtDriverClass.setText("");
@@ -317,9 +321,10 @@ public class JDBDriverManager extends JDialog {
 
         btnDownJdbc.setFont(btnDownJdbc.getFont().deriveFont(btnDownJdbc.getFont().getSize()-1f));
         btnDownJdbc.setForeground(javax.swing.UIManager.getDefaults().getColor("Actions.Blue"));
-        btnDownJdbc.setText("Download jdbc driver from mvnrepository.com");
+        btnDownJdbc.setText("Download jdbc driver from Maven Repository");
         btnDownJdbc.setBorder(null);
         btnDownJdbc.setBorderPainted(false);
+        btnDownJdbc.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btnDownJdbc.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDownJdbcActionPerformed(evt);
@@ -389,12 +394,13 @@ public class JDBDriverManager extends JDialog {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel3)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel8)
-                    .addComponent(jLabel9)
-                    .addComponent(jLabel10)
-                    .addComponent(jLabel11))
+                    .addComponent(btnDelProp, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(txtDriverName)
@@ -411,13 +417,9 @@ public class JDBDriverManager extends JDialog {
                         .addComponent(btnBrowseIcon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(chkNoAuth)
-                        .addGap(0, 0, Short.MAX_VALUE))
+                        .addGap(0, 132, Short.MAX_VALUE))
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(134, 134, 134)
-                .addComponent(btnDelProp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(396, 396, 396))
         );
 
         jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel3, jLabel4, jLabel8, jLabel9});

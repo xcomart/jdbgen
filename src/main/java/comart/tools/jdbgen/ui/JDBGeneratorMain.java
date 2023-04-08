@@ -30,7 +30,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         chkDarkUI.setSelected(conf.isDarkUI());
         EventQueue.invokeLater(() -> {
             JDBConnectionManager cm = JDBConnectionManager.getInstance();
-            cm.setLocationRelativeTo(null);
+            cm.setLocationRelativeTo(this);
             cm.setVisible(true);
             if (cm.selectedConnection == null)
                 System.exit(0);

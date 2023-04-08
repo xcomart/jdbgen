@@ -27,8 +27,8 @@ public class ObjUtils {
             return ((Map)obj).get(property);
         } else if (obj != null) {
             Class c = obj.getClass();
-            Field f = c.getField(property);
             try {
+                Field f = c.getField(property);
                 return f.get(obj);
             } catch(Exception fieldNotVisible) {
                 String getter = "get"+property.substring(0, 1).toUpperCase()+property.substring(1);

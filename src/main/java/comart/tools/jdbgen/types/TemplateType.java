@@ -11,6 +11,7 @@ package comart.tools.jdbgen.types;
  */
 public enum TemplateType {
     JAVA,
+    SQL_MAPPER,
     GENERIC;
 
     private TemplateType() {

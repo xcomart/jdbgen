@@ -211,12 +211,13 @@
                   <Group type="102" attributes="0">
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jLabel3" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel4" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel8" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel9" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel10" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
-                          <Component id="jLabel11" linkSize="1" alignment="0" min="-2" max="-2" attributes="0"/>
+                          <Component id="btnDelProp" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel11" linkSize="1" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel10" linkSize="1" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel9" linkSize="1" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel8" linkSize="1" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel4" linkSize="1" alignment="1" min="-2" max="-2" attributes="0"/>
+                          <Component id="jLabel3" linkSize="1" alignment="1" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="0" attributes="0">
@@ -236,16 +237,11 @@
                           </Group>
                           <Group type="102" alignment="0" attributes="0">
                               <Component id="chkNoAuth" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                              <EmptySpace min="0" pref="132" max="32767" attributes="0"/>
                           </Group>
                           <Component id="jScrollPane2" alignment="0" pref="0" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                  </Group>
-                  <Group type="102" attributes="0">
-                      <EmptySpace min="134" pref="134" max="-2" attributes="0"/>
-                      <Component id="btnDelProp" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="396" pref="396" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -341,11 +337,14 @@
                 <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
                   <Color blue="c4" green="92" id="Actions.Blue" palette="3" red="35" type="palette"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Download jdbc driver from mvnrepository.com"/>
+                <Property name="text" type="java.lang.String" value="Download jdbc driver from Maven Repository"/>
                 <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
                   <Border info="null"/>
                 </Property>
                 <Property name="borderPainted" type="boolean" value="false"/>
+                <Property name="cursor" type="java.awt.Cursor" editor="org.netbeans.modules.form.editors2.CursorEditor">
+                  <Color id="Hand Cursor"/>
+                </Property>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDownJdbcActionPerformed"/>

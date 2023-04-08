@@ -445,7 +445,7 @@ public class StrUtils
      *            byte to be tested.
      * @return is space or not.
      */
-    public static boolean isSpace(byte src)
+    public static boolean isSpace(int src)
     {
         return isSpace(src, SPACE_CHARS);
     }
@@ -459,7 +459,7 @@ public class StrUtils
      *            array of bytes.
      * @return <code>src</code> is in <code>spc</code> or not.
      */
-    public static boolean isSpace(byte src, byte[] spc)
+    public static boolean isSpace(int src, byte[] spc)
     {
         for (int i = 0; i < spc.length; i++) {
             if (src == spc[i])
@@ -573,6 +573,13 @@ public class StrUtils
         } else {
             return false;
         }
+    }
+    
+    public static boolean isEmpty(CharSequence seq) {
+        if (seq != null) {
+            return seq.toString().trim().isEmpty();
+        }
+        return true;
     }
 
     /**
@@ -958,17 +965,14 @@ public class StrUtils
         'r', 'e', 't', 'K', 'e',
         'y'};
 
-    final static SecureRandom rnd = new SecureRandom();
-
-    static IvParameterSpec iv = new IvParameterSpec(rnd.generateSeed(16));
+    static final byte[] biv = hexToBytes("31415926535897932484626433832795");
+    
+    static IvParameterSpec iv = new IvParameterSpec(biv);
 
     public static String encrypt(String value) {
-        try {
-            return encrypt(raw, value.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
-            logger.log(Level.SEVERE, "source string is not UTF-8 encoding", e);
-        }
-        return null;
+        if (value != null && isEmpty(value))
+            return "";
+        return encrypt(raw, value.getBytes(StandardCharsets.UTF_8));
     }
 
     @SuppressWarnings("UseSpecificCatch")
@@ -986,6 +990,8 @@ public class StrUtils
     }
 
     public static String decrypt(String encrypted) {
+        if (encrypted != null && isEmpty(encrypted))
+            return "";
         byte[] orig = decrypt(raw, encrypted);
         if (orig != null)
             try {

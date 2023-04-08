@@ -10,8 +10,10 @@ import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBTemplate;
 import comart.tools.jdbgen.types.TemplateType;
+import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
+import java.awt.TextField;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -111,7 +113,7 @@ public class JDBConnectionManager extends JDialog {
         UIUtils.applyIcon(btnTemplateHelp, FontAwesome.QUESTION);
         UIUtils.addIcon(btnPresets, FontAwesome.PAW);
         UIUtils.applyIcon(btnBrowseTemplate, FontAwesome.FOLDER_O);
-        UIUtils.addIcon(btnNewTemplate, FontAwesome.PLUS);
+        UIUtils.addIcon(btnNewTemplate, FontAwesome.FILE_O);
         UIUtils.addIcon(btnDelTemplate, FontAwesome.MINUS);
         UIUtils.addIcon(btnSaveTemplate, FontAwesome.FLOPPY_O);
         UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
@@ -122,6 +124,10 @@ public class JDBConnectionManager extends JDialog {
             @Override
             public void windowClosing(WindowEvent e) {
                 btnCancelActionPerformed(null);
+            }
+            @Override
+            public void windowActivated(WindowEvent e) {
+                toFront();
             }
         });
         UIUtils.applyTableEdit(tabProps);
@@ -172,6 +178,11 @@ public class JDBConnectionManager extends JDialog {
         cboDriver.setSelectedIndex(0);
         removeProps();
         removeTemplates();
+    }
+    
+    private void setIfEmpty(TextField field, String text) {
+        if (StrUtils.isEmpty(field.getText()))
+            field.setText(text);
     }
 
     /**
@@ -785,6 +796,7 @@ public class JDBConnectionManager extends JDialog {
 
     private void btnManageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageActionPerformed
         JDBDriverManager dm = JDBDriverManager.getInstance();
+        dm.setModal(true);
         dm.setLocationRelativeTo(this);
         dm.setVisible(true);
         if (dm.changed)
@@ -794,8 +806,15 @@ public class JDBConnectionManager extends JDialog {
     private void cboDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboDriverActionPerformed
         String dname = (String)cboDriver.getSelectedItem();
         JDBDriver driver = driverMap.get(dname);
-        if (driver != null)
+        if (driver != null) {
+            txtConnUrl.setText(driver.getUrlTemplate());
             txtIcon.setText(driver.getIcon());
+            for(int i = propsModel.getRowCount() - 1; i >= 0; --i) {
+                propsModel.removeRow(i);
+            }
+            driver.getProps().forEach((key, value) -> 
+                propsModel.addRow(new String[]{key, value}));
+        }
     }//GEN-LAST:event_cboDriverActionPerformed
 
     private void btnCloneConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneConnActionPerformed
@@ -810,7 +829,7 @@ public class JDBConnectionManager extends JDialog {
 
             connections.add(newOne);
             listModel.addElement(newOne.getName());
-            lstConnections.setSelectedIndex(drivers.size() - 1);
+            lstConnections.setSelectedIndex(listModel.size() - 1);
         }
     }//GEN-LAST:event_btnCloneConnActionPerformed
 

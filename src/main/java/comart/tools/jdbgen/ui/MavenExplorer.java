@@ -5,18 +5,19 @@
  */
 package comart.tools.jdbgen.ui;
 
-import comart.tools.jdbgen.types.maven.MavenSearchItem;
-import comart.utils.MavenUtils;
+import comart.tools.jdbgen.types.maven.SearchResponseItem;
+import comart.tools.jdbgen.types.maven.SearchResult;
+import comart.utils.MavenREST;
 import comart.utils.PlatformUtils;
+import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
-import java.awt.event.ItemEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -53,19 +54,23 @@ public class MavenExplorer extends JDialog {
     public String saveLocation = "";
     
     private String searchText = "";
-    private int searchPageNo = 1;
+    private int searchPageNo = 0;
+    private int searchTotal = 0;
+    private int versionPageNo = 0;
+    private int versionTotal = 0;
     
     private final DefaultListModel<String> searchModel;
     private final DefaultListModel<String> versionModel;
     
-    private final List<MavenSearchItem> searchItems = new ArrayList<>();
+    private final List<SearchResponseItem> searchItems = new ArrayList<>();
+    private final List<SearchResponseItem> versionItems = new ArrayList<>();
     
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
         lblMvnLink.setForeground(UIManager.getDefaults().getColor("Actions.Blue"));
         lstSearchResult.setCellRenderer(UIUtils.getListCellRenderer(
                 s -> searchItems.stream()
-                        .filter(d -> s.equals(d.getName()))
+                        .filter(d -> s.equals(d.getTitle()))
                         .findFirst().orElse(null)));
         clearSearch();
     }
@@ -93,14 +98,24 @@ public class MavenExplorer extends JDialog {
         UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
         UIUtils.addIcon(btnDownload, FontAwesome.DOWNLOAD);
         UIUtils.addIcon(btnMore, FontAwesome.PLUS);
+        UIUtils.addIcon(btnMore1, FontAwesome.PLUS);
+    }
+    
+    private void clearVersions() {
+        versionItems.clear();
+        versionModel.removeAllElements();
+        lstVersion.removeAll();
+        versionPageNo = 0;
+        versionTotal = 0;
     }
 
     private void clearSearch() {
         searchItems.clear();
         searchModel.removeAllElements();
-        versionModel.removeAllElements();
-        cboRepository.removeAllItems();
-        searchPageNo = 1;
+        lstSearchResult.removeAll();
+        searchPageNo = 0;
+        searchTotal = 0;
+        clearVersions();
     }
 
     private void eventSetup() {
@@ -109,24 +124,9 @@ public class MavenExplorer extends JDialog {
             public void windowClosing(WindowEvent e) {
                 btnCancelActionPerformed(null);
             }
-        });
-        
-        cboRepository.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                String repo = (String)e.getItem();
-                int idx = lstSearchResult.getSelectedIndex();
-                if (idx > -1 && StringUtils.isNotBlank(repo)) {
-                    EventQueue.invokeLater(() -> {
-                        MavenSearchItem sitem = searchItems.get(idx);
-                        versionModel.removeAllElements();
-                        try {
-                            List<String> versions = MavenUtils.getVersions(sitem, repo);
-                            versions.forEach(v -> versionModel.addElement(v));
-                        } catch (ParseException ex) {
-                            logger.log(Level.SEVERE, null, ex);
-                        }
-                    });
-                }
+            @Override
+            public void windowActivated(WindowEvent e) {
+                toFront();
             }
         });
     }
@@ -152,10 +152,9 @@ public class MavenExplorer extends JDialog {
         btnMore = new javax.swing.JButton();
         jPanel3 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
-        cboRepository = new javax.swing.JComboBox<>();
-        jLabel5 = new javax.swing.JLabel();
         jScrollPane6 = new javax.swing.JScrollPane();
         lstVersion = new javax.swing.JList<>();
+        btnMore1 = new javax.swing.JButton();
         jLabel2 = new javax.swing.JLabel();
         lblMvnLink = new javax.swing.JLabel();
 
@@ -229,30 +228,32 @@ public class MavenExplorer extends JDialog {
                 .addContainerGap()
                 .addComponent(jLabel3)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane5)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 425, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnMore))
         );
 
         jLabel4.setFont(jLabel4.getFont().deriveFont(jLabel4.getFont().getStyle() | java.awt.Font.BOLD, jLabel4.getFont().getSize()+3));
-        jLabel4.setText("Repositories");
-
-        jLabel5.setFont(jLabel5.getFont().deriveFont(jLabel5.getFont().getStyle() | java.awt.Font.BOLD, jLabel5.getFont().getSize()+3));
-        jLabel5.setText("Versions");
+        jLabel4.setText("Versions");
 
         jScrollPane6.setViewportView(lstVersion);
+
+        btnMore1.setText("More");
+        btnMore1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnMore1ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(cboRepository, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE)
             .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel5))
+                .addComponent(jLabel4)
                 .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(btnMore1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -260,18 +261,16 @@ public class MavenExplorer extends JDialog {
                 .addContainerGap()
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(cboRepository, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel5)
+                .addComponent(jScrollPane6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 393, Short.MAX_VALUE))
+                .addComponent(btnMore1))
         );
 
         jLabel2.setText("Powered by");
 
         lblMvnLink.setForeground(javax.swing.UIManager.getDefaults().getColor("Objects.Blue"));
-        lblMvnLink.setText("mvnrepository.com");
-        lblMvnLink.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        lblMvnLink.setText("Apache Maven");
+        lblMvnLink.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
         lblMvnLink.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 lblMvnLinkMouseClicked(evt);
@@ -357,43 +356,38 @@ public class MavenExplorer extends JDialog {
     private void btnMoreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoreActionPerformed
         if (StringUtils.isBlank(searchText))
             return;
-        searchPageNo++;
-        searchMaven();
+        if (searchTotal > searchItems.size()) {
+            searchPageNo++;
+            searchMaven();
+        } else {
+            UIUtils.info(this, "No more results");
+        }
     }//GEN-LAST:event_btnMoreActionPerformed
 
     private void lstSearchResultValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstSearchResultValueChanged
         int idx = lstSearchResult.getSelectedIndex();
         if (idx > -1 && !evt.getValueIsAdjusting()) {
             EventQueue.invokeLater(() -> {
-                MavenSearchItem sitem = searchItems.get(idx);
-                cboRepository.removeAllItems();
-                try {
-                    List<String> repos = MavenUtils.getRepositories(sitem);
-                    repos.forEach(r -> cboRepository.addItem(r));
-                } catch (ParseException ex) {
-                    logger.log(Level.SEVERE, null, ex);
-                    UIUtils.error(this, ex.getLocalizedMessage());
-                }
+                clearVersions();
+                searchVersion();
             });
         }
     }//GEN-LAST:event_lstSearchResultValueChanged
 
     private void lblMvnLinkMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblMvnLinkMouseClicked
-        PlatformUtils.openURL("https://mvnrepository.com");
+        PlatformUtils.openURL("https://maven.org");
     }//GEN-LAST:event_lblMvnLinkMouseClicked
 
     @SuppressWarnings("UseSpecificCatch")
     private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
-        int sidx = lstSearchResult.getSelectedIndex();
         int vidx = lstVersion.getSelectedIndex();
-        if (sidx > -1 && vidx > -1) {
-            MavenSearchItem sitem = searchItems.get(sidx);
-            String version = lstVersion.getSelectedValue();
+        if (vidx > -1) {
+            SearchResponseItem sitem = versionItems.get(vidx);
             EventQueue.invokeLater(() -> {
                 try {
-                    String url = MavenUtils.getDownLink(sitem, version);
+                    String url = MavenREST.downloadLink(sitem);
                     String fname = "drivers/" + url.substring(url.lastIndexOf('/') + 1);
-                    OkHttpClient client = MavenUtils.getHttpClient();
+                    OkHttpClient client = MavenREST.getHttpClient();
                     Request req = new Request.Builder().url(url).build();
                     try (Response response = client.newCall(req).execute()) {
                         @SuppressWarnings("null")
@@ -415,20 +409,53 @@ public class MavenExplorer extends JDialog {
         }
     }//GEN-LAST:event_btnDownloadActionPerformed
 
+    private void btnMore1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMore1ActionPerformed
+        if (versionTotal > versionItems.size()) {
+            versionPageNo++;
+            searchVersion();
+        } else {
+            UIUtils.info(this, "No more versions");
+        }
+    }//GEN-LAST:event_btnMore1ActionPerformed
+
     private void searchMaven() {
         EventQueue.invokeLater(() -> {
             try {
-                if (StringUtils.isBlank(searchText))
+                if (StrUtils.isEmpty(searchText))
                     return;
-                List<MavenSearchItem> items = MavenUtils.searchMaven(searchText, searchPageNo);
+                SearchResult sr = MavenREST.search(searchText, searchPageNo);
+                searchTotal = sr.getResponse().getNumFound();
+                List<SearchResponseItem> items = Arrays.asList(sr.getResponse().getDocs());
                 searchItems.addAll(items);
-                items.forEach(i -> searchModel.addElement(i.getName()));
-            } catch (ParseException ex) {
+                items.forEach(i -> searchModel.addElement(i.getTitle()));
+                btnMore.setEnabled(searchTotal > searchItems.size());
+            } catch (Exception ex) {
                 logger.log(Level.SEVERE, null, ex);
                 UIUtils.error(this, ex.getLocalizedMessage());
             }
         });
     }
+
+    private void searchVersion() {
+        int idx = lstSearchResult.getSelectedIndex();
+        if (idx < 0)
+            return;
+        SearchResponseItem sitem = searchItems.get(idx);
+        EventQueue.invokeLater(() -> {
+            try {
+                SearchResult sr = MavenREST.version(sitem, versionPageNo);
+                versionTotal = sr.getResponse().getNumFound();
+                List<SearchResponseItem> items = Arrays.asList(sr.getResponse().getDocs());
+                versionItems.addAll(items);
+                items.forEach(i -> versionModel.addElement(i.getTitle()));
+                btnMore1.setEnabled(versionTotal > versionItems.size());
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, null, ex);
+                UIUtils.error(this, ex.getLocalizedMessage());
+            }
+        });
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -446,13 +473,12 @@ public class MavenExplorer extends JDialog {
     private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnDownload;
     private javax.swing.JButton btnMore;
+    private javax.swing.JButton btnMore1;
     private javax.swing.JButton btnSearch;
-    private javax.swing.JComboBox<String> cboRepository;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane5;

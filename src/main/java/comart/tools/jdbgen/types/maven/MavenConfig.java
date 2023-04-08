@@ -14,8 +14,7 @@ import lombok.Data;
 @Data
 public class MavenConfig {
     private String urlBase;
-    private MavenConfigItem search;
-    private MavenConfigItem repository;
-    private MavenConfigItem version;
-    private MavenConfigItem download;
+    private String search;
+    private String version;
+    private String download;
 }

@@ -4,73 +4,72 @@
  */
 package comart.utils;
 
-import java.util.ArrayList;
+import com.google.gson.Gson;
+import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.types.maven.MavenConfig;
+import comart.tools.jdbgen.types.maven.SearchParams;
+import comart.tools.jdbgen.types.maven.SearchResponseItem;
+import comart.tools.jdbgen.types.maven.SearchResult;
+import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.json.JSONObject;
 
 /**
  *
  * @author comart
  */
 public class MavenREST {
+    private static final int PAGE_SIZE=20;
     private static final Logger logger = Logger.getLogger(MavenREST.class.getSimpleName());
-    private final static String SEARCH_URL="https://search.maven.org/solrsearch/select?q=${search}&rows=20&wt=json&start=${start}&fl=id,g,a,latestVersion";
-    private final static String VERSION_URL="https://search.maven.org/solrsearch/select?q=g:${group}+AND+a:${artifact}&rows=20&wt=json&fl=id,g,a,v";
-    private final static String DOWNLOAD_URL="https://search.maven.org/remotecontent?filepath=${filePath}";
     private static final OkHttpClient client = new OkHttpClient();
     
-    public static class ResponseItem {
-        public String id;
-        public String group;
-        public String artifact;
-        public String version;
-        public String latestVersion;
-        public String repository;
-        public int versionCount;
-        public String getFilePath() {
-            StringBuilder sb = new StringBuilder();
-            sb.append(group.replace('.', '/'));
-            sb.append('/').append(artifact);
-            sb.append('/').append(version);
-            sb.append('/').append(artifact);
-            sb.append('-').append(version);
-            sb.append(".jar");
-            return sb.toString();
-        }
-    }
-    public static class SearchResult {
-        public int status;
-        public int totalCount;
-        public List<ResponseItem> items = new ArrayList<>();
+    public static OkHttpClient getHttpClient() {
+        return client;
     }
     
-    private static SearchResult restCall(String urlTemplate, Object param) {
-        try {
-            String url = StrUtils.replaceWith(urlTemplate, param, "${", "}");
-            Request req = new Request.Builder().url(url).build();
-            try (Response response = client.newCall(req).execute()) {
-                JSONObject jobj = new JSONObject(response.body().string());
-            } catch(Exception e) {
-                logger.log(Level.SEVERE, "cannot get url contents: " + e.getLocalizedMessage(), e);
-                throw e;
-            }
-        } catch(Exception e) {
-            UIUtils.error(null, e.getLocalizedMessage());
+    private static <T> T restCall(String urlTemplate, Object param, Class<T> clazz) throws ParseException, IOException {
+        String url = StrUtils.replaceWith(urlTemplate, param, "${", "}");
+        Request req = new Request.Builder().url(url).build();
+        try (Response response = client.newCall(req).execute()) {
+            Gson gson = new Gson();
+            return gson.fromJson(response.body().charStream(), clazz);
         }
-        return null;
     }
     
-    public static SearchResult search(String query) {
-        Map<String, String> param = new HashMap<String, String>() {{
-            put("query", query);
-        }};
-        return restCall(SEARCH_URL, param);
+    private static MavenConfig mavenConfig() {
+        return JDBGenConfig.getInstance().getMaven();
+    }
+    
+    public static SearchResult search(String queryStr, int pageNo) throws ParseException, IOException {
+        SearchParams query = new SearchParams();
+        query.setQ(queryStr);
+        query.setRows(""+PAGE_SIZE);
+        query.setStart(""+(PAGE_SIZE*pageNo));
+        MavenConfig mconf = mavenConfig();
+        String searchUrl = mconf.getUrlBase() + mconf.getSearch();
+        return restCall(searchUrl, query, SearchResult.class);
+    }
+
+    public static SearchResult version(SearchResponseItem qitem, int pageNo) throws ParseException, IOException {
+        HashMap<String,Object> query = new HashMap<>();
+        query.put("g", qitem.getG());
+        query.put("a", qitem.getA());
+        query.put("rows", PAGE_SIZE);
+        query.put("start", (PAGE_SIZE*pageNo));
+        MavenConfig mconf = mavenConfig();
+        String versionUrl = mconf.getUrlBase() + mconf.getVersion();
+        return restCall(versionUrl, query, SearchResult.class);
+    }
+
+    public static String downloadLink(SearchResponseItem qitem) throws ParseException, IOException {
+        HashMap<String,Object> query = new HashMap<>();
+        query.put("fpath", qitem.getFilePath());
+        MavenConfig mconf = mavenConfig();
+        String url = mconf.getUrlBase() + mconf.getDownload();
+        return StrUtils.replaceWith(url, query, "${", "}");
     }
 }

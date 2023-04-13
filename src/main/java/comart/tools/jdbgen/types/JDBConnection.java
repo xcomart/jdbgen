@@ -25,6 +25,7 @@ package comart.tools.jdbgen.types;
 
 import com.google.gson.annotations.JsonAdapter;
 import comart.utils.EncryptionAdapter;
+import comart.utils.StrUtils;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -57,6 +58,11 @@ public class JDBConnection extends JDBListBase {
     private String outputDir;
     private String author;
     private boolean dropFirstWord;
-    private boolean buildJavaPackage;
-    private boolean buildSqlNamespace;
+    
+    public boolean validate() {
+        return !StrUtils.isEmpty(driverType) &&
+                !StrUtils.isEmpty(connectionUrl) &&
+                !StrUtils.isEmpty(outputDir) &&
+                (!useKeepAlive || !StrUtils.isEmpty(keepAliveQuery));
+    }
 }

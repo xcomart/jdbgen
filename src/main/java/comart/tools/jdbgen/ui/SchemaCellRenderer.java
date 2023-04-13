@@ -21,21 +21,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package comart.tools.jdbgen.types;
+package comart.tools.jdbgen.ui;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import comart.utils.ObjUtils;
+import comart.utils.UIUtils;
+import java.awt.Component;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
+import jiconfont.icons.font_awesome.FontAwesome;
 
 /**
  *
  * @author comart
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class JDBTemplate {
-    private String name;
-    private String templateFile;
-    private String outTemplate;
+public class SchemaCellRenderer extends DefaultTreeCellRenderer {
+    
+    @Override
+    public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded,
+                                                  boolean leaf, int row, boolean hasFocus) {
+        super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
+        Object uobj = node.getUserObject();
+        if (uobj instanceof String) {
+            setText((String) uobj);
+        } else {
+            try {
+                UIUtils.applyIcon(this, FontAwesome.WINDOW_RESTORE, ObjUtils.getValue(uobj, "name").toString());
+            } catch(Throwable ignored) {}
+        }
+        return this;
+    }
 }

@@ -149,6 +149,7 @@
                     </Property>
                   </Properties>
                   <Events>
+                    <EventHandler event="mouseClicked" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="lstConnectionsMouseClicked"/>
                     <EventHandler event="valueChanged" listener="javax.swing.event.ListSelectionListener" parameters="javax.swing.event.ListSelectionEvent" handler="lstConnectionsValueChanged"/>
                   </Events>
                   <AuxValues>
@@ -374,6 +375,9 @@
                                 <Column editable="true" title="Value" type="java.lang.String"/>
                               </Table>
                             </Property>
+                            <Property name="tableHeader" type="javax.swing.table.JTableHeader" editor="org.netbeans.modules.form.editors2.JTableHeaderEditor">
+                              <TableHeader reorderingAllowed="false" resizingAllowed="true"/>
+                            </Property>
                           </Properties>
                         </Component>
                       </SubComponents>
@@ -450,6 +454,9 @@
                           <Dimension value="[30, 26]"/>
                         </Property>
                       </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDelPropActionPerformed"/>
+                      </Events>
                     </Component>
                     <Component class="javax.swing.JCheckBox" name="chkKeepAlive">
                       <Properties>
@@ -515,11 +522,6 @@
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" alignment="1" attributes="0">
-                                      <Component id="jLabel10" linkSize="2" max="32767" attributes="0"/>
-                                      <EmptySpace max="-2" attributes="0"/>
-                                      <Component id="cboTemplateType" max="32767" attributes="0"/>
-                                  </Group>
-                                  <Group type="102" alignment="1" attributes="0">
                                       <Component id="jLabel9" linkSize="2" max="32767" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="txtTemplateName" max="32767" attributes="0"/>
@@ -547,7 +549,7 @@
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="btnSaveTemplate" min="-2" max="-2" attributes="0"/>
                                   </Group>
-                                  <Component id="jScrollPane2" alignment="1" pref="568" max="32767" attributes="0"/>
+                                  <Component id="jScrollPane2" alignment="1" pref="470" max="32767" attributes="0"/>
                               </Group>
                           </Group>
                       </Group>
@@ -556,19 +558,14 @@
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" alignment="0" attributes="0">
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="jScrollPane2" pref="218" max="32767" attributes="0"/>
+                              <Component id="jScrollPane2" pref="264" max="32767" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
+                                  <Component id="btnTemplateHelp" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="btnPresets" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="btnSaveTemplate" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="btnDelTemplate" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="btnNewTemplate" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="btnTemplateHelp" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="btnPresets" alignment="3" min="-2" max="-2" attributes="0"/>
-                              </Group>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Group type="103" groupAlignment="3" attributes="0">
-                                  <Component id="cboTemplateType" alignment="3" min="-2" max="-2" attributes="0"/>
-                                  <Component id="jLabel10" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="3" attributes="0">
@@ -602,12 +599,14 @@
                         <Component class="javax.swing.JTable" name="tabTemplate">
                           <Properties>
                             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
-                              <Table columnCount="4" rowCount="0">
-                                <Column editable="true" title="Type" type="java.lang.String"/>
+                              <Table columnCount="3" rowCount="0">
                                 <Column editable="true" title="Name" type="java.lang.String"/>
                                 <Column editable="true" title="Template FIle" type="java.lang.String"/>
                                 <Column editable="true" title="Out Template" type="java.lang.String"/>
                               </Table>
+                            </Property>
+                            <Property name="tableHeader" type="javax.swing.table.JTableHeader" editor="org.netbeans.modules.form.editors2.JTableHeaderEditor">
+                              <TableHeader reorderingAllowed="false" resizingAllowed="true"/>
                             </Property>
                           </Properties>
                         </Component>
@@ -636,11 +635,6 @@
                         <Property name="text" type="java.lang.String" value="New"/>
                       </Properties>
                     </Component>
-                    <Component class="javax.swing.JComboBox" name="cboTemplateType">
-                      <AuxValues>
-                        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
-                      </AuxValues>
-                    </Component>
                     <Component class="javax.swing.JTextField" name="txtTemplateName">
                     </Component>
                     <Component class="javax.swing.JButton" name="btnBrowseTemplate">
@@ -663,12 +657,6 @@
                       <Properties>
                         <Property name="horizontalAlignment" type="int" value="11"/>
                         <Property name="text" type="java.lang.String" value="Template Name:"/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JLabel" name="jLabel10">
-                      <Properties>
-                        <Property name="horizontalAlignment" type="int" value="11"/>
-                        <Property name="text" type="java.lang.String" value="Template Type:"/>
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JLabel" name="jLabel13">
@@ -717,12 +705,8 @@
                                       <Component id="btnBrowseOutput" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" attributes="0">
-                                      <Group type="103" groupAlignment="0" attributes="0">
-                                          <Component id="chkCutFirst" min="-2" max="-2" attributes="0"/>
-                                          <Component id="chkPathJava" alignment="0" min="-2" max="-2" attributes="0"/>
-                                          <Component id="chkPathMapper" alignment="0" min="-2" max="-2" attributes="0"/>
-                                      </Group>
-                                      <EmptySpace min="0" pref="113" max="32767" attributes="0"/>
+                                      <Component id="chkCutFirst" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace min="0" pref="85" max="32767" attributes="0"/>
                                   </Group>
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel16" linkSize="3" min="-2" max="-2" attributes="0"/>
@@ -749,15 +733,11 @@
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Component id="chkCutFirst" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="chkPathJava" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
-                              <Component id="chkPathMapper" min="-2" max="-2" attributes="0"/>
-                              <EmptySpace max="-2" attributes="0"/>
+                              <EmptySpace type="unrelated" max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
                                   <Group type="102" attributes="0">
                                       <Component id="jLabel16" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace min="0" pref="199" max="32767" attributes="0"/>
+                                      <EmptySpace min="0" pref="272" max="32767" attributes="0"/>
                                   </Group>
                                   <Component id="jScrollPane4" pref="0" max="32767" attributes="0"/>
                               </Group>
@@ -791,18 +771,6 @@
                         <Property name="text" type="java.lang.String" value="Ignore first word(preceeding with first underbar) in table name."/>
                       </Properties>
                     </Component>
-                    <Component class="javax.swing.JCheckBox" name="chkPathJava">
-                      <Properties>
-                        <Property name="selected" type="boolean" value="true"/>
-                        <Property name="text" type="java.lang.String" value="Java: Build directory path using package name."/>
-                      </Properties>
-                    </Component>
-                    <Component class="javax.swing.JCheckBox" name="chkPathMapper">
-                      <Properties>
-                        <Property name="selected" type="boolean" value="true"/>
-                        <Property name="text" type="java.lang.String" value="MapperSQL: Build directory path using namespace."/>
-                      </Properties>
-                    </Component>
                     <Component class="javax.swing.JLabel" name="jLabel14">
                       <Properties>
                         <Property name="horizontalAlignment" type="int" value="11"/>
@@ -831,6 +799,9 @@
                                 <Column editable="true" title="Name" type="java.lang.String"/>
                                 <Column editable="true" title="Value" type="java.lang.String"/>
                               </Table>
+                            </Property>
+                            <Property name="tableHeader" type="javax.swing.table.JTableHeader" editor="org.netbeans.modules.form.editors2.JTableHeaderEditor">
+                              <TableHeader reorderingAllowed="false" resizingAllowed="true"/>
                             </Property>
                           </Properties>
                         </Component>

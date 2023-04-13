@@ -77,6 +77,7 @@ public class JDBConnectionManager extends JDialog {
     private DefaultListModel listModel = null;
     private JDBGenConfig conf = null;
     private boolean saveSuccess = false;
+    private boolean autoReset = true;
     
     public JDBConnection selectedConnection = null;
     
@@ -103,16 +104,13 @@ public class JDBConnectionManager extends JDialog {
         if (ObjectUtils.isNotEmpty(connections))
             connections.forEach(c -> listModel.addElement(c.getName()));
         cboDriver.setRenderer(UIUtils.getListCellRenderer(s -> driverMap.get(s)));
+        lstConnections.setCellRenderer(UIUtils.getListCellRenderer(s -> connMap.get(s)));
         refreshDrivers();
-        cboTemplateType.removeAllItems();
-        for(TemplateType t:TemplateType.values())
-            cboTemplateType.addItem(t.name());
         resetControls();
     }
     
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
-        lstConnections.setCellRenderer(UIUtils.getListCellRenderer(s -> connMap.get(s)));
     }
     
     private void applyIcons() {
@@ -190,9 +188,6 @@ public class JDBConnectionManager extends JDialog {
         txtUser.setText("");
         chkCutFirst.setSelected(false);
         chkKeepAlive.setSelected(false);
-        chkPathJava.setSelected(true);
-        chkPathMapper.setSelected(true);
-        cboTemplateType.setSelectedIndex(0);
         cboDriver.setSelectedIndex(0);
         removeProps();
         removeTemplates();
@@ -257,13 +252,11 @@ public class JDBConnectionManager extends JDialog {
         btnSaveTemplate = new javax.swing.JButton();
         btnDelTemplate = new javax.swing.JButton();
         btnNewTemplate = new javax.swing.JButton();
-        cboTemplateType = new javax.swing.JComboBox<>();
         txtTemplateName = new javax.swing.JTextField();
         btnBrowseTemplate = new javax.swing.JButton();
         txtTemplateFile = new javax.swing.JTextField();
         jLabel8 = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
-        jLabel10 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
         txtOutTemplate = new javax.swing.JTextField();
         btnPresets = new javax.swing.JButton();
@@ -272,8 +265,6 @@ public class JDBConnectionManager extends JDialog {
         jLabel11 = new javax.swing.JLabel();
         btnBrowseOutput = new javax.swing.JButton();
         chkCutFirst = new javax.swing.JCheckBox();
-        chkPathJava = new javax.swing.JCheckBox();
-        chkPathMapper = new javax.swing.JCheckBox();
         jLabel14 = new javax.swing.JLabel();
         txtAuthor = new javax.swing.JTextField();
         jLabel16 = new javax.swing.JLabel();
@@ -312,6 +303,11 @@ public class JDBConnectionManager extends JDialog {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
             public int getSize() { return strings.length; }
             public String getElementAt(int i) { return strings[i]; }
+        });
+        lstConnections.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                lstConnectionsMouseClicked(evt);
+            }
         });
         lstConnections.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
             public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
@@ -384,6 +380,7 @@ public class JDBConnectionManager extends JDialog {
                 return types [columnIndex];
             }
         });
+        tabProps.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(tabProps);
 
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -419,6 +416,11 @@ public class JDBConnectionManager extends JDialog {
 
         btnDelProp.setText("-");
         btnDelProp.setPreferredSize(new java.awt.Dimension(30, 26));
+        btnDelProp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDelPropActionPerformed(evt);
+            }
+        });
 
         chkKeepAlive.setText("Keep connection alive using below statement every");
 
@@ -543,17 +545,18 @@ public class JDBConnectionManager extends JDialog {
 
             },
             new String [] {
-                "Type", "Name", "Template FIle", "Out Template"
+                "Name", "Template FIle", "Out Template"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
         });
+        tabTemplate.getTableHeader().setReorderingAllowed(false);
         jScrollPane2.setViewportView(tabTemplate);
 
         btnTemplateHelp.setText("?");
@@ -574,9 +577,6 @@ public class JDBConnectionManager extends JDialog {
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel9.setText("Template Name:");
 
-        jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel10.setText("Template Type:");
-
         jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel13.setText("Output Name Template:");
 
@@ -594,10 +594,6 @@ public class JDBConnectionManager extends JDialog {
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
-                        .addComponent(jLabel10, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboTemplateType, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
                         .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -622,27 +618,23 @@ public class JDBConnectionManager extends JDialog {
                         .addComponent(btnDelTemplate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnSaveTemplate))
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 568, Short.MAX_VALUE)))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 470, Short.MAX_VALUE)))
         );
 
-        jPanel5Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel13, jLabel8, jLabel9});
+        jPanel5Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel13, jLabel8, jLabel9});
 
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 264, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnTemplateHelp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnPresets)
                     .addComponent(btnSaveTemplate)
                     .addComponent(btnDelTemplate)
-                    .addComponent(btnNewTemplate)
-                    .addComponent(btnTemplateHelp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnPresets))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cboTemplateType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel10))
+                    .addComponent(btnNewTemplate))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtTemplateName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -671,12 +663,6 @@ public class JDBConnectionManager extends JDialog {
 
         chkCutFirst.setText("Ignore first word(preceeding with first underbar) in table name.");
 
-        chkPathJava.setSelected(true);
-        chkPathJava.setText("Java: Build directory path using package name.");
-
-        chkPathMapper.setSelected(true);
-        chkPathMapper.setText("MapperSQL: Build directory path using namespace.");
-
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel14.setText("Author Name:");
 
@@ -699,6 +685,7 @@ public class JDBConnectionManager extends JDialog {
                 return types [columnIndex];
             }
         });
+        tabVars.getTableHeader().setReorderingAllowed(false);
         jScrollPane4.setViewportView(tabVars);
 
         javax.swing.GroupLayout jPanel6Layout = new javax.swing.GroupLayout(jPanel6);
@@ -719,11 +706,8 @@ public class JDBConnectionManager extends JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnBrowseOutput, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
-                        .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(chkCutFirst)
-                            .addComponent(chkPathJava)
-                            .addComponent(chkPathMapper))
-                        .addGap(0, 113, Short.MAX_VALUE))
+                        .addComponent(chkCutFirst)
+                        .addGap(0, 85, Short.MAX_VALUE))
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel16)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -746,15 +730,11 @@ public class JDBConnectionManager extends JDialog {
                     .addComponent(jLabel14))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkCutFirst)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkPathJava)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkPathMapper)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel6Layout.createSequentialGroup()
                         .addComponent(jLabel16)
-                        .addGap(0, 199, Short.MAX_VALUE))
+                        .addGap(0, 272, Short.MAX_VALUE))
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -822,16 +802,20 @@ public class JDBConnectionManager extends JDialog {
     }//GEN-LAST:event_btnManageActionPerformed
 
     private void cboDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboDriverActionPerformed
+        if (autoReset) {
         String dname = (String)cboDriver.getSelectedItem();
-        JDBDriver driver = driverMap.get(dname);
-        if (driver != null) {
-            txtConnUrl.setText(driver.getUrlTemplate());
-            txtIcon.setText(driver.getIcon());
-            for(int i = propsModel.getRowCount() - 1; i >= 0; --i) {
-                propsModel.removeRow(i);
+            JDBDriver driver = driverMap.get(dname);
+            if (driver != null) {
+                if (txtConnUrl.getText().contains("<"))
+                    txtConnUrl.setText(driver.getUrlTemplate());
+                if (txtIcon.getText().startsWith("stock:"))
+                    txtIcon.setText(driver.getIcon());
+                for(int i = propsModel.getRowCount() - 1; i >= 0; --i) {
+                    propsModel.removeRow(i);
+                }
+                driver.getProps().forEach((key, value) -> 
+                    propsModel.addRow(new String[]{key, value}));
             }
-            driver.getProps().forEach((key, value) -> 
-                propsModel.addRow(new String[]{key, value}));
         }
     }//GEN-LAST:event_cboDriverActionPerformed
 
@@ -853,8 +837,8 @@ public class JDBConnectionManager extends JDialog {
 
     private void lstConnectionsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstConnectionsValueChanged
         int idx = lstConnections.getSelectedIndex();
-        int prev = idx == evt.getFirstIndex() ? evt.getLastIndex(): evt.getFirstIndex();
         if (idx > -1) {
+            autoReset = false;
             JDBConnection conn = connections.get(idx);
             txtAuthor.setText(conn.getAuthor());
             txtConnUrl.setText(conn.getConnectionUrl());
@@ -869,9 +853,6 @@ public class JDBConnectionManager extends JDialog {
             txtUser.setText(conn.getUserName());
             chkCutFirst.setSelected(conn.isDropFirstWord());
             chkKeepAlive.setSelected(conn.isUseKeepAlive());
-            chkPathJava.setSelected(conn.isBuildJavaPackage());
-            chkPathMapper.setSelected(conn.isBuildSqlNamespace());
-            cboTemplateType.setSelectedIndex(0);
             cboDriver.getModel().setSelectedItem(conn.getDriverType());
             removeProps();
             removeTemplates();
@@ -879,10 +860,10 @@ public class JDBConnectionManager extends JDialog {
             conn.getConnectionProps().forEach((k, v) -> propsModel.insertRow(0, new String[]{k, v}));
             conn.getTemplates().forEach(t -> tplModel.addRow(
                     new String[]{
-                        t.getType().name(),
                         t.getName(),
                         t.getTemplateFile(),
                         t.getOutTemplate()}));
+            autoReset = true;
         }
     }//GEN-LAST:event_lstConnectionsValueChanged
 
@@ -908,11 +889,10 @@ public class JDBConnectionManager extends JDialog {
             tpls = new ArrayList<>();
         tpls.clear();
         for (int i=0; i<tplModel.getRowCount(); i++) {
-            String type = (String)tplModel.getValueAt(i, 0);
-            String name = (String)tplModel.getValueAt(i, 1);
-            String tplf = (String)tplModel.getValueAt(i, 2);
-            String otpl = (String)tplModel.getValueAt(i, 3);
-            tpls.add(new JDBTemplate(TemplateType.valueOf(type), name, tplf, otpl));
+            String name = (String)tplModel.getValueAt(i, 0);
+            String tplf = (String)tplModel.getValueAt(i, 1);
+            String otpl = (String)tplModel.getValueAt(i, 2);
+            tpls.add(new JDBTemplate(name, tplf, otpl));
         }
         return tpls;
     }
@@ -936,27 +916,30 @@ public class JDBConnectionManager extends JDialog {
         if (isNameExists) {
             UIUtils.error(this, "Name " + txtName.getText() + " exists already.");
             txtName.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtName.getText())) {
+        } else if (StrUtils.isEmpty(txtName.getText())) {
             UIUtils.error(this, "Connection name required.");
             txtName.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtConnUrl.getText())) {
+        } else if (StrUtils.isEmpty(txtConnUrl.getText())) {
             UIUtils.error(this, "Connection url required.");
             txtConnUrl.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtUser.getText()) && !driver.isNoAuth()) {
+        } else if (StrUtils.isEmpty(txtUser.getText()) && !driver.isNoAuth()) {
             UIUtils.error(this, "Database user name required.");
             txtUser.requestFocusInWindow();
-        } else if (StringUtils.isBlank(new String(txtPassword.getPassword())) && !driver.isNoAuth()) {
+        } else if (StrUtils.isEmpty(new String(txtPassword.getPassword())) && !driver.isNoAuth()) {
             UIUtils.error(this, "Database user password required.");
             txtPassword.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtKeepAliveQuery.getText()) && chkKeepAlive.isSelected()) {
+        } else if (StrUtils.isEmpty(txtKeepAliveQuery.getText()) && chkKeepAlive.isSelected()) {
             UIUtils.error(this, "Keep alive statement required.");
             txtKeepAliveQuery.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtKeepAliveSec.getText()) && chkKeepAlive.isSelected()) {
+        } else if (StrUtils.isEmpty(txtKeepAliveSec.getText()) && chkKeepAlive.isSelected()) {
             UIUtils.error(this, "Keep alive statement execution interval required.");
             txtKeepAliveSec.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtOutputDir.getText())) {
+        } else if (StrUtils.isEmpty(txtOutputDir.getText())) {
             UIUtils.error(this, "Output directory required.");
             txtOutputDir.requestFocusInWindow();
+        } else if (!driver.validate()) {
+            UIUtils.error(this, "Driver information is not fulfilled.");
+            this.btnManageActionPerformed(evt);
         } else {
             target.setAuthor(txtAuthor.getText());
             target.setConnectionUrl(txtConnUrl.getText());
@@ -968,8 +951,6 @@ public class JDBConnectionManager extends JDialog {
             target.setUserName(txtUser.getText());
             target.setDropFirstWord(chkCutFirst.isSelected());
             target.setUseKeepAlive(chkKeepAlive.isSelected());
-            target.setBuildJavaPackage(chkPathJava.isSelected());
-            target.setBuildSqlNamespace(chkPathMapper.isSelected());
             target.setDriverType((String)cboDriver.getSelectedItem());
             target.setConnectionProps(applyToPropsMap(target.getConnectionProps()));
             target.setTemplates(applyToTplList(target.getTemplates()));
@@ -993,8 +974,33 @@ public class JDBConnectionManager extends JDialog {
     }//GEN-LAST:event_btnConnectActionPerformed
 
     private void btnPresetsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPresetsActionPerformed
-        // TODO add your handling code here:
+        JDBPresets preset = new JDBPresets();
+        preset.setModal(true);
+        preset.setLocationRelativeTo(this);
+        preset.setVisible(true);
     }//GEN-LAST:event_btnPresetsActionPerformed
+
+    private void lstConnectionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstConnectionsMouseClicked
+        // TODO add your handling code here:
+        if (evt.getClickCount() == 2) {
+            btnConnectActionPerformed(null);
+        }
+    }//GEN-LAST:event_lstConnectionsMouseClicked
+
+    private void btnDelPropActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelPropActionPerformed
+        int row = tabProps.getSelectedRow();
+        if (tabProps.getRowCount() > 1) {
+            propsModel.removeRow(row);
+        } else if (row == 0) {
+            for (int i=0; i<propsModel.getColumnCount(); i++)
+                propsModel.setValueAt("", row, i);
+        }
+        int idx = lstConnections.getSelectedIndex();
+        if (idx > -1) {
+            JDBConnection target = connections.get(idx);
+            target.setConnectionProps(applyToPropsMap(target.getConnectionProps()));
+        }
+    }//GEN-LAST:event_btnDelPropActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1027,13 +1033,9 @@ public class JDBConnectionManager extends JDialog {
     private javax.swing.JButton btnSaveTemplate;
     private javax.swing.JButton btnTemplateHelp;
     private javax.swing.JComboBox<String> cboDriver;
-    private javax.swing.JComboBox<String> cboTemplateType;
     private javax.swing.JCheckBox chkCutFirst;
     private javax.swing.JCheckBox chkKeepAlive;
-    private javax.swing.JCheckBox chkPathJava;
-    private javax.swing.JCheckBox chkPathMapper;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;

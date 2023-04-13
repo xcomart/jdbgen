@@ -23,7 +23,6 @@
  */
 package comart.tools.jdbgen.types.maven;
 
-import java.util.List;
 import lombok.Data;
 
 /**

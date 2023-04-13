@@ -48,7 +48,7 @@ public class ObjUtils {
             try {
                 Field f = c.getField(property);
                 return f.get(obj);
-            } catch(Exception fieldNotVisible) {
+            } catch(Throwable fieldNotVisible) {
                 String getter = "get"+property.substring(0, 1).toUpperCase()+property.substring(1);
                 @SuppressWarnings("null")
                 Method m = null;
@@ -87,6 +87,11 @@ public class ObjUtils {
                     getValuePrivate(obj, property.substring(0, idx)),
                     property.substring(idx+1));
         }
+    }
+    
+    public static Object getValue(Object obj, String property, Object defVal) throws Exception {
+        Object res = getValue(obj, property);
+        return res == null ? defVal: res;
     }
     
     @SuppressWarnings("UseSpecificCatch")

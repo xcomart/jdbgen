@@ -27,6 +27,7 @@ import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.utils.ClassUtils;
 import comart.utils.PlatformUtils;
+import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
@@ -114,13 +115,11 @@ public class JDBDriverManager extends JDialog {
         UIUtils.applyIcon(btnDelProp, FontAwesome.MINUS);
         UIUtils.applyIcon(btnBrowseIcon, FontAwesome.FOLDER_O);
         
-        UIUtils.applyIcon(btnCatalog, FontAwesome.QUESTION);
-        UIUtils.applyIcon(btnSchema, FontAwesome.QUESTION);
-        UIUtils.applyIcon(btnTable, FontAwesome.QUESTION);
-        UIUtils.applyIcon(btnColumn, FontAwesome.QUESTION);
+        UIUtils.applyIcon(btnTableComments, FontAwesome.QUESTION);
+        UIUtils.applyIcon(btnColumnComments, FontAwesome.QUESTION);
         
         UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
-        UIUtils.addIcon(btnSave, FontAwesome.FLOPPY_O);
+        UIUtils.addIcon(btnSave, FontAwesome.CHECK);
     }
 
     private void eventSetup() {
@@ -165,14 +164,10 @@ public class JDBDriverManager extends JDialog {
         txtJarFile.setText("");
         txtUrlTemplate.setText("");
         
-        chkCatalog.setSelected(false);
-        txtCatalog.setText("");
-        chkSchema.setSelected(false);
-        txtSchema.setText("");
-        chkTable.setSelected(false);
-        txtTable.setText("");
-        chkColumn.setSelected(false);
-        txtColumn.setText("");
+        chkTableComments.setSelected(false);
+        txtTableComments.setText("");
+        chkColumnComments.setSelected(false);
+        txtColumnComments.setText("");
         txtDriverName.setEditable(true);
         txtDriverClass.setEditable(true);
         btnBrowseIcon.setEnabled(true);
@@ -220,22 +215,14 @@ public class JDBDriverManager extends JDialog {
         jPanel4 = new javax.swing.JPanel();
         jScrollPane3 = new javax.swing.JScrollPane();
         jPanel5 = new javax.swing.JPanel();
-        btnCatalog = new javax.swing.JButton();
-        chkCatalog = new javax.swing.JCheckBox();
+        btnTableComments = new javax.swing.JButton();
+        chkTableComments = new javax.swing.JCheckBox();
         jScrollPane4 = new javax.swing.JScrollPane();
-        txtSchema = new javax.swing.JTextArea();
-        btnSchema = new javax.swing.JButton();
-        chkSchema = new javax.swing.JCheckBox();
+        txtColumnComments = new javax.swing.JTextArea();
+        btnColumnComments = new javax.swing.JButton();
+        chkColumnComments = new javax.swing.JCheckBox();
         jScrollPane5 = new javax.swing.JScrollPane();
-        txtCatalog = new javax.swing.JTextArea();
-        chkTable = new javax.swing.JCheckBox();
-        btnTable = new javax.swing.JButton();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        txtTable = new javax.swing.JTextArea();
-        chkColumn = new javax.swing.JCheckBox();
-        btnColumn = new javax.swing.JButton();
-        jScrollPane7 = new javax.swing.JScrollPane();
-        txtColumn = new javax.swing.JTextArea();
+        txtTableComments = new javax.swing.JTextArea();
 
         setTitle("Driver Manager");
 
@@ -246,7 +233,7 @@ public class JDBDriverManager extends JDialog {
             }
         });
 
-        btnSave.setText("Save");
+        btnSave.setText("Ok");
         btnSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveActionPerformed(evt);
@@ -393,6 +380,7 @@ public class JDBDriverManager extends JDialog {
                 return types [columnIndex];
             }
         });
+        tabProps.getTableHeader().setReorderingAllowed(false);
         jScrollPane2.setViewportView(tabProps);
 
         btnDelProp.setText("-");
@@ -485,81 +473,43 @@ public class JDBDriverManager extends JDialog {
 
         jTabbedPane1.addTab("General", jPanel2);
 
-        btnCatalog.setText("?");
-        btnCatalog.setPreferredSize(new java.awt.Dimension(30, 26));
-        btnCatalog.addActionListener(new java.awt.event.ActionListener() {
+        btnTableComments.setText("?");
+        btnTableComments.setPreferredSize(new java.awt.Dimension(30, 26));
+        btnTableComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCatalogActionPerformed(evt);
+                btnTableCommentsActionPerformed(evt);
             }
         });
 
-        chkCatalog.setText("Get catalogs");
-        chkCatalog.addActionListener(new java.awt.event.ActionListener() {
+        chkTableComments.setText("Get table comments");
+        chkTableComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkCatalogActionPerformed(evt);
+                chkTableCommentsActionPerformed(evt);
             }
         });
 
-        txtSchema.setColumns(20);
-        txtSchema.setRows(5);
-        jScrollPane4.setViewportView(txtSchema);
+        txtColumnComments.setColumns(20);
+        txtColumnComments.setRows(5);
+        jScrollPane4.setViewportView(txtColumnComments);
 
-        btnSchema.setText("?");
-        btnSchema.setPreferredSize(new java.awt.Dimension(30, 26));
-        btnSchema.addActionListener(new java.awt.event.ActionListener() {
+        btnColumnComments.setText("?");
+        btnColumnComments.setPreferredSize(new java.awt.Dimension(30, 26));
+        btnColumnComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSchemaActionPerformed(evt);
+                btnColumnCommentsActionPerformed(evt);
             }
         });
 
-        chkSchema.setText("Get schemas of catalog");
-        chkSchema.addActionListener(new java.awt.event.ActionListener() {
+        chkColumnComments.setText("Get table column comments");
+        chkColumnComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkSchemaActionPerformed(evt);
+                chkColumnCommentsActionPerformed(evt);
             }
         });
 
-        txtCatalog.setColumns(20);
-        txtCatalog.setRows(5);
-        jScrollPane5.setViewportView(txtCatalog);
-
-        chkTable.setText("Get tables of schema");
-        chkTable.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkTableActionPerformed(evt);
-            }
-        });
-
-        btnTable.setText("?");
-        btnTable.setPreferredSize(new java.awt.Dimension(30, 26));
-        btnTable.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTableActionPerformed(evt);
-            }
-        });
-
-        txtTable.setColumns(20);
-        txtTable.setRows(5);
-        jScrollPane6.setViewportView(txtTable);
-
-        chkColumn.setText("Get columns of table");
-        chkColumn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkColumnActionPerformed(evt);
-            }
-        });
-
-        btnColumn.setText("?");
-        btnColumn.setPreferredSize(new java.awt.Dimension(30, 26));
-        btnColumn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnColumnActionPerformed(evt);
-            }
-        });
-
-        txtColumn.setColumns(20);
-        txtColumn.setRows(5);
-        jScrollPane7.setViewportView(txtColumn);
+        txtTableComments.setColumns(20);
+        txtTableComments.setRows(5);
+        jScrollPane5.setViewportView(txtTableComments);
 
         javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
         jPanel5.setLayout(jPanel5Layout);
@@ -569,36 +519,22 @@ public class JDBDriverManager extends JDialog {
                 .addContainerGap()
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addComponent(chkSchema)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnSchema, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addComponent(chkColumn)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnColumn, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(chkColumnComments)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnColumnComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel5Layout.createSequentialGroup()
-                                        .addComponent(chkTable)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(btnTable, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(jPanel5Layout.createSequentialGroup()
-                                        .addComponent(chkCatalog)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(btnCatalog, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addGap(0, 0, Short.MAX_VALUE))
+                                .addComponent(chkTableComments)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnTableComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(0, 362, Short.MAX_VALUE))
                             .addGroup(jPanel5Layout.createSequentialGroup()
                                 .addGap(21, 21, 21)
                                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jScrollPane7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 503, Short.MAX_VALUE)
                                     .addComponent(jScrollPane4, javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jScrollPane5)
-                                    .addComponent(jScrollPane6))))
+                                    .addComponent(jScrollPane5))))
                         .addContainerGap())))
         );
         jPanel5Layout.setVerticalGroup(
@@ -606,29 +542,17 @@ public class JDBDriverManager extends JDialog {
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addGap(7, 7, 7)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkCatalog)
-                    .addComponent(btnCatalog, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(chkTableComments)
+                    .addComponent(btnTableComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkSchema)
-                    .addComponent(btnSchema, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(chkColumnComments)
+                    .addComponent(btnColumnComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkTable)
-                    .addComponent(btnTable, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkColumn)
-                    .addComponent(btnColumn, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(229, Short.MAX_VALUE))
         );
 
         jScrollPane3.setViewportView(jPanel5);
@@ -643,7 +567,7 @@ public class JDBDriverManager extends JDialog {
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 444, Short.MAX_VALUE)
+            .addComponent(jScrollPane3)
         );
 
         jTabbedPane1.addTab("Custom Queries", jPanel4);
@@ -709,18 +633,12 @@ public class JDBDriverManager extends JDialog {
         } else if (StringUtils.isBlank(txtDriverClass.getText())) {
             UIUtils.error(this, "Driver class required.");
             txtDriverClass.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtCatalog.getText()) && chkCatalog.isSelected()) {
-            UIUtils.error(this, "Catalog query required.");
-            txtCatalog.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtSchema.getText()) && chkSchema.isSelected()) {
-            UIUtils.error(this, "Schema query required.");
-            txtSchema.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtTable.getText()) && chkTable.isSelected()) {
-            UIUtils.error(this, "Table query required.");
-            txtTable.requestFocusInWindow();
-        } else if (StringUtils.isBlank(txtColumn.getText()) && chkColumn.isSelected()) {
-            UIUtils.error(this, "Column query required.");
-            txtColumn.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtTableComments.getText()) && chkTableComments.isSelected()) {
+            UIUtils.error(this, "Table comments query required.");
+            txtTableComments.requestFocusInWindow();
+        } else if (StringUtils.isBlank(txtColumnComments.getText()) && chkColumnComments.isSelected()) {
+            UIUtils.error(this, "Column comments query required.");
+            txtColumnComments.requestFocusInWindow();
         } else {
             if (idx == -1) {
                 target = new JDBDriver();
@@ -751,14 +669,10 @@ public class JDBDriverManager extends JDialog {
                 target.setProps(props);
             }
 
-            target.setUseCatalogSql(chkCatalog.isSelected());
-            target.setCatalogSql(txtCatalog.getText());
-            target.setUseSchemaSql(chkSchema.isSelected());
-            target.setSchemaSql(txtSchema.getText());
-            target.setUseTableSql(chkTable.isSelected());
-            target.setTableSql(txtTable.getText());
-            target.setUseColumnSql(chkColumn.isSelected());
-            target.setColumnSql(txtColumn.getText());
+            target.setUseTableComments(chkTableComments.isSelected());
+            target.setTableCommentsSql(txtTableComments.getText());
+            target.setUseColumnComments(chkColumnComments.isSelected());
+            target.setColumnCommentsSql(txtColumnComments.getText());
             
             JDBGenConfig.saveInstace(this);
             changed = true;
@@ -790,18 +704,12 @@ public class JDBDriverManager extends JDialog {
             tableModel.addRow(new String[]{k, v});
         });
 
-        chkCatalog.setSelected(driver.isUseCatalogSql());
-        txtCatalog.setEnabled(chkCatalog.isSelected());
-        txtCatalog.setText(driver.getCatalogSql());
-        chkSchema.setSelected(driver.isUseSchemaSql());
-        txtSchema.setEnabled(chkSchema.isSelected());
-        txtSchema.setText(driver.getSchemaSql());
-        chkTable.setSelected(driver.isUseTableSql());
-        txtTable.setEnabled(chkTable.isSelected());
-        txtTable.setText(driver.getTableSql());
-        chkColumn.setSelected(driver.isUseColumnSql());
-        txtColumn.setEnabled(chkColumn.isSelected());
-        txtColumn.setText(driver.getColumnSql());
+        chkTableComments.setSelected(driver.isUseTableComments());
+        txtTableComments.setEnabled(chkTableComments.isSelected());
+        txtTableComments.setText(driver.getTableCommentsSql());
+        chkColumnComments.setSelected(driver.isUseColumnComments());
+        txtColumnComments.setEnabled(chkColumnComments.isSelected());
+        txtColumnComments.setText(driver.getColumnCommentsSql());
         
         boolean isStockItem = driver.isStockItem();
         txtDriverName.setEditable(!isStockItem);
@@ -906,11 +814,16 @@ public class JDBDriverManager extends JDialog {
         EventQueue.invokeLater(() -> {
             me.setModal(true);
             me.setLocationRelativeTo(this);
-            me.setVisible(true);
-            if (me.changed) {
-                txtJarFile.setText(me.saveLocation);
-                updateDriver(d -> d.setJdbcJar(me.saveLocation));
-            }
+            updateDriver(d -> {
+                String query = d.getDefaultQuery();
+                if (!StrUtils.isEmpty(query))
+                    me.setQuery(d.getDefaultQuery());
+                me.setVisible(true);
+                if (me.changed) {
+                    txtJarFile.setText(me.saveLocation);
+                    d.setJdbcJar(me.saveLocation);
+                }
+            });
         });
 //        String groupId = txtGroupId.getText();
 //        String artifactId = txtArtifactId.getText();
@@ -962,41 +875,23 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_btnBrowseJarActionPerformed
 
-    private void chkCatalogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkCatalogActionPerformed
-        txtCatalog.setEnabled(chkCatalog.isSelected());
-    }//GEN-LAST:event_chkCatalogActionPerformed
+    private void chkTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTableCommentsActionPerformed
+        txtTableComments.setEnabled(chkTableComments.isSelected());
+    }//GEN-LAST:event_chkTableCommentsActionPerformed
 
-    private void chkSchemaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkSchemaActionPerformed
-        txtSchema.setEnabled(chkSchema.isSelected());
-    }//GEN-LAST:event_chkSchemaActionPerformed
+    private void chkColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnCommentsActionPerformed
+        txtColumnComments.setEnabled(chkColumnComments.isSelected());
+    }//GEN-LAST:event_chkColumnCommentsActionPerformed
 
-    private void chkTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTableActionPerformed
-        txtTable.setEnabled(chkTable.isSelected());
-    }//GEN-LAST:event_chkTableActionPerformed
-
-    private void chkColumnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnActionPerformed
-        txtColumn.setEnabled(chkColumn.isSelected());
-    }//GEN-LAST:event_chkColumnActionPerformed
-
-    private void btnCatalogActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCatalogActionPerformed
+    private void btnTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableCommentsActionPerformed
         // TODO add your handling code here:
         PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
-    }//GEN-LAST:event_btnCatalogActionPerformed
+    }//GEN-LAST:event_btnTableCommentsActionPerformed
 
-    private void btnSchemaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSchemaActionPerformed
+    private void btnColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnCommentsActionPerformed
         // TODO add your handling code here:
         PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
-    }//GEN-LAST:event_btnSchemaActionPerformed
-
-    private void btnTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableActionPerformed
-        // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
-    }//GEN-LAST:event_btnTableActionPerformed
-
-    private void btnColumnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnActionPerformed
-        // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
-    }//GEN-LAST:event_btnColumnActionPerformed
+    }//GEN-LAST:event_btnColumnCommentsActionPerformed
 
     /**
      * @param args the command line arguments
@@ -1015,21 +910,17 @@ public class JDBDriverManager extends JDialog {
     private javax.swing.JButton btnBrowseIcon;
     private javax.swing.JButton btnBrowseJar;
     private javax.swing.JButton btnCancel;
-    private javax.swing.JButton btnCatalog;
     private javax.swing.JButton btnCloneDriver;
-    private javax.swing.JButton btnColumn;
+    private javax.swing.JButton btnColumnComments;
     private javax.swing.JButton btnDelDriver;
     private javax.swing.JButton btnDelProp;
     private javax.swing.JButton btnDownJdbc;
     private javax.swing.JButton btnNewDriver;
     private javax.swing.JButton btnSave;
-    private javax.swing.JButton btnSchema;
-    private javax.swing.JButton btnTable;
-    private javax.swing.JCheckBox chkCatalog;
-    private javax.swing.JCheckBox chkColumn;
+    private javax.swing.JButton btnTableComments;
+    private javax.swing.JCheckBox chkColumnComments;
     private javax.swing.JCheckBox chkNoAuth;
-    private javax.swing.JCheckBox chkSchema;
-    private javax.swing.JCheckBox chkTable;
+    private javax.swing.JCheckBox chkTableComments;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -1047,19 +938,15 @@ public class JDBDriverManager extends JDialog {
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JScrollPane jScrollPane6;
-    private javax.swing.JScrollPane jScrollPane7;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JList<String> lstDrivers;
     private javax.swing.JTable tabProps;
-    private javax.swing.JTextArea txtCatalog;
-    private javax.swing.JTextArea txtColumn;
+    private javax.swing.JTextArea txtColumnComments;
     private javax.swing.JTextField txtDriverClass;
     private javax.swing.JTextField txtDriverName;
     private javax.swing.JTextField txtIcon;
     private javax.swing.JTextField txtJarFile;
-    private javax.swing.JTextArea txtSchema;
-    private javax.swing.JTextArea txtTable;
+    private javax.swing.JTextArea txtTableComments;
     private javax.swing.JTextField txtUrlTemplate;
     // End of variables declaration//GEN-END:variables
 }

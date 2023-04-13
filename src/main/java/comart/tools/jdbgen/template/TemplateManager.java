@@ -26,7 +26,9 @@ package comart.tools.jdbgen.template;
 import comart.utils.ObjUtils;
 import comart.utils.StrUtils;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,10 @@ public class TemplateManager {
     
     private interface TemplateHandler {
         TemplateItem process(String extra, ParseContext ctx) throws ParseException;
+    }
+    
+    private interface TemplateAppender {
+        void append(StringBuilder sb, TemplateItem template, Object mapper) throws Exception;
     }
     
     private static enum TemplateType {
@@ -243,6 +249,17 @@ public class TemplateManager {
     
     private static TemplateItem parseIf(String extra, ParseContext ctx) throws ParseException {
         // this codes makes like below
+        //
+        // if
+        //   true statement
+        // elif
+        //   true statement
+        // ...
+        // else
+        //   false statement
+        //
+        // will be processed to below
+        //
         // if
         //   true statements
         // else
@@ -309,19 +326,28 @@ public class TemplateManager {
         return new TemplateItem(TemplateType.USER, parseNVPairs(extra));
     }
     
+    
     private static final Map<String, TemplateHandler> handlers = new HashMap<>();
     static {
         handlers.put("item", TemplateManager::parseItem);
-        handlers.put("if", TemplateManager::parseIf);
-        handlers.put("for", TemplateManager::parseFor);
+        handlers.put("if"  , TemplateManager::parseIf  );
+        handlers.put("for" , TemplateManager::parseFor );
         handlers.put("date", TemplateManager::parseDate);
         handlers.put("user", TemplateManager::parseUser);
     }
     
     private final List<TemplateItem> items;
     private String lineEnd = System.lineSeparator();
+    private final Map<TemplateType, TemplateAppender> appenders = new HashMap<>();
     
     public TemplateManager(String template) throws ParseException {
+        appenders.put(TemplateType.TEXT, this::appendText);
+        appenders.put(TemplateType.ITEM, this::appendItem);
+        appenders.put(TemplateType.IF  , this::appendIf  );
+        appenders.put(TemplateType.FOR , this::appendFor );
+        appenders.put(TemplateType.DATE, this::appendDate);
+        appenders.put(TemplateType.USER, this::appendUser);
+
         // preserve line end with source
         int idx = template.indexOf("\n");
         if (idx > 0) {
@@ -333,5 +359,151 @@ public class TemplateManager {
         items = parseTemplate(new ParseContext(template));
     }
     
-
+    private void appendBase(StringBuilder sb, Map<String,Object> map, Object val) throws Exception {
+        String spadsz = (String)map.get("padSize");
+        int padsz = spadsz == null? 0:Integer.parseInt(spadsz);
+        String spaddr = (String)map.get("padDir");
+        boolean padLeft = spaddr == null? false:"left".equalsIgnoreCase(spaddr);
+        String quote = (String)map.get("quote");
+        String qpre = (String)map.get("prepend");
+        String qpos = (String)map.get("postpend");
+        if (qpre == null) qpre = quote;
+        if (qpos == null) qpos = quote;
+        if (val != null) {
+            String valstr = String.valueOf(val);
+            if (qpre != null)
+                valstr = qpre + valstr;
+            if (qpos != null)
+                valstr = valstr + qpos;
+            if (!padLeft)
+                sb.append(valstr);
+            if (padsz > 0) {
+                int vsize = padsz - valstr.getBytes("EUC-KR").length;
+                if (vsize < 0) vsize = 0;
+                sb.append(StrUtils.space(vsize, ' '));
+            }
+            if (padLeft)
+                sb.append(valstr);
+        }
+    }
+    
+    private String getKey(Map<String,Object> props) {
+        String mkey = (String)props.get("key");
+        if (mkey == null) mkey = (String)props.get("item");
+        return mkey;
+    }
+    
+    private void appendText(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+        sb.append(template.cont.toString());
+    }
+    
+    private void appendItem(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+        Map<String,Object> map = (Map<String,Object>)template.cont;
+        String mkey = getKey(map);
+        Object val = ObjUtils.getValue(mapper, mkey);
+        appendBase(sb, map, val);
+    }
+    
+    private void appendIf(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+        Map<String,Object> map = (Map<String,Object>)template.cont;
+        List<TemplateItem> ttpls = (List<TemplateItem>)map.get("true");
+        Object ftpls = map.get("false");
+        String mkey = getKey(map);
+        String cval = (String)map.get("value");
+        String cons = (String)map.get("contains");
+        String ncons = (String)map.get("notcontains");
+        String iname = cons == null? ncons:cons;
+        boolean condMet = false;
+        if (cval != null) {
+            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            condMet = cval.equalsIgnoreCase(oval);
+        } else if (iname != null) {
+            List<Object> collection = (List<Object>)ObjUtils.getValue(mapper, mkey);
+            boolean contains = false;
+            for(Object o: collection) {
+                if (String.valueOf(ObjUtils.getValue(o, "name")).equalsIgnoreCase(iname)) {
+                    contains = true;
+                    break;
+                }
+            }
+            condMet = cons == null? !contains:contains;
+        } else {
+            throw new ParseException("Invalid if statement in template.", 0);
+        }
+        if (condMet) {
+            appendMapper(sb, ttpls, mapper);
+        } else if (ftpls != null) {
+            if (ftpls instanceof TemplateItem) {
+                appendIf(sb, (TemplateItem)ftpls, mapper);
+            } else if (ftpls instanceof List) {
+                appendMapper(sb, (List<TemplateItem>)ftpls, mapper);
+            }
+        }
+    }
+    
+    private void appendFor(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+        Map<String,Object> map = (Map<String,Object>)template.cont;
+        String mkey = getKey(map);
+        String instr = (String)map.get("inStr");
+        String indent = (String)map.get("indent");
+        String[] skips = StrUtils.split((String)map.get("skipList"), ",", true);
+        int idnt = indent == null? 0:Integer.parseInt(indent);
+        List<TemplateItem> tpls = (List<TemplateItem>)map.get("items");
+        List<Object> items = (List<Object>)ObjUtils.getValue(mapper, mkey);
+        int stidx = sb.lastIndexOf("\n")+1;
+        int splen = sb.substring(stidx).getBytes("EUC-KR").length; // space length(no utf-8)
+        splen += idnt;
+        String prepend = StrUtils.space(splen, ' ');
+        boolean isFirst = true;
+        for (int i=0; i<items.size(); i++) {
+            Object o = items.get(i);
+            if (skips != null) {
+                String n = (String)ObjUtils.getValue(o, "name");
+                if (StrUtils.contains(skips, n))
+                    continue;
+            }
+            if (!isFirst) {
+                if (instr != null) {
+                    int idx = instr.indexOf('\n');
+                    if (idx > -1) {
+                        sb.append(instr.substring(0, idx));
+                        sb.append(lineEnd).append(prepend);
+                        sb.append(instr.substring(idx+1));
+                    } else {
+                        sb.append(instr);
+                    }
+                }
+            }
+            ObjUtils.setValue(o, "no", (i+1));
+            ObjUtils.setValue(o, "super", mapper);
+            appendMapper(sb, tpls, o);
+            // can cause circular reference, so unset super reference.
+            ObjUtils.setValue(o, "super", null);
+            isFirst = false;
+        }
+    }
+    
+    private void appendDate(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+        Map<String,Object> map = (Map<String,Object>)template.cont;
+        String format = (String)map.get("format");
+        SimpleDateFormat sdf = new SimpleDateFormat(format);
+        appendBase(sb, map, sdf.format(new Date()));
+    }
+    
+    private void appendUser(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+        Map<String,Object> map = (Map<String,Object>)template.cont;
+        appendBase(sb, map, USER_ID);
+    }
+    
+    private void appendMapper(StringBuilder sb, List<TemplateItem> templates, Object mapper) throws Exception {
+        for (TemplateItem tpl:templates) {
+            appenders.get(tpl.type).append(sb, tpl, mapper);
+        }
+    }
+    
+    public String applyMapper(Object mapper) throws Exception {
+        StringBuilder sb = new StringBuilder();
+        appendMapper(sb, items, mapper);
+        return sb.toString();
+    }
 }

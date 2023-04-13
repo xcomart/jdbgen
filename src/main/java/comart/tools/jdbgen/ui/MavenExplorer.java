@@ -135,6 +135,11 @@ public class MavenExplorer extends JDialog {
         searchTotal = 0;
         clearVersions();
     }
+    
+    public void setQuery(String query) {
+        txtSearch.setText(query);
+        EventQueue.invokeLater(() -> btnSearchActionPerformed(null));
+    }
 
     private void eventSetup() {
         this.addWindowListener(new WindowAdapter() {

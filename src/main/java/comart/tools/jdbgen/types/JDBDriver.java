@@ -23,6 +23,7 @@
  */
 package comart.tools.jdbgen.types;
 
+import comart.utils.StrUtils;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -47,12 +48,15 @@ public class JDBDriver extends JDBListBase {
     private String defaultQuery;
     private Map<String, String> props;
     private boolean noAuth;
-    private boolean useCatalogSql;
-    private String catalogSql;
-    private boolean useSchemaSql;
-    private String schemaSql;
-    private boolean useTableSql;
-    private String tableSql;
-    private boolean useColumnSql;
-    private String columnSql;
+    private boolean useTableComments;
+    private String tableCommentsSql;
+    private boolean useColumnComments;
+    private String columnCommentsSql;
+    
+    public boolean validate() {
+        return !StrUtils.isEmpty(jdbcJar) &&
+                !StrUtils.isEmpty(driverClass) &&
+                (!useTableComments || !StrUtils.isEmpty(tableCommentsSql)) &&
+                (!useColumnComments || !StrUtils.isEmpty(columnCommentsSql));
+    }
 }

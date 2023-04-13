@@ -34,9 +34,13 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.EventQueue;
+import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -49,9 +53,13 @@ import javax.swing.AbstractButton;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTable;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
@@ -70,7 +78,7 @@ public class UIUtils {
     private static final Logger logger = Logger.getLogger(UIUtils.class.getName());
     private static int fontSize = 14;
     private static Color color = null;
-    private static final Set<Pair<AbstractButton, IconCode>> items = new HashSet();
+    private static final Set<Pair<JComponent, IconCode>> items = new HashSet();
     private static final Set<Container> frames = new HashSet<>();
     private static final Map<String, Icon> cachedIcon = new HashMap<>();
     private static UIDefaults uiDefaults = null;
@@ -106,7 +114,7 @@ public class UIUtils {
         color = uiDefaults.getColor("Button.foreground");
         fontSize = uiDefaults.getFont("Button.font").getSize();
         items.forEach((t) -> {
-            addIconPrivate((AbstractButton)t.getFirst(), (IconCode)t.getSecond());
+            addIconPrivate((JComponent)t.getFirst(), (IconCode)t.getSecond());
         });
         frames.forEach((f) -> {
             try {
@@ -136,27 +144,31 @@ public class UIUtils {
     public static void fontSizeChanged(int size) {
         fontSize = UIManager.getFont("Button.font").getSize();
         items.forEach((t) -> {
-            addIconPrivate((AbstractButton)t.getFirst(), (IconCode)t.getSecond());
+            addIconPrivate((JComponent)t.getFirst(), (IconCode)t.getSecond());
         });
     }
 
-    public static void applyIcon(AbstractButton button, IconCode code, String text) {
-        button.setText(text);
+    public static void applyIcon(JComponent button, IconCode code, String text) {
+        try {
+            Method setText = button.getClass().getMethod("setText", new Class[]{String.class});
+            setText.invoke(button, text);
+        } catch(Throwable ignored) {}
         addIcon(button, code);
     }
 
-    public static void applyIcon(AbstractButton button, IconCode code) {
+    public static void applyIcon(JComponent button, IconCode code) {
         applyIcon(button, code, "");
     }
 
-    private static void addIconPrivate(AbstractButton button, IconCode code) {
+    private static void addIconPrivate(JComponent button, IconCode code) {
         try {
-            button.setIcon(IconFontSwing.buildIcon(code, (float)fontSize, color));
+            Method setIcon = button.getClass().getMethod("setIcon", new Class[]{Icon.class});
+            setIcon.invoke(button, IconFontSwing.buildIcon(code, (float)fontSize, color));
         } catch (Exception ignored) {}
 
     }
 
-    public static void addIcon(AbstractButton button, IconCode code) {
+    public static void addIcon(JComponent button, IconCode code) {
         addIconPrivate(button, code);
         items.add(new Pair(button, code));
     }
@@ -214,7 +226,12 @@ public class UIUtils {
             if (lb != null) {
                 if (lb instanceof HasIcon) {
                     HasIcon hi = (HasIcon)lb;
-                    label.setIcon(UIUtils.getIcon(hi.getIcon()));
+                    String icon = hi.getIcon();
+                    if (icon.startsWith("FA:")) {
+                        UIUtils.addIcon(label, FontAwesome.valueOf(icon.substring(3)));
+                    } else {
+                        label.setIcon(UIUtils.getIcon(hi.getIcon()));
+                    }
                 }
                 label.setText(lb.getTitle());
             }
@@ -224,7 +241,7 @@ public class UIUtils {
     }
     
     public static <T> ListCellRenderer<T> getListCellRenderer(Function<T,HasTitle> func) {
-        return new MyListCellRenderer(func);
+        return (ListCellRenderer<T>) new MyListCellRenderer<>(func);
     }
     
     public static void applyTableEdit(JTable table) {
@@ -264,8 +281,54 @@ public class UIUtils {
     
     public static boolean confirm(Component parent, String title, String message) {
         boolean res = JOptionPane.showConfirmDialog(
-                parent, message, "Confirm", JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION;
+                parent, message, title, JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION;
         logger.log(Level.INFO, "{0}: {1}", new Object[]{message, res});
         return res;
+    }
+    
+    private static class PasswordPanel extends JPanel {
+        private final String password;
+
+        private PasswordPanel(String prompt) {
+            super(new FlowLayout());
+            JPasswordField pwdField = new JPasswordField(20);
+            add(pwdField);
+            JOptionPane joptionPane = new JOptionPane(this, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
+            boolean responseOK = configure(joptionPane, prompt, pwdField).equals(JOptionPane.OK_OPTION);
+            this.password = responseOK ? String.valueOf(pwdField.getPassword()) : null;
+        }
+
+        public static String getPassword(String message){
+            return new PasswordPanel(message).password;
+        }
+
+        private Object configure(JOptionPane jOptionPane, String prompt, JComponent pwdField) {
+            JDialog jDialog = promptDialog(prompt, jOptionPane, pwdField);
+            Object result = jOptionPane.getValue();
+            jDialog.dispatchEvent(new WindowEvent(jDialog, WindowEvent.WINDOW_CLOSING));
+            jDialog.dispose();
+            return result;
+        }
+
+        private JDialog promptDialog(String message, JOptionPane jOptionPane, JComponent pwdField) {
+            JDialog dialog = jOptionPane.createDialog(message);
+            dialog.addWindowFocusListener(new WindowAdapter() {
+                @Override
+                public void windowGainedFocus(WindowEvent e) {
+                    pwdField.requestFocusInWindow();
+                }
+            });
+            dialog.setVisible(true);
+            return dialog;
+        }
+    }
+
+    public static String password(String message) {
+        String passwordText = PasswordPanel.getPassword(message);
+        if (null != passwordText) {
+            return passwordText;
+        } else {
+            return null;
+        }
     }
 }

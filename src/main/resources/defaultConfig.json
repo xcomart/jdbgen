@@ -37,7 +37,14 @@
             "urlTemplate": "jdbc:sqlserver://<databaseHost>:1433;databaseName=<database>",
             "defaultQuery": "mssql-jdbc",
             "icon": "stock:mssql.png",
-            "props": {}
+            "useTableComments": true,
+            "tableCommentsSql": "SELECT OBJNAME, cast(value as varchar(8000)) as VALUE \nFROM fn_listextendedproperty ('MS_DESCRIPTION','schema','${schema}','table',null,null,null)",
+            "useColumnComments": true,
+            "columnCommentsSql": "SELECT OBJNAME, cast(value as varchar(8000)) as VALUE \nFROM fn_listextendedproperty ('MS_DESCRIPTION','schema','${schema}','table','${table}','column',null)",
+            "props": {
+                "encrypt": "true",
+                "trustServerCertificate": "true"
+            }
         },
         {
             "stockItem": true,

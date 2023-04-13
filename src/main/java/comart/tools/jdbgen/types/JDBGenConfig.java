@@ -26,6 +26,7 @@ package comart.tools.jdbgen.types;
 import comart.tools.jdbgen.types.maven.MavenConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.Container;
 import java.io.File;
@@ -37,8 +38,10 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.filechooser.FileSystemView;
 import lombok.Data;
 
 /**
@@ -49,23 +52,35 @@ import lombok.Data;
 public class JDBGenConfig {
     private static final Logger logger = Logger.getLogger(JDBGenConfig.class.getName());
     private static final String CONF_PATH = "config.json";
+    public static byte[] KEY = null;
+    public static byte[] IV = null;
     private static JDBGenConfig INSTANCE = null;
     private boolean isDarkUI = false;
     private List<JDBConnection> connections;
     private List<JDBDriver> drivers;
+    private Map<String, List<JDBTemplate>> presets;
     private MavenConfig maven;
 
     public static synchronized JDBGenConfig getInstance() {
         if (INSTANCE == null) {
+            String master = UIUtils.password("Enter master password");
+            if (master == null)
+                System.exit(1);
+            StrUtils.setMaster(master);
+            logger.info("config path: "+CONF_PATH);
             Gson gson = new Gson();
             File f = new File(CONF_PATH);
             if (f.exists() && f.isFile()) {
                 try {
                     INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f), JDBGenConfig.class);
                 } catch (Exception e) {
-                    UIUtils.error(null, "Loading configuration failed: " +
+                    boolean isOk = UIUtils.confirm(null, "Configuration Error",
+                            "Loading configuration failed - Password may not correct : " +
                             e.getLocalizedMessage() +
-                            "\nTrying to load default configuration.");
+                            "\nDo you want to load default configuration?");
+                    if (!isOk) {
+                        System.exit(1);
+                    }
                 }
             }
 
@@ -90,7 +105,7 @@ public class JDBGenConfig {
 
         try {
             String json = gson.toJson(INSTANCE);
-            System.out.println(json);
+//            System.out.println(json);
             try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(CONF_PATH), StandardCharsets.UTF_8)) {
                 fw.write(json);
             }

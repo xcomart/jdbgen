@@ -26,7 +26,7 @@ package comart.utils;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.security.SecureRandom;
+import java.security.MessageDigest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -982,61 +982,131 @@ public class StrUtils
         return dateFormat(format, new Date());
     }
     
-    static byte[] raw = new byte[]{
-        'T', 'h', 'i', 's', 'I',
-        's', 'A', 'S', 'e', 'c',
-        'r', 'e', 't', 'K', 'e',
-        'y'};
+    public static boolean contains(Object[] arr, Object val) {
+        if (arr == null || val == null)
+            return false;
+        for (Object c:arr)
+            if (c.equals(val)) return true;
+        return false;
+    }
+    
+    public static String toCamelCase(String s) {
+        StringBuilder sb = new StringBuilder();
+        boolean upper = false;
+        for (int i=0; i<s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '_')
+                upper = true;
+            else if (upper) {
+                sb.append(s.substring(i, i+1).toUpperCase());
+                upper = false;
+            } else
+                sb.append(s.substring(i, i+1).toLowerCase());
+        }
+        return sb.toString();
+    }
+    
+    public static String toPascalCase(String s) {
+        String res = toCamelCase(s);
+        if (res.length() > 0) {
+            return res.substring(0, 1).toUpperCase() + res.substring(1);
+        } else {
+            return res;
+        }
+    }
+    
+    public static String unCamelCase(String s) {
+        StringBuilder sb = new StringBuilder();
+        for (int i=0; i<s.length(); i++) {
+            char c = s.charAt(i);
+            if (c >= 'A' && c <= 'Z') {
+                sb.append('_').append(c);
+            } else {
+                sb.append((""+c).toUpperCase());
+            }
+        }
+        return sb.toString();
+    }
 
-    static final byte[] biv = hexToBytes("31415926535897932484626433832795");
+    static byte[] raw = new byte[]{
+        (byte)0xE1, (byte)0xAB, (byte)0x86, (byte)0xA1, (byte)0x45,
+        (byte)0x0D, (byte)0x1C, (byte)0x5B, (byte)0xA2, (byte)0xA0,
+        (byte)0xCA, (byte)0x79, (byte)0xA0, (byte)0x1A, (byte)0x92,
+        (byte)0x8A
+    };
+
+    static final byte[] biv = new byte[] {
+        (byte)0x16, (byte)0x44, (byte)0xCC, (byte)0x82, (byte)0x76,
+        (byte)0x90, (byte)0x4B, (byte)0x65, (byte)0x2D, (byte)0x0D,
+        (byte)0x2E, (byte)0x26, (byte)0x39, (byte)0x62, (byte)0xE8,
+        (byte)0x93
+    };
     
     static IvParameterSpec iv = new IvParameterSpec(biv);
+    
+    public static void setMaster(String master) {
+        byte[] enc;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            enc = md.digest(master.getBytes(StandardCharsets.UTF_8));
+        } catch(Throwable ignore) {
+            enc = encrypt(raw, master.getBytes(StandardCharsets.UTF_8));
+        }
+        if (enc.length == 16) {
+            raw = enc;
+            iv = new IvParameterSpec(enc);
+        } else {
+            raw = Arrays.copyOfRange(enc, 0, 16);
+            iv = new IvParameterSpec(Arrays.copyOfRange(enc, 16, 32));
+        }
+    }
 
     public static String encrypt(String value) {
-        if (value != null && isEmpty(value))
+        if (value == null)
+            return null;
+        if (isEmpty(value))
             return "";
-        return encrypt(raw, value.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted = encrypt(raw, value.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(encrypted);
     }
 
     @SuppressWarnings("UseSpecificCatch")
-    public static String encrypt(byte[] key, byte[] data) {
+    public static byte[] encrypt(byte[] key, byte[] data) {
         try {
             SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             cipher.init(Cipher.ENCRYPT_MODE, skeySpec,iv);
-            byte[] encrypted = cipher.doFinal(data);
-            return Base64.getEncoder().encodeToString(encrypted);
+            return cipher.doFinal(data);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "encryption failed", ex);
+            throw new RuntimeException("Encryption failed", ex);
         }
-        return null;
     }
 
     public static String decrypt(String encrypted) {
-        if (encrypted != null && isEmpty(encrypted))
+        if (encrypted == null)
+            return null;
+        if (isEmpty(encrypted))
             return "";
-        byte[] orig = decrypt(raw, encrypted);
+        byte[] enc = Base64.getDecoder().decode(encrypted);
+        byte[] orig = decrypt(raw, enc);
         if (orig != null)
-            try {
-                return new String(orig, "UTF-8");
-            } catch (UnsupportedEncodingException e) {
-                logger.log(Level.SEVERE, "source string is not UTF-8 encoding", e);
-            }
+            return new String(orig, StandardCharsets.UTF_8);
         return null;
     }
     
     @SuppressWarnings("UseSpecificCatch")
-    public static byte[] decrypt(byte[] key, String encrypted) {
+    public static byte[] decrypt(byte[] key, byte[] encrypted) {
         try {
             SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
             Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
             cipher.init(Cipher.DECRYPT_MODE, skeySpec,iv);
             
-            return cipher.doFinal(Base64.getDecoder().decode(encrypted));
+            return cipher.doFinal(encrypted);
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "decryption failed", ex);
+            throw new RuntimeException("Decryption failed", ex);
         }
-        return null;
     }
     
     public static boolean strIn(String key, String[] haystack) {
@@ -1049,21 +1119,25 @@ public class StrUtils
     
     public static void main(String []args) throws ParseException
     {
-        String encrypt = encrypt("1234567890123456");
-        System.out.println("encrypted value:" + encrypt);
-        System.out.println("decrypted value:" + (decrypt(encrypt)));
-        
-        
-//        String mapper = "%itemTotal% 주%orgTotal%";
-//        String source = "14,493,404 주";
-        String mapper = "%P3%,qwwwefunbv=%P1%,guella=%P1%,qwpir9834hn=%P2%";
-        String source = "what the hell,qwwwefunbv=this is,guella=shit!,qwpir9834hn=fuck man!";
-        System.out.println("mapper:" + mapper);
-        System.out.println("source:" + source);
-        String[] p1 = mapSubs(mapper, source, "%P1%", "%");
-        String p2 = mapSub(mapper, source, "%P2%", "%");
-        String p3 = mapSub(mapper, source, "%P3%", "%");
-        System.out.println(p1[0]+" "+p1[1]+" "+p2+". "+p3);
+        byte[] enc = encrypt(raw, "12345678".getBytes());
+        System.out.println(bytesToHex(enc));
+        byte[] dec = decrypt(raw, enc);
+        System.out.println(new String(dec, StandardCharsets.UTF_8));
+//        String encrypt = encrypt("1234567890123456");
+//        System.out.println("encrypted value:" + encrypt);
+//        System.out.println("decrypted value:" + (decrypt(encrypt)));
+//        
+//        
+////        String mapper = "%itemTotal% 주%orgTotal%";
+////        String source = "14,493,404 주";
+//        String mapper = "%P3%,qwwwefunbv=%P1%,guella=%P1%,qwpir9834hn=%P2%";
+//        String source = "what the hell,qwwwefunbv=this is,guella=shit!,qwpir9834hn=fuck man!";
+//        System.out.println("mapper:" + mapper);
+//        System.out.println("source:" + source);
+//        String[] p1 = mapSubs(mapper, source, "%P1%", "%");
+//        String p2 = mapSub(mapper, source, "%P2%", "%");
+//        String p3 = mapSub(mapper, source, "%P3%", "%");
+//        System.out.println(p1[0]+" "+p1[1]+" "+p2+". "+p3);
 //        String itemTotal = mapSub(mapper, source, "%itemTotal%", "%");
 //        String orgTotal = mapSub(mapper, source, "%orgTotal%", "%");
 //        System.out.println("itemTotal: "+itemTotal+"  ,orgTotal: "+orgTotal);

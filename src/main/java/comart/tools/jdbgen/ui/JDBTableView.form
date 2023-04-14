@@ -107,7 +107,7 @@
     <Component class="javax.swing.JLabel" name="lblRemark">
       <Properties>
         <Property name="text" type="java.lang.String" value="Remarks"/>
-        <Property name="autoscrolls" type="boolean" value="true"/>
+        <Property name="verticalAlignment" type="int" value="1"/>
       </Properties>
     </Component>
   </SubComponents>

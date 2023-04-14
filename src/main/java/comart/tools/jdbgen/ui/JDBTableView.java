@@ -48,8 +48,8 @@ public class JDBTableView extends javax.swing.JDialog {
         super(parent, true);
         initComponents();
         this.table = table;
-        lblTableName.setText(table.getTable());
-        lblRemark.setText(table.getRemarks());
+        lblTableName.setText("<html>"+table.getTable()+"</html>");
+        lblRemark.setText("<html>"+table.getRemarks()+"</html>");
 
         tabColumns.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         tabColumns.getColumnModel().getColumn(0).setPreferredWidth(50);
@@ -134,7 +134,7 @@ public class JDBTableView extends javax.swing.JDialog {
         });
 
         lblRemark.setText("Remarks");
-        lblRemark.setAutoscrolls(true);
+        lblRemark.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);

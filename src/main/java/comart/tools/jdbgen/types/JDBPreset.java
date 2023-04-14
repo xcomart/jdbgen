@@ -23,28 +23,26 @@
  */
 package comart.tools.jdbgen.types;
 
-import lombok.AllArgsConstructor;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.EqualsAndHashCode;
 
 /**
  *
  * @author comart
  */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class JDBTemplate {
-    private String name;
-    private String templateFile;
-    private String outTemplate;
-    
-    public Object[] getRowArray() {
-        return new Object[]{ name, templateFile, outTemplate };
-    }
+@EqualsAndHashCode(callSuper=true)
+public class JDBPreset extends JDBListBase {
+    private List<JDBTemplate> templates;
     
     @Override
     public Object clone() throws CloneNotSupportedException {
-        return super.clone();
+        JDBPreset res = (JDBPreset)super.clone();
+        res.templates = new ArrayList<>();
+        for(JDBTemplate t:templates)
+            res.templates.add((JDBTemplate)t.clone());
+        return res;
     }
 }

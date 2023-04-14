@@ -41,8 +41,8 @@ public class NamingUtils {
         int count = 0;
 
         String ret;
-        for(ret = name; nameExists(list, ret); ret = name + " - " + count) {
-            ++count;
+        for(ret = name; nameExists(list, ret); count++) {
+            ret = name + " - " + count;
         }
 
         return ret;

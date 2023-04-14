@@ -58,7 +58,7 @@ public class JDBGenConfig {
     private boolean isDarkUI = false;
     private List<JDBConnection> connections;
     private List<JDBDriver> drivers;
-    private Map<String, List<JDBTemplate>> presets;
+    private List<JDBPreset> presets;
     private MavenConfig maven;
 
     public static synchronized JDBGenConfig getInstance() {

@@ -23,14 +23,21 @@
  */
 package comart.tools.jdbgen.ui;
 
+import comart.tools.jdbgen.types.JDBConnection;
+import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.types.JDBPreset;
+import comart.tools.jdbgen.types.JDBTemplate;
+import comart.utils.PlatformUtils;
 import comart.utils.UIUtils;
-import java.awt.Cursor;
 import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
-import javax.swing.plaf.basic.BasicSplitPaneUI;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
 
 /**
@@ -39,12 +46,35 @@ import jiconfont.icons.font_awesome.FontAwesome;
  */
 public class JDBPresets extends JDialog {
 
+    private final DefaultTableModel templateModel;
+    private final DefaultListModel presetModel;
+    
+    private final JDBGenConfig conf = JDBGenConfig.getInstance();
+    
+    private final List<JDBPreset> presets = conf.getPresets();
+    
+    private final JTable connTpls;
     /**
      * Creates new form JDBPresets
+     * @param connTpls
      */
-    public JDBPresets() {
+    public JDBPresets(JTable connTpls) {
         initComponents();
         applyIcons();
+        
+        this.connTpls = connTpls;
+        
+        templateModel = (DefaultTableModel)tabTemplates.getModel();
+        presetModel = new DefaultListModel();
+        //presetModel = (DefaultListModel)lstPresets.getModel();
+        lstPresets.setModel(presetModel);
+        
+        presets.forEach(p -> presetModel.addElement(p.getName()));
+        
+        tabTemplates.getSelectionModel().addListSelectionListener(e -> {
+            int row = tabTemplates.getSelectedRow();
+            setTemplate(row);
+        });
 
         this.addWindowListener(new WindowAdapter() {
 //            @Override
@@ -65,12 +95,25 @@ public class JDBPresets extends JDialog {
 
         UIUtils.applyIcon(btnTemplateHelp, FontAwesome.QUESTION);
         UIUtils.applyIcon(btnBrowseTemplate, FontAwesome.FOLDER_O);
-        UIUtils.addIcon(btnNewTemplate, FontAwesome.FILE_O);
+        UIUtils.addIcon(btnNewTemplate, FontAwesome.FILE);
         UIUtils.addIcon(btnDelTemplate, FontAwesome.MINUS);
-        UIUtils.addIcon(btnSaveTemplate, FontAwesome.FLOPPY_O);
+        UIUtils.addIcon(btnSaveTemplate, FontAwesome.ARROW_UP);
         
-        UIUtils.addIcon(btnApply, FontAwesome.THUMB_TACK);
+        UIUtils.addIcon(btnApply, FontAwesome.ANGLE_DOUBLE_DOWN);
+        UIUtils.addIcon(btnNewFromConn, FontAwesome.ANGLE_DOUBLE_UP);
         UIUtils.addIcon(btnOk, FontAwesome.CHECK);
+    }
+    
+    private void setTemplate(int row) {
+        if (row > -1) {
+            txtTemplateName.setText((String)tabTemplates.getValueAt(row, 0));
+            txtTemplateFile.setText((String)tabTemplates.getValueAt(row, 1));
+            txtOutTemplate.setText((String)tabTemplates.getValueAt(row, 2));
+        } else {
+            txtTemplateName.setText("");
+            txtTemplateFile.setText("");
+            txtOutTemplate.setText("");
+        }
     }
 
     /**
@@ -82,9 +125,6 @@ public class JDBPresets extends JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        buttonGroup1 = new javax.swing.ButtonGroup();
-        buttonGroup2 = new javax.swing.ButtonGroup();
-        jLabel4 = new javax.swing.JLabel();
         btnOk = new javax.swing.JButton();
         splPreset = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
@@ -116,9 +156,12 @@ public class JDBPresets extends JDialog {
         btnApply = new javax.swing.JButton();
         btnNewFromConn = new javax.swing.JButton();
 
-        jLabel4.setText("jLabel4");
-
         btnOk.setText("Ok");
+        btnOk.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnOkActionPerformed(evt);
+            }
+        });
 
         splPreset.setDividerLocation(200);
         splPreset.setDividerSize(6);
@@ -127,10 +170,11 @@ public class JDBPresets extends JDialog {
         jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
         jLabel1.setText("Presets");
 
-        lstPresets.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+        lstPresets.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
+        lstPresets.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                lstPresetsValueChanged(evt);
+            }
         });
         jScrollPane1.setViewportView(lstPresets);
 
@@ -138,14 +182,29 @@ public class JDBPresets extends JDialog {
 
         btnNew.setText("+");
         btnNew.setPreferredSize(new java.awt.Dimension(23, 26));
+        btnNew.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNewActionPerformed(evt);
+            }
+        });
         jPanel3.add(btnNew);
 
         btnClone.setText("C");
         btnClone.setPreferredSize(new java.awt.Dimension(23, 26));
+        btnClone.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCloneActionPerformed(evt);
+            }
+        });
         jPanel3.add(btnClone);
 
         btnDel.setText("-");
         btnDel.setPreferredSize(new java.awt.Dimension(23, 26));
+        btnDel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDelActionPerformed(evt);
+            }
+        });
         jPanel3.add(btnDel);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -198,16 +257,37 @@ public class JDBPresets extends JDialog {
                 return canEdit [columnIndex];
             }
         });
+        tabTemplates.getTableHeader().setReorderingAllowed(false);
         jScrollPane3.setViewportView(tabTemplates);
 
         btnTemplateHelp.setText("?");
         btnTemplateHelp.setPreferredSize(new java.awt.Dimension(30, 26));
+        btnTemplateHelp.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTemplateHelpActionPerformed(evt);
+            }
+        });
 
         btnNewTemplate.setText("New");
+        btnNewTemplate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnNewTemplateActionPerformed(evt);
+            }
+        });
 
         btnDelTemplate.setText("Delete");
+        btnDelTemplate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDelTemplateActionPerformed(evt);
+            }
+        });
 
-        btnSaveTemplate.setText("Save");
+        btnSaveTemplate.setText("Apply");
+        btnSaveTemplate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveTemplateActionPerformed(evt);
+            }
+        });
 
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel9.setText("Template Name:");
@@ -303,7 +383,12 @@ public class JDBPresets extends JDialog {
 
         splPreset.setRightComponent(jPanel2);
 
-        btnApply.setText("Apply");
+        btnApply.setText("Apply to Current Connection");
+        btnApply.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnApplyActionPerformed(evt);
+            }
+        });
 
         btnNewFromConn.setText("New Preset from Current Connection");
         btnNewFromConn.addActionListener(new java.awt.event.ActionListener() {
@@ -320,8 +405,9 @@ public class JDBPresets extends JDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(btnNewFromConn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnApply)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnOk))
@@ -345,8 +431,83 @@ public class JDBPresets extends JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnNewFromConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewFromConnActionPerformed
-        // TODO add your handling code here:
+        // clear selection
+        btnNewActionPerformed(evt);
+        for (int i=0; i<connTpls.getRowCount(); i++) {
+            String name = (String)connTpls.getValueAt(i, 0);
+            String tplf = (String)connTpls.getValueAt(i, 1);
+            String otpl = (String)connTpls.getValueAt(i, 2);
+            templateModel.addRow(new Object[]{ name, tplf, otpl });
+        }
     }//GEN-LAST:event_btnNewFromConnActionPerformed
+
+    private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
+        lstPresets.setSelectedIndex(-1);
+        while (templateModel.getRowCount() > 0) templateModel.removeRow(0);
+        setTemplate(-1);
+        txtPresetName.setText(NamingUtils.nextNameOf(presets, "New Preset"));
+    }//GEN-LAST:event_btnNewActionPerformed
+
+    private void btnCloneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneActionPerformed
+        int idx = lstPresets.getSelectedIndex();
+        if (idx > -1) {
+            try {
+                JDBPreset npreset = (JDBPreset)presets.get(idx).clone();
+                npreset.setName(NamingUtils.nextNameOf(
+                        presets, "Copy of "+npreset.getName()));
+                presets.add(npreset);
+                presetModel.addElement(npreset.getName());
+                lstPresets.setSelectedIndex(presets.size()-1);
+            } catch(Exception ignored) {}
+        }
+    }//GEN-LAST:event_btnCloneActionPerformed
+
+    private void btnDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelActionPerformed
+        int idx = lstPresets.getSelectedIndex();
+        if (idx > -1) {
+            boolean isDel = UIUtils.confirm(this, "Delete Preset",
+                    "Do you want to delete '"+this.txtPresetName+"'?");
+            if (isDel) {
+                presets.remove(idx);
+                presetModel.remove(idx);
+            }
+        }
+    }//GEN-LAST:event_btnDelActionPerformed
+
+    private void btnTemplateHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTemplateHelpActionPerformed
+        PlatformUtils.openURL("");
+    }//GEN-LAST:event_btnTemplateHelpActionPerformed
+
+    private void btnNewTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewTemplateActionPerformed
+        tabTemplates.clearSelection();
+    }//GEN-LAST:event_btnNewTemplateActionPerformed
+
+    private void btnDelTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelTemplateActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnDelTemplateActionPerformed
+
+    private void btnSaveTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveTemplateActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnSaveTemplateActionPerformed
+
+    private void btnApplyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApplyActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnApplyActionPerformed
+
+    private void btnOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOkActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnOkActionPerformed
+
+    private void lstPresetsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstPresetsValueChanged
+        // TODO add your handling code here:
+        int idx = lstPresets.getSelectedIndex();
+        if (idx > -1) {
+            JDBPreset preset = presets.get(idx);
+            this.txtPresetName.setText(preset.getName());
+            while (templateModel.getRowCount() > 0) templateModel.removeRow(0);
+            preset.getTemplates().forEach(t -> templateModel.addRow(t.getRowArray()));
+        }
+    }//GEN-LAST:event_lstPresetsValueChanged
 
     /**
      * @param args the command line arguments
@@ -354,7 +515,7 @@ public class JDBPresets extends JDialog {
     public static void main(String args[]) {
         UIUtils.setFlatDarkLaf();
         EventQueue.invokeLater(() -> {
-            JDBPresets gm = new JDBPresets();
+            JDBPresets gm = new JDBPresets(null);
             gm.setLocationRelativeTo(null);
             gm.setVisible(true);
             System.exit(0);
@@ -373,13 +534,10 @@ public class JDBPresets extends JDialog {
     private javax.swing.JButton btnOk;
     private javax.swing.JButton btnSaveTemplate;
     private javax.swing.JButton btnTemplateHelp;
-    private javax.swing.ButtonGroup buttonGroup1;
-    private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel13;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;

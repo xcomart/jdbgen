@@ -129,9 +129,9 @@ public class JDBConnectionManager extends JDialog {
         UIUtils.applyIcon(btnTemplateHelp, FontAwesome.QUESTION);
         UIUtils.addIcon(btnPresets, FontAwesome.PAW);
         UIUtils.applyIcon(btnBrowseTemplate, FontAwesome.FOLDER_O);
-        UIUtils.addIcon(btnNewTemplate, FontAwesome.FILE_O);
+        UIUtils.addIcon(btnNewTemplate, FontAwesome.FILE);
         UIUtils.addIcon(btnDelTemplate, FontAwesome.MINUS);
-        UIUtils.addIcon(btnSaveTemplate, FontAwesome.FLOPPY_O);
+        UIUtils.addIcon(btnSaveTemplate, FontAwesome.ARROW_UP);
         UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
     }
 
@@ -562,7 +562,7 @@ public class JDBConnectionManager extends JDialog {
         btnTemplateHelp.setText("?");
         btnTemplateHelp.setPreferredSize(new java.awt.Dimension(30, 26));
 
-        btnSaveTemplate.setText("Save");
+        btnSaveTemplate.setText("Apply");
 
         btnDelTemplate.setText("Delete");
 
@@ -974,7 +974,7 @@ public class JDBConnectionManager extends JDialog {
     }//GEN-LAST:event_btnConnectActionPerformed
 
     private void btnPresetsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPresetsActionPerformed
-        JDBPresets preset = new JDBPresets();
+        JDBPresets preset = new JDBPresets(tabTemplate);
         preset.setModal(true);
         preset.setLocationRelativeTo(this);
         preset.setVisible(true);

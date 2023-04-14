@@ -36,7 +36,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder=true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class JDBListBase implements HasIcon, HasTitle {
+public class JDBListBase implements HasIcon, HasTitle, Cloneable {
     private String name;
     private String icon;
     
@@ -48,5 +48,10 @@ public class JDBListBase implements HasIcon, HasTitle {
     @Override
     public String toString() {
         return getTitle();
+    }
+    
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

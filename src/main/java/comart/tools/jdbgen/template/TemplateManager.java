@@ -243,6 +243,7 @@ public class TemplateManager {
         return res;
     }
 
+    @SuppressWarnings("unused")
     private static TemplateItem parseItem(String extra, ParseContext ctx) throws ParseException {
         return new TemplateItem(TemplateType.ITEM, parseNVPairs(extra));
     }
@@ -316,12 +317,14 @@ public class TemplateManager {
         return res;
     }
     
+    @SuppressWarnings("unused")
     private static TemplateItem parseDate(String extra, ParseContext ctx) throws ParseException {
         if (!extra.contains("="))
             extra = "format="+extra;
         return new TemplateItem(TemplateType.DATE, parseNVPairs(extra));
     }
     
+    @SuppressWarnings("unused")
     private static TemplateItem parseUser(String extra, ParseContext ctx) throws ParseException {
         return new TemplateItem(TemplateType.USER, parseNVPairs(extra));
     }
@@ -393,6 +396,7 @@ public class TemplateManager {
         return mkey;
     }
     
+    @SuppressWarnings("unused")
     private void appendText(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
         sb.append(template.cont.toString());
     }
@@ -409,15 +413,15 @@ public class TemplateManager {
         List<TemplateItem> ttpls = (List<TemplateItem>)map.get("true");
         Object ftpls = map.get("false");
         String mkey = getKey(map);
-        String cval = (String)map.get("value");
-        String cons = (String)map.get("contains");
-        String ncons = (String)map.get("notcontains");
-        String iname = cons == null? ncons:cons;
         boolean condMet = false;
-        if (cval != null) {
+        if (map.containsKey("value")) {
+            String cval = (String)map.get("value");
             String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
             condMet = cval.equalsIgnoreCase(oval);
-        } else if (iname != null) {
+        } else if (map.containsKey("contains") || map.containsKey("notcontains")) {
+            String cons = (String)map.get("contains");
+            String ncons = (String)map.get("notcontains");
+            String iname = cons == null? ncons:cons;
             List<Object> collection = (List<Object>)ObjUtils.getValue(mapper, mkey);
             boolean contains = false;
             for(Object o: collection) {
@@ -427,9 +431,18 @@ public class TemplateManager {
                 }
             }
             condMet = cons == null? !contains:contains;
+        } else if (map.containsKey("startsWith")) {
+            String stwith = (String)map.get("startsWith");
+            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            condMet = oval.toLowerCase().startsWith(stwith.toLowerCase());
+        } else if (map.containsKey("endsWith")) {
+            String edwith = (String)map.get("endsWith");
+            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            condMet = oval.toLowerCase().endsWith(edwith.toLowerCase());
         } else {
             throw new ParseException("Invalid if statement in template.", 0);
         }
+
         if (condMet) {
             appendMapper(sb, ttpls, mapper);
         } else if (ftpls != null) {
@@ -449,14 +462,14 @@ public class TemplateManager {
         String[] skips = StrUtils.split((String)map.get("skipList"), ",", true);
         int idnt = indent == null? 0:Integer.parseInt(indent);
         List<TemplateItem> tpls = (List<TemplateItem>)map.get("items");
-        List<Object> items = (List<Object>)ObjUtils.getValue(mapper, mkey);
+        List<Object> litems = (List<Object>)ObjUtils.getValue(mapper, mkey);
         int stidx = sb.lastIndexOf("\n")+1;
         int splen = sb.substring(stidx).getBytes("EUC-KR").length; // space length(no utf-8)
         splen += idnt;
         String prepend = StrUtils.space(splen, ' ');
         boolean isFirst = true;
-        for (int i=0; i<items.size(); i++) {
-            Object o = items.get(i);
+        for (int i=0; i<litems.size(); i++) {
+            Object o = litems.get(i);
             if (skips != null) {
                 String n = (String)ObjUtils.getValue(o, "name");
                 if (StrUtils.contains(skips, n))
@@ -483,6 +496,7 @@ public class TemplateManager {
         }
     }
     
+    @SuppressWarnings("unused")
     private void appendDate(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         String format = (String)map.get("format");
@@ -490,6 +504,7 @@ public class TemplateManager {
         appendBase(sb, map, sdf.format(new Date()));
     }
     
+    @SuppressWarnings("unused")
     private void appendUser(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         appendBase(sb, map, USER_ID);

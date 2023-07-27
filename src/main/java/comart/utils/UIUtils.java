@@ -28,7 +28,6 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLightLaf;
 import comart.tools.jdbgen.types.HasIcon;
 import comart.tools.jdbgen.types.HasTitle;
-import comart.tools.jdbgen.types.JDBListBase;
 import comart.utils.tuple.Pair;
 import java.awt.Color;
 import java.awt.Component;
@@ -49,7 +48,6 @@ import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
-import javax.swing.AbstractButton;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -186,12 +184,13 @@ public class UIUtils {
 
             try {
                 if (isUrl) {
-                    OkHttpClient client = MavenREST.getHttpClient();
+                    OkHttpClient client = HttpUtils.getClient();
                     Request req = new Request.Builder().url(path).build();
                     try (Response response = client.newCall(req).execute()) {
                         res = new ImageIcon(resize(ImageIO.read(response.body().byteStream())));
                     }
                 } else {
+                    logger.log(Level.WARNING, npath);
                     try (InputStream is = isStock ? UIUtils.class.getResourceAsStream(npath) : new FileInputStream(path)) {
                         res = new ImageIcon(resize(ImageIO.read((InputStream)is)));
                     }

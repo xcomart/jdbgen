@@ -33,7 +33,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.logging.Logger;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -44,16 +43,12 @@ import okhttp3.Response;
 public class MavenREST {
     private static final int PAGE_SIZE=20;
     private static final Logger logger = Logger.getLogger(MavenREST.class.getSimpleName());
-    private static final OkHttpClient client = new OkHttpClient();
     
-    public static OkHttpClient getHttpClient() {
-        return client;
-    }
-    
+    @SuppressWarnings("null")
     private static <T> T restCall(String urlTemplate, Object param, Class<T> clazz) throws ParseException, IOException {
         String url = StrUtils.replaceWith(urlTemplate, param, "${", "}");
         Request req = new Request.Builder().url(url).build();
-        try (Response response = client.newCall(req).execute()) {
+        try (Response response = HttpUtils.getClient().newCall(req).execute()) {
             Gson gson = new Gson();
             return gson.fromJson(response.body().charStream(), clazz);
         }

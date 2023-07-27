@@ -36,7 +36,7 @@ public class PlatformUtils {
     public PlatformUtils() {
     }
 
-    public static OSType getOSType() {
+    public synchronized static OSType getOSType() {
         if (detectedOS == null) {
             String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
             if (!OS.contains("mac") && !OS.contains("darwin")) {

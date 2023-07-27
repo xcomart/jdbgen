@@ -25,6 +25,7 @@ package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.maven.SearchResponseItem;
 import comart.tools.jdbgen.types.maven.SearchResult;
+import comart.utils.HttpUtils;
 import comart.utils.MavenREST;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
@@ -410,7 +411,7 @@ public class MavenExplorer extends JDialog {
                 try {
                     String url = MavenREST.downloadLink(sitem);
                     String fname = "drivers/" + url.substring(url.lastIndexOf('/') + 1);
-                    OkHttpClient client = MavenREST.getHttpClient();
+                    OkHttpClient client = HttpUtils.getClient();
                     Request req = new Request.Builder().url(url).build();
                     try (Response response = client.newCall(req).execute()) {
                         @SuppressWarnings("null")

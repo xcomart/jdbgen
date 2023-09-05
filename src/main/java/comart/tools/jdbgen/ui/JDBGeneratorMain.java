@@ -210,6 +210,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         btnManageConn = new javax.swing.JButton();
         lblConnectionInfo = new javax.swing.JLabel();
+        btnAck = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("DB Generator");
@@ -477,6 +478,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
         lblConnectionInfo.setText("Connection Information Placeholder");
 
+        btnAck.setText("A");
+        btnAck.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAckActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -499,7 +507,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         .addComponent(btnManageConn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lblConnectionInfo)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnAck)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -510,7 +519,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     .addComponent(cboConnection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2)
                     .addComponent(btnManageConn)
-                    .addComponent(lblConnectionInfo))
+                    .addComponent(lblConnectionInfo)
+                    .addComponent(btnAck))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -627,6 +637,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_lstTablesMouseClicked
 
+    private void btnAckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAckActionPerformed
+        // TODO add your handling code here:
+        Acknowledgements.getInstance(this).setVisible(true);
+    }//GEN-LAST:event_btnAckActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -641,6 +656,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAck;
     private javax.swing.JButton btnBrowseOutput;
     private javax.swing.JButton btnClose;
     private javax.swing.JButton btnDelVar;

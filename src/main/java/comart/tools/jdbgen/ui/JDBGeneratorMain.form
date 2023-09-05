@@ -43,7 +43,8 @@
                       <Component id="btnManageConn" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="lblConnectionInfo" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="btnAck" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -59,6 +60,7 @@
                   <Component id="jLabel2" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnManageConn" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblConnectionInfo" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="btnAck" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jPanel1" max="32767" attributes="0"/>
@@ -472,6 +474,14 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Connection Information Placeholder"/>
       </Properties>
+    </Component>
+    <Component class="javax.swing.JButton" name="btnAck">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="A"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAckActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

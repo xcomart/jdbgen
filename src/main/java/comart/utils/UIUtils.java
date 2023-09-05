@@ -175,8 +175,9 @@ public class UIUtils {
     public static synchronized Icon getIcon(String path) {
         Icon res = null;
         if (!cachedIcon.containsKey(path)) {
-            boolean isStock = path.startsWith("stock:");
-            boolean isUrl = path.startsWith("http");
+            boolean isStock = path.toLowerCase().startsWith("stock:");
+            boolean isUrl = path.toLowerCase().startsWith("http");
+            boolean isFA = path.toLowerCase().startsWith("fa:");
             String npath = path;
             if (isStock) {
                 npath = "/icons/" + path.substring(6);
@@ -189,16 +190,22 @@ public class UIUtils {
                     try (Response response = client.newCall(req).execute()) {
                         res = new ImageIcon(resize(ImageIO.read(response.body().byteStream())));
                     }
+                } else if (isFA) {
+                    IconCode code = FontAwesome.valueOf(npath.substring(3).toUpperCase());
+                    res = IconFontSwing.buildIcon( code, (float)fontSize, color);
                 } else {
-                    logger.log(Level.WARNING, npath);
+                    if (StrUtils.isEmpty(path))
+                        npath = "/icons/generic.png";
                     try (InputStream is = isStock ? UIUtils.class.getResourceAsStream(npath) : new FileInputStream(path)) {
                         res = new ImageIcon(resize(ImageIO.read((InputStream)is)));
                     }
                 }
             } catch (Exception e) {
-                logger.log(Level.SEVERE, (String)null, e);
                 if (!"/icons/generic.png".equals(npath)) {
+                    logger.info("Icon not found. Falling back to use default icon.");
                     res = getIcon("stock:generic.png");
+                } else {
+                    logger.log(Level.SEVERE, "cannot read default icon. installation may corrupted.", e);
                 }
             }
 

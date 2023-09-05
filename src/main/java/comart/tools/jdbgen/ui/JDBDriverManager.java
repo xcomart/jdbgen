@@ -677,6 +677,7 @@ public class JDBDriverManager extends JDialog {
             JDBGenConfig.saveInstace(this);
             changed = true;
         }
+        setVisible(false);
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void updateDriver(Consumer<JDBDriver> cons) {

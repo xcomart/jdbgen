@@ -504,8 +504,11 @@ public class TemplateManager {
         Object val = ObjUtils.getValue(mapper, key);
         if (val == null)
             val = ObjUtils.getValue(customs, key);
-        if (val == null)
-            throw new RuntimeException("cannot find '"+key+"' information from database/custom variables");
+        if (val == null) {
+            logger.warning("cannot find '"+key+"' information from database/custom variables");
+            //throw new RuntimeException("cannot find '"+key+"' information from database/custom variables");
+            val = "";
+        }
         for (int i=1; i<keys.length; i++) {
             String proc = StrUtils.trim(keys[i]).toLowerCase();
             if (!procs.containsKey(proc))

@@ -5,7 +5,7 @@
     <artifactId>jdbgen</artifactId>
     <name>DB Generator</name>
     <packaging>jar</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <build>
         <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
         <outputDirectory>${basedir}/target/classes</outputDirectory>
@@ -145,6 +145,24 @@
             <groupId>org.netbeans.external</groupId>
             <artifactId>AbsoluteLayout</artifactId>
             <version>RELEASE121</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-params</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>

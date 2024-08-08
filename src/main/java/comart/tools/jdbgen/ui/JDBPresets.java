@@ -101,6 +101,7 @@ public class JDBPresets extends JDialog {
         
         UIUtils.addIcon(btnApply, FontAwesome.ANGLE_DOUBLE_DOWN);
         UIUtils.addIcon(btnNewFromConn, FontAwesome.ANGLE_DOUBLE_UP);
+        UIUtils.addIcon(btnSave, FontAwesome.FLOPPY_O);
         UIUtils.addIcon(btnOk, FontAwesome.CHECK);
     }
     
@@ -155,6 +156,7 @@ public class JDBPresets extends JDialog {
         jLabel13 = new javax.swing.JLabel();
         btnApply = new javax.swing.JButton();
         btnNewFromConn = new javax.swing.JButton();
+        btnSave = new javax.swing.JButton();
 
         btnOk.setText("Ok");
         btnOk.addActionListener(new java.awt.event.ActionListener() {
@@ -397,6 +399,13 @@ public class JDBPresets extends JDialog {
             }
         });
 
+        btnSave.setText("Save");
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -410,6 +419,8 @@ public class JDBPresets extends JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnApply)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnSave)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnOk))
                     .addComponent(splPreset, javax.swing.GroupLayout.DEFAULT_SIZE, 671, Short.MAX_VALUE))
                 .addContainerGap())
@@ -418,12 +429,13 @@ public class JDBPresets extends JDialog {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(splPreset, javax.swing.GroupLayout.DEFAULT_SIZE, 428, Short.MAX_VALUE)
+                .addComponent(splPreset)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnOk)
                     .addComponent(btnApply)
-                    .addComponent(btnNewFromConn))
+                    .addComponent(btnNewFromConn)
+                    .addComponent(btnSave))
                 .addContainerGap())
         );
 
@@ -509,6 +521,10 @@ public class JDBPresets extends JDialog {
         }
     }//GEN-LAST:event_lstPresetsValueChanged
 
+    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_btnSaveActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -532,6 +548,7 @@ public class JDBPresets extends JDialog {
     private javax.swing.JButton btnNewFromConn;
     private javax.swing.JButton btnNewTemplate;
     private javax.swing.JButton btnOk;
+    private javax.swing.JButton btnSave;
     private javax.swing.JButton btnSaveTemplate;
     private javax.swing.JButton btnTemplateHelp;
     private javax.swing.JLabel jLabel1;

@@ -41,6 +41,9 @@ public class Acknowledgements extends javax.swing.JDialog {
     public Acknowledgements(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
+        
+        setLocationRelativeTo(parent);
+        
         StringBuilder sb = new StringBuilder();
         
         try (InputStream is = Acknowledgements.class.getResourceAsStream("/acknowledgements.txt");
@@ -75,7 +78,9 @@ public class Acknowledgements extends javax.swing.JDialog {
         jLabel1.setFont(new java.awt.Font("맑은 고딕", 1, 18)); // NOI18N
         jLabel1.setText("Acknowledgements");
 
+        txtContents.setEditable(false);
         txtContents.setColumns(20);
+        txtContents.setFont(new java.awt.Font("Monospaced", 0, 13)); // NOI18N
         txtContents.setRows(5);
         jScrollPane1.setViewportView(txtContents);
 
@@ -96,7 +101,7 @@ public class Acknowledgements extends javax.swing.JDialog {
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 546, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 698, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
                         .addComponent(btnOk)))

@@ -673,9 +673,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                             String outFname = tplOut.applyMapper(t);
                             if (!StrUtils.isEmpty(txtOutputDir.getText()))
                                 outFname = txtOutputDir.getText() + "/" + outFname;
-                            logger.info(result);
-                            logger.info(outFname);
-                            
                             ObjUtils.writeFile(outFname, result);
                         }
                     }

@@ -44,7 +44,10 @@ public class ProcessProgress extends javax.swing.JDialog {
         protected void process(List<String> chunks) {
             parent.progStatus.setValue(getProgress());
             for (String chunk:chunks)
-                parent.txtProcessLog.insert(chunk+"\n", 0);
+                parent.txtProcessLog.append(chunk+"\n");
+            int last = parent.txtProcessLog.getText().length();
+            parent.txtProcessLog.setSelectionStart(last);
+            parent.txtProcessLog.setSelectionEnd(last);
         }
 
         @Override

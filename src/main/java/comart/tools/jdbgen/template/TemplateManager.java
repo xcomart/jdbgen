@@ -32,12 +32,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  *
  * @author comart
  */
 public class TemplateManager {
+    private final static Logger logger = Logger.getLogger(TemplateManager.class.getName());
     private static final String USER_ID = ObjUtils.getLoginUserId();
     
     private interface TemplateHandler {
@@ -45,11 +47,15 @@ public class TemplateManager {
     }
     
     private interface TemplateAppender {
-        void append(StringBuilder sb, TemplateItem template, Object mapper) throws Exception;
+        void append(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception;
+    }
+    
+    private interface ItemProcHandler {
+        String process(String item);
     }
     
     private static enum TemplateType {
-        TEXT, ITEM, FOR, IF, USER, DATE;
+        TEXT, ITEM, SUPER, FOR, IF, USER, DATE;
     }
     
     private static class TemplateItem {
@@ -112,6 +118,14 @@ public class TemplateManager {
                 return -1;
             }
         }
+        
+        public String near() {
+            int length = 100;
+            if (curr + length < len)
+                return template.substring(curr, curr+length) + "...";
+            else
+                return template.substring(curr);
+        }
     }
     
     
@@ -125,7 +139,7 @@ public class TemplateManager {
             sp = ctx.len;
         
         // add previous text
-        if (sp > ctx.curr+1) {
+        if (sp > ctx.curr) {
             String pretext = ctx.template.substring(ctx.curr, sp);
             items.add(new TemplateItem(TemplateType.TEXT, pretext));
         }
@@ -133,8 +147,8 @@ public class TemplateManager {
         if (sp+1 < ctx.len)
             sp += 2;    // skip "${"
         
+        ctx.updateLineCount(sp);
         if (sp == ctx.len) {
-            ctx.updateLineCount(sp);
             return null;
         } else {
             ctx.skipSpace();
@@ -142,7 +156,7 @@ public class TemplateManager {
             StringBuilder sb = new StringBuilder();
             // check escaping string
             if (c == '"' || c == '\'') {
-                int openChar = c;
+                int openChar = ctx.nextChar();
                 boolean isEscape = false;
                 while ((c = ctx.nextChar()) > -1) {
                     if (!isEscape) {
@@ -155,11 +169,11 @@ public class TemplateManager {
                     }
                     sb.append((char)c);
                 }
-                sp = ctx.curr+1;
+                sp = ctx.curr;
             }
             int lst = ctx.template.indexOf("}", sp);
             if (lst < 0) {
-                throw new ParseException("'}' not found ", ctx.line);
+                throw new ParseException("'}' not found, before: "+ctx.near(), ctx.line);
             }
             String res = sb.length() == 0 ? ctx.template.substring(sp, lst).trim():sb.toString();
             ctx.updateLineCount(lst);
@@ -174,11 +188,13 @@ public class TemplateManager {
         }
     }
 
-    private static Map<String,Object> parseNVPairs(String data) throws ParseException {
+    private static Map<String,Object> parseNVPairs(ParseContext ctx, String data) throws ParseException {
         int idx = 0;
         int openChar = -1;
         Map<String,Object> map = new HashMap<>();
         StringBuilder sb = new StringBuilder();
+        String name = "";
+        String value = "";
         while (idx < data.length()) {
             char c = data.charAt(idx);
             if (c == '\\') {
@@ -194,13 +210,21 @@ public class TemplateManager {
             }else {
                 if (openChar < 0 && (c == '\"' || c == '\'')) {
                     openChar = c;
+                    sb.append(c);
                 } else if (c == openChar) {
+                    sb.append(c);
                     openChar = -1;
+                } else if (openChar < 0 && c == '=') {
+                    name = StrUtils.trim(sb.toString());
+                    sb.delete(0, sb.length());
                 } else if (openChar < 0 && c == ',') {
-                    String[] nv = StrUtils.split(sb.toString(), "=", true);
-                    if (nv.length < 2)
-                        throw new ParseException("Name value pair not matched: "+data, idx);
-                    map.put(nv[0], nv[1]);
+                    value = StrUtils.trim(sb.toString());
+                    if (StrUtils.isEmpty(name))
+                        throw new ParseException("Name value pair not matched: "+
+                                data+". invalid syntax before: "+ctx.near(), idx);
+                    map.put(name.toLowerCase(), value);
+                    name = "";
+                    value = "";
                     sb.delete(0, sb.length());
                 } else {
                     sb.append(c);
@@ -208,26 +232,30 @@ public class TemplateManager {
             }
             idx++;
         }
-        String remain = sb.toString().trim();
-        if (remain.length() > 0) {
-            String[] nv = StrUtils.split(remain, "=", true);
-            if (nv.length < 2)
-                throw new ParseException("Name value pair not matched: "+data, idx);
-            map.put(nv[0], nv[1]);
+        value = StrUtils.trim(sb.toString());
+        if (!StrUtils.isEmpty(value)) {
+            if (StrUtils.isEmpty(name)) {
+                throw new ParseException("Name value pair not matched: "+
+                        data+". invalid syntax before: "+ctx.near(), idx);
+            }
+            map.put(name.toLowerCase(), value);
         }
         return map;
     }
     
     private static TemplateItem parseOne(String itemString, ParseContext ctx) throws ParseException {
-        if (itemString.indexOf(':') < 0) {
+        if (itemString.toLowerCase().equals("user") ||
+                itemString.toLowerCase().equals("date")) {
+            itemString += ":";
+        } else if (itemString.indexOf(':') < 0) {
             itemString = "item:key=" + itemString;
         }
         int idx = itemString.indexOf(':');
-        String type = itemString.substring(0, idx).trim().toLowerCase();
+        String type = StrUtils.trim(itemString.substring(0, idx)).toLowerCase();
         String typeOptions = itemString.substring(idx+1);
         TemplateHandler handler = handlers.get(type);
         if (handler == null) {
-            throw new ParseException("Unknown template: "+itemString, ctx.line);
+            throw new ParseException("Unknown template: "+itemString+", before: "+ctx.near(), ctx.line);
         }
         return handler.process(typeOptions, ctx);
     }
@@ -245,7 +273,21 @@ public class TemplateManager {
 
     @SuppressWarnings("unused")
     private static TemplateItem parseItem(String extra, ParseContext ctx) throws ParseException {
-        return new TemplateItem(TemplateType.ITEM, parseNVPairs(extra));
+        return new TemplateItem(TemplateType.ITEM, parseNVPairs(ctx, extra));
+    }
+
+    @SuppressWarnings("unused")
+    private static TemplateItem parseSuper(String extra, ParseContext ctx) throws ParseException {
+        return new TemplateItem(TemplateType.SUPER, parseNVPairs(ctx, extra));
+    }
+    
+    private static void checkIfConditions(Map<String, Object> pairs, String extra, ParseContext ctx) throws ParseException {
+        String[] conds = new String[] {"value", "contains", "notcontains", "startswith", "endswith"};
+        for (String cond: conds) {
+            if (pairs.containsKey(cond))
+                return;
+        }
+        throw new ParseException("Unknown if condition: "+extra+", before: "+ctx.near(), ctx.line);
     }
     
     private static TemplateItem parseIf(String extra, ParseContext ctx) throws ParseException {
@@ -269,17 +311,19 @@ public class TemplateManager {
         //   ...
         //   else
         //     false statements
-        Map<String, Object> pairs = parseNVPairs(extra);
+        Map<String, Object> pairs = parseNVPairs(ctx, extra);
+        checkIfConditions(pairs, extra, ctx);
         TemplateItem res = new TemplateItem(TemplateType.IF, pairs);
         ArrayList<TemplateItem> items = new ArrayList<>();
         pairs.put("true", items); // set to true for future statements
         while (true) {
             String itemString = next(ctx, items);
             if (itemString == null)
-                throw new ParseException("if statements not closed.", ctx.line);
+                throw new ParseException("if statements not closed, before: "+ctx.near(), ctx.line);
             if (itemString.startsWith("elif:")) {
-                extra = itemString.substring(5).trim();
-                Map<String, Object> npairs = parseNVPairs(extra);
+                extra = StrUtils.trim(itemString.substring(5));
+                Map<String, Object> npairs = parseNVPairs(ctx, extra);
+                checkIfConditions(npairs, extra, ctx);
                 TemplateItem curr = new TemplateItem(TemplateType.IF, npairs);
                 items = new ArrayList<>();
                 npairs.put("true", items); // set to true for future statements
@@ -299,14 +343,14 @@ public class TemplateManager {
     }
     
     private static TemplateItem parseFor(String extra, ParseContext ctx) throws ParseException {
-        Map<String, Object> pairs = parseNVPairs(extra);
+        Map<String, Object> pairs = parseNVPairs(ctx, extra);
         TemplateItem res = new TemplateItem(TemplateType.FOR, pairs);
         ArrayList<TemplateItem> items = new ArrayList<>();
         pairs.put("items", items); // set to true for future statements
         while (true) {
             String itemString = next(ctx, items);
             if (itemString == null)
-                throw new ParseException("for statements not closed.", ctx.line);
+                throw new ParseException("for statements not closed. before: " + ctx.near(), ctx.line);
             if ("endfor".equals(itemString)) {
                 // reached end of for statement.
                 break;
@@ -321,35 +365,85 @@ public class TemplateManager {
     private static TemplateItem parseDate(String extra, ParseContext ctx) throws ParseException {
         if (!extra.contains("="))
             extra = "format="+extra;
-        return new TemplateItem(TemplateType.DATE, parseNVPairs(extra));
+        return new TemplateItem(TemplateType.DATE, parseNVPairs(ctx, extra));
     }
     
     @SuppressWarnings("unused")
     private static TemplateItem parseUser(String extra, ParseContext ctx) throws ParseException {
-        return new TemplateItem(TemplateType.USER, parseNVPairs(extra));
+        return new TemplateItem(TemplateType.USER, parseNVPairs(ctx, extra));
+    }
+    
+    private static String procPrefix(String item) {
+        int idx = item.lastIndexOf("_");
+        if (idx > -1) {
+            return item.substring(0, idx);
+        } else{
+            return item;
+        }
+    }
+    
+    private static String procSuffix(String item) {
+        int idx = item.indexOf("_");
+        if (idx > -1) {
+            return item.substring(idx+1);
+        } else{
+            return item;
+        }
+    }
+    
+    private static String procCamel(String item) {
+        return StrUtils.toCamelCase(item);
+    }
+    
+    private static String procPascal(String item) {
+        String camel = procCamel(item);
+        String res = camel.substring(0, 1).toUpperCase();
+        if (camel.length() > 1)
+            res += camel.substring(1);
+        return res;
+    }
+    
+    private static String procLower(String item) {
+        return item.toLowerCase();
+    }
+    
+    private static String procUpper(String item) {
+        return item.toUpperCase();
     }
     
     
     private static final Map<String, TemplateHandler> handlers = new HashMap<>();
+    private static final Map<String, ItemProcHandler> procs = new HashMap<>();
     static {
-        handlers.put("item", TemplateManager::parseItem);
-        handlers.put("if"  , TemplateManager::parseIf  );
-        handlers.put("for" , TemplateManager::parseFor );
-        handlers.put("date", TemplateManager::parseDate);
-        handlers.put("user", TemplateManager::parseUser);
+        handlers.put("item" , TemplateManager::parseItem );
+        handlers.put("super", TemplateManager::parseSuper);
+        handlers.put("if"   , TemplateManager::parseIf   );
+        handlers.put("for"  , TemplateManager::parseFor  );
+        handlers.put("date" , TemplateManager::parseDate );
+        handlers.put("user" , TemplateManager::parseUser );
+        
+        procs.put("prefix", TemplateManager::procPrefix);
+        procs.put("suffix", TemplateManager::procSuffix);
+        procs.put("camel" , TemplateManager::procCamel );
+        procs.put("pascal", TemplateManager::procPascal);
+        procs.put("lower" , TemplateManager::procLower );
+        procs.put("upper" , TemplateManager::procUpper );
     }
     
     private final List<TemplateItem> items;
     private String lineEnd = System.lineSeparator();
     private final Map<TemplateType, TemplateAppender> appenders = new HashMap<>();
     
-    public TemplateManager(String template) throws ParseException {
-        appenders.put(TemplateType.TEXT, this::appendText);
-        appenders.put(TemplateType.ITEM, this::appendItem);
-        appenders.put(TemplateType.IF  , this::appendIf  );
-        appenders.put(TemplateType.FOR , this::appendFor );
-        appenders.put(TemplateType.DATE, this::appendDate);
-        appenders.put(TemplateType.USER, this::appendUser);
+    private Map<String, String> customs = null;
+    
+    public TemplateManager(String template, Map<String, String> customs) throws ParseException {
+        appenders.put(TemplateType.TEXT , this::appendText );
+        appenders.put(TemplateType.ITEM , this::appendItem );
+        appenders.put(TemplateType.SUPER, this::appendSuper);
+        appenders.put(TemplateType.IF   , this::appendIf   );
+        appenders.put(TemplateType.FOR  , this::appendFor  );
+        appenders.put(TemplateType.DATE , this::appendDate );
+        appenders.put(TemplateType.USER , this::appendUser );
 
         // preserve line end with source
         int idx = template.indexOf("\n");
@@ -359,13 +453,14 @@ public class TemplateManager {
             else
                 lineEnd = "\n";
         }
+        this.customs = customs;
         items = parseTemplate(new ParseContext(template));
     }
     
     private void appendBase(StringBuilder sb, Map<String,Object> map, Object val) throws Exception {
-        String spadsz = (String)map.get("padSize");
+        String spadsz = (String)map.get("padsize");
         int padsz = spadsz == null? 0:Integer.parseInt(spadsz);
-        String spaddr = (String)map.get("padDir");
+        String spaddr = (String)map.get("paddir");
         boolean padLeft = spaddr == null? false:"left".equalsIgnoreCase(spaddr);
         String quote = (String)map.get("quote");
         String qpre = (String)map.get("prepend");
@@ -397,18 +492,40 @@ public class TemplateManager {
     }
     
     @SuppressWarnings("unused")
-    private void appendText(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+    private void appendText(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         sb.append(template.cont.toString());
     }
     
-    private void appendItem(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+    private void appendItemBase(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         String mkey = getKey(map);
-        Object val = ObjUtils.getValue(mapper, mkey);
+        String []keys = StrUtils.split(mkey, ".");
+        String key = StrUtils.trim(keys[0]);
+        Object val = ObjUtils.getValue(mapper, key);
+        if (val == null)
+            val = ObjUtils.getValue(customs, key);
+        if (val == null)
+            throw new RuntimeException("cannot find '"+key+"' information from database/custom variables");
+        for (int i=1; i<keys.length; i++) {
+            String proc = StrUtils.trim(keys[i]).toLowerCase();
+            if (!procs.containsKey(proc))
+                throw new RuntimeException("cannot find '"+proc+"' in string processors, valid values: [prefix, postfix, camel, pascal, lower, upper]");
+            val = procs.get(proc).process(val.toString());
+        }
         appendBase(sb, map, val);
     }
     
-    private void appendIf(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+    @SuppressWarnings("unused")
+    private void appendItem(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
+        appendItemBase(sb, template, mapper);
+    }
+    
+    @SuppressWarnings("unused")
+    private void appendSuper(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
+        appendItemBase(sb, template, supr);
+    }
+    
+    private void appendIf(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         List<TemplateItem> ttpls = (List<TemplateItem>)map.get("true");
         Object ftpls = map.get("false");
@@ -431,12 +548,12 @@ public class TemplateManager {
                 }
             }
             condMet = cons == null? !contains:contains;
-        } else if (map.containsKey("startsWith")) {
-            String stwith = (String)map.get("startsWith");
+        } else if (map.containsKey("startswith")) {
+            String stwith = (String)map.get("startswith");
             String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
             condMet = oval.toLowerCase().startsWith(stwith.toLowerCase());
-        } else if (map.containsKey("endsWith")) {
-            String edwith = (String)map.get("endsWith");
+        } else if (map.containsKey("endswith")) {
+            String edwith = (String)map.get("endswith");
             String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
             condMet = oval.toLowerCase().endsWith(edwith.toLowerCase());
         } else {
@@ -444,25 +561,28 @@ public class TemplateManager {
         }
 
         if (condMet) {
-            appendMapper(sb, ttpls, mapper);
+            appendMapper(sb, ttpls, mapper, supr);
         } else if (ftpls != null) {
             if (ftpls instanceof TemplateItem) {
-                appendIf(sb, (TemplateItem)ftpls, mapper);
+                appendIf(sb, (TemplateItem)ftpls, mapper, supr);
             } else if (ftpls instanceof List) {
-                appendMapper(sb, (List<TemplateItem>)ftpls, mapper);
+                appendMapper(sb, (List<TemplateItem>)ftpls, mapper, supr);
             }
         }
     }
     
-    private void appendFor(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+    private void appendFor(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         String mkey = getKey(map);
-        String instr = (String)map.get("inStr");
+        String instr = (String)map.get("instr");
         String indent = (String)map.get("indent");
-        String[] skips = StrUtils.split((String)map.get("skipList"), ",", true);
+        String[] skips = StrUtils.split((String)map.get("skiplist"), ",", true);
         int idnt = indent == null? 0:Integer.parseInt(indent);
         List<TemplateItem> tpls = (List<TemplateItem>)map.get("items");
         List<Object> litems = (List<Object>)ObjUtils.getValue(mapper, mkey);
+        if (litems == null) {
+            throw new RuntimeException("Model has no '"+mkey+"' member: "+mapper);
+        }
         int stidx = sb.lastIndexOf("\n")+1;
         int splen = sb.substring(stidx).getBytes("EUC-KR").length; // space length(no utf-8)
         splen += idnt;
@@ -477,7 +597,7 @@ public class TemplateManager {
             }
             if (!isFirst) {
                 if (instr != null) {
-                    int idx = instr.indexOf('\n');
+                    int idx = instr.indexOf("\n");
                     if (idx > -1) {
                         sb.append(instr.substring(0, idx));
                         sb.append(lineEnd).append(prepend);
@@ -488,16 +608,13 @@ public class TemplateManager {
                 }
             }
             ObjUtils.setValue(o, "no", (i+1));
-            ObjUtils.setValue(o, "super", mapper);
-            appendMapper(sb, tpls, o);
-            // can cause circular reference, so unset super reference.
-            ObjUtils.setValue(o, "super", null);
+            appendMapper(sb, tpls, o, mapper);
             isFirst = false;
         }
     }
     
     @SuppressWarnings("unused")
-    private void appendDate(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+    private void appendDate(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         String format = (String)map.get("format");
         SimpleDateFormat sdf = new SimpleDateFormat(format);
@@ -505,20 +622,20 @@ public class TemplateManager {
     }
     
     @SuppressWarnings("unused")
-    private void appendUser(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+    private void appendUser(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         appendBase(sb, map, USER_ID);
     }
     
-    private void appendMapper(StringBuilder sb, List<TemplateItem> templates, Object mapper) throws Exception {
+    private void appendMapper(StringBuilder sb, List<TemplateItem> templates, Object mapper, Object supr) throws Exception {
         for (TemplateItem tpl:templates) {
-            appenders.get(tpl.type).append(sb, tpl, mapper);
+            appenders.get(tpl.type).append(sb, tpl, mapper, supr);
         }
     }
     
     public String applyMapper(Object mapper) throws Exception {
         StringBuilder sb = new StringBuilder();
-        appendMapper(sb, items, mapper);
+        appendMapper(sb, items, mapper, null);
         return sb.toString();
     }
 }

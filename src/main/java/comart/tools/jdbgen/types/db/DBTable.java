@@ -36,13 +36,6 @@ public class DBTable extends DBMetaModel implements HasTitle, HasIcon {
     private String remarks;
     
     
-    private String nameCamelCase;
-    private String namePascalCase;
-    private String nameSuffix;
-    private String nameSuffixCamelCase;
-    private String nameSuffixPascal;
-    private String nameSuffixLower;
-    
     public DBTable(ResultSet rs) throws SQLException {
         catalog = rs.getString("TABLE_CAT");
         schema = rs.getString("TABLE_SCHEM");
@@ -54,18 +47,6 @@ public class DBTable extends DBMetaModel implements HasTitle, HasIcon {
 
     public final void setName(String name) {
         this.name = name;
-        this.nameCamelCase = StrUtils.toCamelCase(name);
-        namePascalCase = nameCamelCase.substring(0,1).toUpperCase();
-        if (nameCamelCase.length() > 1)
-            namePascalCase += nameCamelCase.substring(1);
-        // guarantee start with 0 if no under bar is presents.
-        int idx = name.indexOf('_') + 1;
-        this.nameSuffix = name.substring(idx);
-        this.nameSuffixCamelCase = StrUtils.toCamelCase(this.nameSuffix);
-        this.nameSuffixPascal = nameSuffixCamelCase.substring(0,1).toUpperCase();
-        if (nameSuffixCamelCase.length() > 1)
-            this.nameSuffixPascal += nameSuffixCamelCase.substring(1);
-        this.nameSuffixLower = nameSuffixCamelCase.toLowerCase();
     }
 
     @Override

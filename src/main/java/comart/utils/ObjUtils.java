@@ -136,7 +136,8 @@ public class ObjUtils {
         BufferedOutputStream bos = null;
         try {
             File f = new File(fname);
-            f.getParentFile().mkdirs();
+            if (f.getParentFile() != null)
+                f.getParentFile().mkdirs();
             bos = new BufferedOutputStream(new FileOutputStream(f));
             bos.write(content.getBytes("utf-8"));
         } finally {

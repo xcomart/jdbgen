@@ -57,7 +57,7 @@ public class JDBConnection extends JDBListBase {
     private List<JDBTemplate> templates;
     private String outputDir;
     private String author;
-    private boolean dropFirstWord;
+    private Map<String, String> customVars;
     
     public boolean validate() {
         return !StrUtils.isEmpty(driverType) &&

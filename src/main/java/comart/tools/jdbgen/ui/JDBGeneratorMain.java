@@ -23,12 +23,16 @@
  */
 package comart.tools.jdbgen.ui;
 
+import comart.tools.jdbgen.template.TemplateManager;
 import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.types.JDBTemplate;
 import comart.tools.jdbgen.types.db.DBMeta;
 import comart.tools.jdbgen.types.db.DBSchema;
 import comart.tools.jdbgen.types.db.DBTable;
+import comart.utils.ObjUtils;
+import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
 import java.awt.Point;
@@ -36,6 +40,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +53,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
@@ -139,6 +145,22 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             cboConnection.setSelectedItem(preName);
             suppressCboConnEvent = false;
         }
+        DefaultTableModel tplModel = (DefaultTableModel)this.tblTemplates.getModel();
+        tplModel.setRowCount(0);
+        DefaultTableModel cstModel = (DefaultTableModel)this.tabVars.getModel();
+        cstModel.setRowCount(0);
+        if (conn != null) {
+            List<JDBTemplate> tpls = conn.getTemplates();
+            tplModel.setRowCount(tpls.size());
+            for (int row=0; row<tpls.size(); row++) {
+                JDBTemplate t = tpls.get(row);
+                tplModel.setValueAt(t.getName(), row, 1);
+                tplModel.setValueAt(t.getTemplateFile(), row, 2);
+                tplModel.setValueAt(t.getOutTemplate(), row, 3);
+            }
+            this.txtAuthor.setText(conn.getAuthor());
+            conn.getCustomVars().forEach((k, v) -> cstModel.addRow(new String[]{k, v}));
+        }
     }
     
     private void showInit() throws SQLException {
@@ -196,7 +218,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         txtOutputDir = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
         btnBrowseOutput = new javax.swing.JButton();
-        chkCutFirst = new javax.swing.JCheckBox();
         jLabel14 = new javax.swing.JLabel();
         txtAuthor = new javax.swing.JTextField();
         jLabel16 = new javax.swing.JLabel();
@@ -280,8 +301,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(chkShowView)
                     .addComponent(jLabel5))
-                .addContainerGap(104, Short.MAX_VALUE))
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 198, Short.MAX_VALUE)
+                .addContainerGap(128, Short.MAX_VALUE))
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -333,8 +354,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
         btnBrowseOutput.setText("...");
         btnBrowseOutput.setPreferredSize(new java.awt.Dimension(30, 26));
-
-        chkCutFirst.setText("Ignore first word(preceeding with first underbar) in table name.");
 
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel14.setText("Author Name:");
@@ -388,7 +407,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                             .addComponent(btnDelVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                    .addComponent(chkCutFirst, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -418,14 +436,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     .addComponent(txtAuthor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel14))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkCutFirst)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel16)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(87, 87, 87)
                         .addComponent(btnDelVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -479,6 +495,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         lblConnectionInfo.setText("Connection Information Placeholder");
 
         btnAck.setText("A");
+        btnAck.setToolTipText("Acknowledgements");
         btnAck.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAckActionPerformed(evt);
@@ -563,7 +580,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         if (dbmeta != null)
                             try { dbmeta.close(); } catch(SQLException ignored) {}
                         lblConnectionInfo.setText(jcc.getConnectionUrl());
-                        // TODO: get schemas & tables
+                        // get schemas & tables
                         dbmeta = new DBMeta(jdr, jcc);
                         showInit();
                     } catch (Exception ex) {
@@ -615,8 +632,72 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         System.exit(0);
     }//GEN-LAST:event_btnCloseActionPerformed
 
+    private ProcessProgress.Worker getProgressWorker() {
+        return new ProcessProgress.Worker() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                try {
+                    Map<String, String> custVars = UIUtils.applyTableToMap(tabVars.getModel());
+                    custVars.put("author", txtAuthor.getText());
+                    int tidxs[] = lstTables.getSelectedIndices();
+                    List<DBTable> tbls = new ArrayList<>();
+                    for (int idx: tidxs) {
+                        DBTable t = tables.get(idx);
+                        dbmeta.getTableColumns(t);
+                        tbls.add(t);
+                    }
+                    List<JDBTemplate> tpls = new ArrayList<>();
+                    DefaultTableModel tplModel = (DefaultTableModel)tblTemplates.getModel();
+                    for (int i=0; i<tblTemplates.getRowCount(); i++) {
+                        Object val = tplModel.getValueAt(i, 0);
+                        if (val != null && (boolean)val) {
+                            tpls.add(new JDBTemplate(
+                                    tplModel.getValueAt(i, 1).toString(),
+                                    tplModel.getValueAt(i, 2).toString(),
+                                    tplModel.getValueAt(i, 3).toString()
+                            ));
+                        }
+                    }
+                    int totalProcs = tidxs.length * tpls.size();
+                    int progress = 0;
+                    for (JDBTemplate tpl:tpls) {
+                        publish(tpl.getName() + " template processing...");
+                        String tplStr = ObjUtils.getFileContents(tpl.getTemplateFile());
+                        TemplateManager tplCont = new TemplateManager(tplStr, custVars);
+                        TemplateManager tplOut = new TemplateManager(tpl.getOutTemplate(), custVars);
+                        for (DBTable t:tbls) {
+                            progress++;
+                            setProgress(progress * 100 / totalProcs);
+                            publish(tpl.getName() + " applyng to " + t.getTable() + "...");
+                            String result = tplCont.applyMapper(t);
+                            String outFname = tplOut.applyMapper(t);
+                            if (!StrUtils.isEmpty(txtOutputDir.getText()))
+                                outFname = txtOutputDir.getText() + "/" + outFname;
+                            logger.info(result);
+                            logger.info(outFname);
+                            
+                            ObjUtils.writeFile(outFname, result);
+                        }
+                    }
+                    setProgress(100);
+                    publish("all process complete!");
+                    UIUtils.info(parent, "Process complete!");
+                    return true;
+                } catch(Exception e) {
+                    e.printStackTrace();
+                    publish("process failed! : " + e.getLocalizedMessage());
+                    UIUtils.info(parent, "Process failed!");
+                    return false;
+                }
+            }
+        };
+    }
+    
     private void btnGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateActionPerformed
-        // TODO add your handling code here:
+        // TODO: run with background thread
+        ProcessProgress pp = new ProcessProgress(this, true, getProgressWorker());
+        pp.start();
+        pp.setVisible(true);
     }//GEN-LAST:event_btnGenerateActionPerformed
 
     private void lstTablesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseClicked
@@ -663,7 +744,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private javax.swing.JButton btnGenerate;
     private javax.swing.JButton btnManageConn;
     private javax.swing.JComboBox<String> cboConnection;
-    private javax.swing.JCheckBox chkCutFirst;
     private javax.swing.JCheckBox chkDarkUI;
     private javax.swing.JCheckBox chkShowView;
     private javax.swing.JLabel jLabel1;

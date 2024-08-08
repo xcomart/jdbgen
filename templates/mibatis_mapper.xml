@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.abc.sample.${name.prefix.camel}">
+
+	<!-- ${remarks} search list -->
+    <select id="search" resultType="record" parameterType="params">
+        SELECT ${for:
+                         item=columns,
+                         inStr="\n,"
+               }${name} AS "${name.camel}"${endfor}
+          FROM ${name} A
+         WHERE (0=0)
+               ${for:item=keys,inStr="\n"}<if test="${name.camel} == null or ${name.camel} == '')">AND ${name} = #{${name.camel}} </if>${endfor}
+         ORDER 
+            BY UPDT_DT DESC
+    </select>
+	<!-- ${remarks} search list count -->
+    <select id="searchCount" resultType="int" parameterType="params">
+        SELECT COUNT(1) 
+          FROM ${name} A
+         WHERE (0=0)
+               ${for:item=keys,inStr="\n"}<if test="${name.camel} == null or ${name.camel} == ''">AND ${name} = #{${name.camel}}</if>${endfor}
+    </select>
+
+	<!-- ${remarks} select one -->
+    <select id="select" resultType="record" parameterType="params">
+        SELECT ${for:item=columns,inStr="\n,"}${name} AS "${name.camel}"${endfor}
+          FROM ${name} A
+         WHERE ${for:item=keys,inStr="\nAND "}${name} = #{${name.camel}}${endfor}
+    </select>
+
+	<!-- ${remarks} insert -->
+    <insert id="insert" parameterType="params">
+        INSERT 
+          INTO ${name} 
+             (
+               ${for:item=columns,inStr="\n,"}${name}${endfor}  
+             )
+        VALUES
+             (
+               ${for:item=columns,inStr="\n,"}${if:item=typeName,value="datetime"}GETDATE()${else}#{${name.camel}}${endif}${endfor}  
+             )
+    </insert>
+
+	<!-- ${remarks} update -->
+    <update id="update" parameterType="params">
+        UPDATE ${name} 
+           SET ${for:item=notKeys,inStr="\n,"}${name} = #{${name.camel}}${endfor}  
+         WHERE ${for:item=keys,inStr="\nAND "}${name} = #{${name.camel}}${endfor}
+    </update>
+
+	<!-- ${remarks} delete -->
+    <delete id="delete" parameterType="params">
+        DELETE 
+          FROM ${name} 
+         WHERE ${for:item=keys,inStr="\nAND "}${name} = #{${name.camel}}${endfor}
+    </delete> 
+
+</mapper>

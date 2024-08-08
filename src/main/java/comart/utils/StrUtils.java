@@ -759,6 +759,37 @@ public class StrUtils
         return new String(pad(c, size));
     }
     
+    public static String trim(String input) {
+        return trim(input, new String(SPACE_CHARS));
+    }
+    
+    public static String trim(String input, String spaceChars) {
+        return trim(input, spaceChars.toCharArray());
+    }
+    
+    public static boolean contains(char[] charArr, char c) {
+        for (char ca:charArr)
+            if (ca == c) return true;
+        return false;
+    }
+    
+    public static String trim(String input, char[] spaceChars) {
+        int st = 0, ed = input.length();
+        while (st < ed && contains(spaceChars, input.charAt(st)))
+            st++;
+        if (st < ed) {
+            while (st < ed && contains(spaceChars, input.charAt(ed-1)))
+                ed--;
+            String res = input.substring(st, ed);
+            if (contains(new char[]{'"','\''}, res.charAt(0)) &&
+                    res.charAt(0) == res.charAt(res.length()-1)) {
+                res = res.substring(1, res.length()-1);
+            }
+            return res;
+        }
+        return "";
+    }
+    
     public static String[] mapSubs(
             String mapper, String source, String sub, String delim
             ) throws ParseException

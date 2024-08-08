@@ -37,11 +37,13 @@ import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -53,6 +55,7 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -63,7 +66,9 @@ import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import jiconfont.IconCode;
 import jiconfont.icons.font_awesome.FontAwesome;
 import jiconfont.swing.IconFontSwing;
@@ -233,10 +238,12 @@ public class UIUtils {
                 if (lb instanceof HasIcon) {
                     HasIcon hi = (HasIcon)lb;
                     String icon = hi.getIcon();
-                    if (icon.startsWith("FA:")) {
-                        UIUtils.addIcon(label, FontAwesome.valueOf(icon.substring(3)));
-                    } else {
-                        label.setIcon(UIUtils.getIcon(hi.getIcon()));
+                    if (!StrUtils.isEmpty(icon)) {
+                        if (icon.startsWith("FA:")) {
+                            UIUtils.addIcon(label, FontAwesome.valueOf(icon.substring(3)));
+                        } else {
+                            label.setIcon(UIUtils.getIcon(hi.getIcon()));
+                        }
                     }
                 }
                 label.setText(lb.getTitle());
@@ -336,5 +343,63 @@ public class UIUtils {
         } else {
             return null;
         }
+    }
+    
+    public static String openFileDlg(Component parent) {
+        return openFileDlg(parent, "", true);
+    }
+    
+    public static String openFileDlg(Component parent, String startPath, boolean relative) {
+        return openFileDlg(parent, startPath, relative, null, null);
+    }
+    
+    public static String openFileDlg(Component parent, String startPath, boolean relative, String fileTypeName, String []fileTypes) {
+        JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(new File(startPath));
+        if (fileTypeName != null && fileTypes != null) {
+            FileNameExtensionFilter filter = new FileNameExtensionFilter(
+                fileTypeName, fileTypes);
+        }
+        if (fc.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
+            String fpath = fc.getSelectedFile().getAbsolutePath();
+            if (relative) {
+                String cpath = new File("").getAbsolutePath();
+                fpath = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
+            }
+            return fpath;
+        } else {
+            return null;
+        }
+    }
+    
+    public static String openDirDlg(Component parent) {
+        return openDirDlg(parent, "", true);
+    }
+    
+    public static String openDirDlg(Component parent, String startPath, boolean relative) {
+        JFileChooser fc = new JFileChooser();
+        fc.setCurrentDirectory(new File(startPath));
+        fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if (fc.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
+            String fpath = fc.getSelectedFile().getAbsolutePath();
+            if (relative) {
+                String cpath = new File("").getAbsolutePath();
+                fpath = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
+            }
+            return fpath;
+        } else {
+            return null;
+        }
+    }
+
+    public static Map<String, String> applyTableToMap(TableModel model) {
+        Map<String, String> props = new LinkedHashMap<>();
+        for (int i=0; i<model.getRowCount(); i++) {
+            String k = (String)model.getValueAt(i, 0);
+            String v = (String)model.getValueAt(i, 1);
+            if (ObjectUtils.isNotEmpty(k) && ObjectUtils.isNotEmpty(v))
+                props.put(k, v);
+        }
+        return props;
     }
 }

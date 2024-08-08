@@ -5,7 +5,6 @@
  */
 package comart.tools.jdbgen.types.db;
 
-import comart.utils.StrUtils;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import lombok.Data;
@@ -34,8 +33,6 @@ public class DBColumn extends DBMetaModel {
     private String defVal;
     
     private String typeString;
-    private String nameCamelCase;
-    private String namePascalCase;
     private boolean isCharType;
     private String nvlColName;
     private String jdbcType;
@@ -65,10 +62,6 @@ public class DBColumn extends DBMetaModel {
                 tname += "("+length+")";
         }
         typeString = tname;
-        nameCamelCase = StrUtils.toCamelCase(name);
-        namePascalCase = nameCamelCase.substring(0,1).toUpperCase();
-        if (nameCamelCase.length() > 1)
-            namePascalCase += nameCamelCase.substring(1);
         jdbcType = SqlTypes.getJDBCType(dataType);
         javaType = SqlTypes.getJavaType(dataType);
     }

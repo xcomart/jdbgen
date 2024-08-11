@@ -52,6 +52,10 @@ public class JDBDriver extends JDBListBase {
     private String tableCommentsSql;
     private boolean useColumnComments;
     private String columnCommentsSql;
+    private boolean useTables;
+    private String tablesSql;
+    private boolean useColumns;
+    private String columnsSql;
     
     public boolean validate() {
         return !StrUtils.isEmpty(jdbcJar) &&

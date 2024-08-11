@@ -94,8 +94,10 @@ public class DBMeta implements AutoCloseable {
                     }
                 }
                 if (res.isEmpty()) {
-                    tree.put("Default Catalog", new ArrayList<>());
-                    res.add(new DBSchema());
+                    DBSchema scheme = new DBSchema();
+                    scheme.setName("Default Schema");
+                    res.add(scheme);
+                    tree.put("Default Catalog", res);
                 }
                 schemas = res;
             }
@@ -108,19 +110,38 @@ public class DBMeta implements AutoCloseable {
         return tree;
     }
     
+    private ArrayList<DBTable> getTables(DBSchema schema) throws Exception {
+        ArrayList<DBTable> tables = new ArrayList<>();
+        if (driver.isUseTables()) {
+            String sql = driver.getTablesSql();
+            sql = StrUtils.replaceWith(sql, schema, "${", "}");
+            try (Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql))
+            {
+                while (rs.next()) {
+                    DBTable table = new DBTable(rs);
+                    tables.add(table);
+                }
+            }
+            
+        } else {
+            DatabaseMetaData dbm = getMetaData();
+            try (ResultSet rs = dbm.getTables(
+                    schema.getCatalog(), schema.getSchema(), null, null)) {
+                while (rs.next()) {
+                    DBTable table = new DBTable(rs);
+                    tables.add(table);
+                }
+            }
+        }
+        return tables;
+    }
+    
     public List<DBTable> getTables(
             DBSchema schema, boolean includeViews) throws Exception {
         synchronized(schema) {
             if (schema.getTables() == null) {
-                DatabaseMetaData dbm = getMetaData();
-                ArrayList<DBTable> tables = new ArrayList<>();
-                try (ResultSet rs = dbm.getTables(
-                        schema.getCatalog(), schema.getSchema(), null, null)) {
-                    while (rs.next()) {
-                        DBTable table = new DBTable(rs);
-                        tables.add(table);
-                    }
-                }
+                ArrayList<DBTable> tables = getTables(schema);
                 schema.setTables(tables);
                 if (driver.isUseTableComments()) {
                     String sql = driver.getTableCommentsSql();

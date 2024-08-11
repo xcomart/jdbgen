@@ -35,6 +35,8 @@ import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -44,6 +46,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -62,6 +65,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.UIDefaults;
@@ -302,20 +307,36 @@ public class UIUtils {
     private static class PasswordPanel extends JPanel {
         private final String password;
 
-        private PasswordPanel(String prompt) {
+        private PasswordPanel(String prompt, boolean isFirst) {
             super(new FlowLayout());
             JPasswordField pwdField = new JPasswordField(20);
+            add(new JLabel("Password:", null, JLabel.LEADING));
             add(pwdField);
+            JPasswordField confirmField = null;
+            if (isFirst){
+                add(new JLabel("Confirm:", null, JLabel.LEADING));
+                confirmField = new JPasswordField(20);
+                add(confirmField);
+            }
             JOptionPane joptionPane = new JOptionPane(this, JOptionPane.PLAIN_MESSAGE, JOptionPane.OK_CANCEL_OPTION);
-            boolean responseOK = configure(joptionPane, prompt, pwdField).equals(JOptionPane.OK_OPTION);
+            boolean responseOK = false;
+            boolean isSame = true;
+            do {
+                responseOK = configure(joptionPane, prompt, pwdField).equals(JOptionPane.OK_OPTION);
+                if (isFirst) {
+                    String pass = String.valueOf(pwdField.getPassword());
+                    String conf = String.valueOf(confirmField.getPassword());
+                    isSame = pass.equals(conf);
+                }
+            } while (responseOK && !isSame);
             this.password = responseOK ? String.valueOf(pwdField.getPassword()) : null;
         }
 
-        public static String getPassword(String message){
-            return new PasswordPanel(message).password;
+        public static String getPassword(String message, boolean isFirst){
+            return new PasswordPanel(message, isFirst).password;
         }
 
-        private Object configure(JOptionPane jOptionPane, String prompt, JComponent pwdField) {
+        private Object configure(JOptionPane jOptionPane, String prompt, JPasswordField pwdField) {
             JDialog jDialog = promptDialog(prompt, jOptionPane, pwdField);
             Object result = jOptionPane.getValue();
             jDialog.dispatchEvent(new WindowEvent(jDialog, WindowEvent.WINDOW_CLOSING));
@@ -336,13 +357,8 @@ public class UIUtils {
         }
     }
 
-    public static String password(String message) {
-        String passwordText = PasswordPanel.getPassword(message);
-        if (null != passwordText) {
-            return passwordText;
-        } else {
-            return null;
-        }
+    public static String password(String message, boolean isFirst) {
+        return PasswordPanel.getPassword(message, isFirst);
     }
     
     public static String openFileDlg(Component parent) {
@@ -370,6 +386,10 @@ public class UIUtils {
         } else {
             return null;
         }
+    }
+    
+    public static String openIconDlg(Component parent, String startPath) {
+        return openFileDlg(parent, startPath, true, "Image/Icon Files", new String[]{"jpg", "jpeg", "tiff", "tif", "gif", "png", "ico"});
     }
     
     public static String openDirDlg(Component parent) {
@@ -401,5 +421,42 @@ public class UIUtils {
                 props.put(k, v);
         }
         return props;
+    }
+    
+    public static boolean checkNotEmpty(Component parent, JComponent target) {
+        boolean isOk = true;
+        if (target instanceof JTextField) {
+            isOk = !StrUtils.isEmpty(((JTextField) target).getText());
+        } else if (target instanceof JTextArea) {
+            isOk = !StrUtils.isEmpty(((JTextArea) target).getText());
+        }
+        if (!isOk) {
+            String name = target.getToolTipText();
+            if (name == null)
+                name = target.getName();
+            UIUtils.error(parent, "'"+name+"' is required");
+        }
+        return isOk;
+    }
+    
+    public static boolean checkNotEmpty(Component parent, JComponent[] targets) {
+        for (JComponent t:targets) {
+            if (!checkNotEmpty(parent, t))
+                return false;
+        }
+        return true;
+    }
+    
+    public static void templateTooltip(JTable tabTemplates, int baseidx, MouseEvent evt) {
+        Point p = evt.getPoint();
+        int row = tabTemplates.rowAtPoint(p);
+        String name = (String)tabTemplates.getValueAt(row, baseidx);
+        String tfile = (String)tabTemplates.getValueAt(row, baseidx+1);
+        String tout = (String)tabTemplates.getValueAt(row, baseidx+2);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Template Name  : ").append(name).append("\n");
+        sb.append("Template File  : ").append(tfile).append("\n");
+        sb.append("Output Template: ").append(tout);
+        tabTemplates.setToolTipText(sb.toString());
     }
 }

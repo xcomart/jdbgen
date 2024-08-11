@@ -28,15 +28,20 @@ import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBPreset;
 import comart.tools.jdbgen.types.JDBTemplate;
 import comart.utils.PlatformUtils;
+import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
+import java.awt.Point;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.DefaultListModel;
+import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
 
@@ -71,6 +76,7 @@ public class JDBPresets extends JDialog {
         
         presets.forEach(p -> presetModel.addElement(p.getName()));
         
+        tabTemplates.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabTemplates.getSelectionModel().addListSelectionListener(e -> {
             int row = tabTemplates.getSelectedRow();
             setTemplate(row);
@@ -102,7 +108,7 @@ public class JDBPresets extends JDialog {
         UIUtils.addIcon(btnApply, FontAwesome.ANGLE_DOUBLE_DOWN);
         UIUtils.addIcon(btnNewFromConn, FontAwesome.ANGLE_DOUBLE_UP);
         UIUtils.addIcon(btnSave, FontAwesome.FLOPPY_O);
-        UIUtils.addIcon(btnOk, FontAwesome.CHECK);
+        UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
     }
     
     private void setTemplate(int row) {
@@ -126,7 +132,7 @@ public class JDBPresets extends JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        btnOk = new javax.swing.JButton();
+        btnCancel = new javax.swing.JButton();
         splPreset = new javax.swing.JSplitPane();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
@@ -158,10 +164,10 @@ public class JDBPresets extends JDialog {
         btnNewFromConn = new javax.swing.JButton();
         btnSave = new javax.swing.JButton();
 
-        btnOk.setText("Ok");
-        btnOk.addActionListener(new java.awt.event.ActionListener() {
+        btnCancel.setText("Cancel");
+        btnCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnOkActionPerformed(evt);
+                btnCancelActionPerformed(evt);
             }
         });
 
@@ -170,7 +176,7 @@ public class JDBPresets extends JDialog {
         splPreset.setResizeWeight(1.0);
 
         jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText("Presets");
+        jLabel1.setText("Template Presets");
 
         lstPresets.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         lstPresets.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
@@ -260,6 +266,11 @@ public class JDBPresets extends JDialog {
             }
         });
         tabTemplates.getTableHeader().setReorderingAllowed(false);
+        tabTemplates.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                tabTemplatesMouseMoved(evt);
+            }
+        });
         jScrollPane3.setViewportView(tabTemplates);
 
         btnTemplateHelp.setText("?");
@@ -421,7 +432,7 @@ public class JDBPresets extends JDialog {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnSave)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnOk))
+                        .addComponent(btnCancel))
                     .addComponent(splPreset, javax.swing.GroupLayout.DEFAULT_SIZE, 671, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -432,7 +443,7 @@ public class JDBPresets extends JDialog {
                 .addComponent(splPreset)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnOk)
+                    .addComponent(btnCancel)
                     .addComponent(btnApply)
                     .addComponent(btnNewFromConn)
                     .addComponent(btnSave))
@@ -455,7 +466,7 @@ public class JDBPresets extends JDialog {
 
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
         lstPresets.setSelectedIndex(-1);
-        while (templateModel.getRowCount() > 0) templateModel.removeRow(0);
+        templateModel.setRowCount(0);
         setTemplate(-1);
         txtPresetName.setText(NamingUtils.nextNameOf(presets, "New Preset"));
     }//GEN-LAST:event_btnNewActionPerformed
@@ -487,7 +498,7 @@ public class JDBPresets extends JDialog {
     }//GEN-LAST:event_btnDelActionPerformed
 
     private void btnTemplateHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTemplateHelpActionPerformed
-        PlatformUtils.openURL("");
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/blob/master/docs/README.md#template-management");
     }//GEN-LAST:event_btnTemplateHelpActionPerformed
 
     private void btnNewTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewTemplateActionPerformed
@@ -495,20 +506,59 @@ public class JDBPresets extends JDialog {
     }//GEN-LAST:event_btnNewTemplateActionPerformed
 
     private void btnDelTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelTemplateActionPerformed
-        // TODO add your handling code here:
+        int idx = tabTemplates.getSelectedRow();
+        if (idx > -1) {
+            templateModel.removeRow(idx);
+            tabTemplates.clearSelection();
+        }
     }//GEN-LAST:event_btnDelTemplateActionPerformed
 
+    private boolean saveTemplate() {
+        int idx = tabTemplates.getSelectedRow();
+        String tname = txtTemplateName.getText();
+        String tfile = txtTemplateFile.getText();
+        String outpl = txtOutTemplate.getText();
+        if (idx < 0 && StrUtils.isEmpty(tname))
+            return true;
+        
+        JComponent[] targets = new JComponent[] {
+            txtTemplateName, txtTemplateFile, txtOutTemplate
+        };
+        if (!UIUtils.checkNotEmpty(this, targets))
+            return false;
+            
+        if (idx > -1) {
+            templateModel.setValueAt(tname, idx, 0);
+            templateModel.setValueAt(tfile, idx, 1);
+            templateModel.setValueAt(outpl, idx, 2);
+        } else {
+            templateModel.addRow(new String[]{tname, tfile, outpl});
+            idx = templateModel.getRowCount() - 1;
+            tabTemplates.setRowSelectionInterval(idx, idx);
+        }
+        return true;
+    }
+    
     private void btnSaveTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveTemplateActionPerformed
-        // TODO add your handling code here:
+        saveTemplate();
     }//GEN-LAST:event_btnSaveTemplateActionPerformed
 
     private void btnApplyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApplyActionPerformed
-        // TODO add your handling code here:
+        DefaultTableModel connTplModel = (DefaultTableModel)connTpls.getModel();
+        connTplModel.setRowCount(0);
+        for (int i=0; i<tabTemplates.getRowCount(); i++) {
+            String name = (String)tabTemplates.getValueAt(i, 0);
+            String tplf = (String)tabTemplates.getValueAt(i, 1);
+            String otpl = (String)tabTemplates.getValueAt(i, 2);
+            connTplModel.addRow(new Object[]{ name, tplf, otpl });
+        }
+        
     }//GEN-LAST:event_btnApplyActionPerformed
 
-    private void btnOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOkActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnOkActionPerformed
+    private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
+        setVisible(false);
+            
+    }//GEN-LAST:event_btnCancelActionPerformed
 
     private void lstPresetsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstPresetsValueChanged
         // TODO add your handling code here:
@@ -521,9 +571,44 @@ public class JDBPresets extends JDialog {
         }
     }//GEN-LAST:event_lstPresetsValueChanged
 
+    private boolean savePreset() {
+        if (!saveTemplate())
+            return false;
+        if (!UIUtils.checkNotEmpty(this, txtPresetName))
+            return false;
+        int idx = lstPresets.getSelectedIndex();
+        JDBPreset target = null;
+        if (idx > -1) {
+            target = presets.get(idx);
+        } else {
+            target = new JDBPreset();
+        }
+        target.setName(txtPresetName.getText());
+        target.setIcon("FA:paw");
+        ArrayList<JDBTemplate> tpls = new ArrayList<>();
+        for (int i=0; i<tabTemplates.getRowCount(); i++) {
+            String name = (String)tabTemplates.getValueAt(i, 0);
+            String tplf = (String)tabTemplates.getValueAt(i, 1);
+            String otpl = (String)tabTemplates.getValueAt(i, 2);
+            tpls.add(new JDBTemplate(name, tplf, otpl));
+        }
+        target.setTemplates(tpls);
+        if (idx < 0) {
+            presets.add(target);
+            presetModel.addElement(target.getName());
+            lstPresets.setSelectedIndex(presets.size() - 1);
+        }
+        JDBGenConfig.saveInstace(this);
+        return true;
+    }
+    
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
-        // TODO add your handling code here:
+        savePreset();
     }//GEN-LAST:event_btnSaveActionPerformed
+
+    private void tabTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplatesMouseMoved
+        UIUtils.templateTooltip(tabTemplates, 0, evt);
+    }//GEN-LAST:event_tabTemplatesMouseMoved
 
     /**
      * @param args the command line arguments
@@ -541,13 +626,13 @@ public class JDBPresets extends JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnApply;
     private javax.swing.JButton btnBrowseTemplate;
+    private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnClone;
     private javax.swing.JButton btnDel;
     private javax.swing.JButton btnDelTemplate;
     private javax.swing.JButton btnNew;
     private javax.swing.JButton btnNewFromConn;
     private javax.swing.JButton btnNewTemplate;
-    private javax.swing.JButton btnOk;
     private javax.swing.JButton btnSave;
     private javax.swing.JButton btnSaveTemplate;
     private javax.swing.JButton btnTemplateHelp;

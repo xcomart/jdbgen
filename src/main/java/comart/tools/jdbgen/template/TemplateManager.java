@@ -175,7 +175,7 @@ public class TemplateManager {
             if (lst < 0) {
                 throw new ParseException("'}' not found, before: "+ctx.near(), ctx.line);
             }
-            String res = sb.length() == 0 ? ctx.template.substring(sp, lst).trim():sb.toString();
+            String res = sb.length() == 0 ? StrUtils.trim(ctx.template.substring(sp, lst)):sb.toString();
             ctx.updateLineCount(lst);
             ctx.nextChar(); // skip '}'
             if (sb.length() > 0) {
@@ -204,10 +204,9 @@ public class TemplateManager {
                     case 'n': sb.append('\n'); break;
                     case 'r': sb.append('\r'); break;
                     case 't': sb.append('\t'); break;
-                    default:
-                        sb.append(c);
+                    default : sb.append(c);
                 }
-            }else {
+            } else {
                 if (openChar < 0 && (c == '\"' || c == '\'')) {
                     openChar = c;
                     sb.append(c);
@@ -215,9 +214,15 @@ public class TemplateManager {
                     sb.append(c);
                     openChar = -1;
                 } else if (openChar < 0 && c == '=') {
+                    if (!StrUtils.isEmpty(name))
+                        throw new ParseException("Name value pair not matched: "+
+                                data+". invalid syntax before: "+ctx.near(), idx);
                     name = StrUtils.trim(sb.toString());
-                    sb.delete(0, sb.length());
+                    sb = new StringBuilder();
                 } else if (openChar < 0 && c == ',') {
+                    if (!StrUtils.isEmpty(value))
+                        throw new ParseException("Name value pair not matched: "+
+                                data+". invalid syntax before: "+ctx.near(), idx);
                     value = StrUtils.trim(sb.toString());
                     if (StrUtils.isEmpty(name))
                         throw new ParseException("Name value pair not matched: "+
@@ -225,15 +230,18 @@ public class TemplateManager {
                     map.put(name.toLowerCase(), value);
                     name = "";
                     value = "";
-                    sb.delete(0, sb.length());
+                    sb = new StringBuilder();
                 } else {
                     sb.append(c);
                 }
             }
             idx++;
         }
+        if (!StrUtils.isEmpty(value))
+            throw new ParseException("Name value pair not matched: "+
+                    data+". invalid syntax before: "+ctx.near(), idx);
         value = StrUtils.trim(sb.toString());
-        if (!StrUtils.isEmpty(value)) {
+        if (value.length() > 0) {
             if (StrUtils.isEmpty(name)) {
                 throw new ParseException("Name value pair not matched: "+
                         data+". invalid syntax before: "+ctx.near(), idx);
@@ -602,9 +610,11 @@ public class TemplateManager {
                 if (instr != null) {
                     int idx = instr.indexOf("\n");
                     if (idx > -1) {
-                        sb.append(instr.substring(0, idx));
+                        if (idx > 0)
+                            sb.append(instr.substring(0, idx));
                         sb.append(lineEnd).append(prepend);
-                        sb.append(instr.substring(idx+1));
+                        if (instr.length()-1 > idx)
+                            sb.append(instr.substring(idx+1));
                     } else {
                         sb.append(instr);
                     }

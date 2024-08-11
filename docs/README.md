@@ -11,14 +11,14 @@ from database table, this tool will fit perfectly as you need.
 ## UI Workflow
 
 ### Master Password
-![Master password input window](images/master_passwd.png)
+![Master password input window](images/master_passwd.png "Master Password Window")
 
 Master password is used to encrypt/decrypt your database connection informations.
 
 If you forgot master password, all customized informations will be lost.
 
 ### Connection Manager Window
-![Connection manager window](images/connection_manager.png)
+![Connection manager window](images/connection_manager.png "Connection Manager Window")
 
 Managing database connection informations, connection dependent templates and
 options.
@@ -35,3 +35,11 @@ options.
 |Icon|Icon used in connection list(see [Icons Usage](## Icons Usage))|
 |Connection Props|Additional connection properties|
 |Keep Alive|Execute dummy query every n seconds to keep alive connection|
+
+#### Templates Tab
+
+#### Options Tab
+
+### Driver Manager Window
+
+### Template Presets Window

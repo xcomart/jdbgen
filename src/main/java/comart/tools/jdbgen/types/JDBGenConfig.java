@@ -26,6 +26,7 @@ package comart.tools.jdbgen.types;
 import comart.tools.jdbgen.types.maven.MavenConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import comart.utils.ObjUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.Container;
@@ -37,6 +38,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,23 +65,30 @@ public class JDBGenConfig {
 
     public static synchronized JDBGenConfig getInstance() {
         if (INSTANCE == null) {
-            String master = UIUtils.password("Enter master password");
-            if (master == null)
-                System.exit(1);
-            StrUtils.setMaster(master);
             logger.info("config path: "+CONF_PATH);
-            Gson gson = new Gson();
             File f = new File(CONF_PATH);
-            if (f.exists() && f.isFile()) {
-                try {
-                    INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f), JDBGenConfig.class);
-                } catch (Exception e) {
-                    boolean isOk = UIUtils.confirm(null, "Configuration Error",
-                            "Loading configuration failed - Password may not correct : " +
-                            e.getLocalizedMessage() +
-                            "\nDo you want to load default configuration?");
-                    if (!isOk) {
-                        System.exit(1);
+            Gson gson = new Gson();
+            for (int cnt=0; cnt < 3; cnt++) {
+                String master = UIUtils.password("Enter master password", !(f.exists() && f.isFile()));
+                if (master == null)
+                    System.exit(1);
+                StrUtils.setMaster(master);
+                if (f.exists() && f.isFile()) {
+                    try {
+                        INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f), JDBGenConfig.class);
+                        break;
+                    } catch (Exception e) {
+                        if (cnt < 2) {
+                            UIUtils.error(null, "Password Incorrect!");
+                        } else {
+                            boolean isOk = UIUtils.confirm(null, "Configuration Error",
+                                    "Loading configuration failed - Password may not correct : " +
+                                    e.getLocalizedMessage() +
+                                    "\nDo you want to load default configuration?");
+                            if (!isOk) {
+                                System.exit(1);
+                            }
+                        }
                     }
                 }
             }
@@ -87,6 +98,23 @@ public class JDBGenConfig {
 
                 try (InputStream is = JDBGenConfig.class.getResourceAsStream("/defaultConfig.json")) {
                     INSTANCE = (JDBGenConfig)gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), JDBGenConfig.class);
+                    
+                    // create sample connection with H2 Embedded
+                    JDBConnection jcon = new JDBConnection();
+                    jcon.setAuthor(ObjUtils.getLoginUserId());
+                    jcon.setConnectionProps(new HashMap<>());
+                    jcon.setConnectionUrl("jdbc:h2:./sample_h2.db");
+                    jcon.setDriverType("H2 Embedded");
+                    jcon.setIcon("stock:h2.png");
+                    jcon.setName("Sample H2 Embedded");
+                    jcon.setOutputDir("output");
+                    List<JDBTemplate> templates = new ArrayList<>(Arrays.asList(
+                        new JDBTemplate("Java Model", "templates/java_model.java", "${name.suffix.pascal}Model.java"),
+                        new JDBTemplate("MyBatis mapper", "templates/mybatis_mapper.xml", "${name.suffix.camel}-mapper.xml"),
+                        new JDBTemplate("PHP CI Model", "templates/php_ci.php", "${name.suffix.lower}_ci_model.php")
+                    ));
+                    jcon.setTemplates(templates);
+                    INSTANCE.connections = new ArrayList<>(Arrays.asList(jcon));
                 } catch (Exception e) {
                     UIUtils.error(null, "Cannot load default configuration: " + e.getLocalizedMessage());
                     logger.log(Level.SEVERE, "cannot recover previous error.", e);

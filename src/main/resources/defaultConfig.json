@@ -32,6 +32,39 @@
         },
         {
             "stockItem": true,
+            "name": "SQLite",
+            "driverClass": "org.sqlite.JDBC",
+            "urlTemplate": "jdbc:sqlite:<database file>",
+            "defaultQuery": "sqlite-jdbc",
+            "noAuth": true,
+            "icon": "stock:sqlite.png",
+            "props": {}
+        },
+        {
+            "stockItem": true,
+            "name": "H2 Embedded",
+            "driverClass": "org.h2.Driver",
+            "urlTemplate": "jdbc:h2:<database file>",
+            "defaultQuery": "h2database",
+            "noAuth": true,
+            "icon": "stock:h2.png",
+            "useTables": true,
+            "tablesSql": "select TABLE_CATALOG as \"TABLE_CAT\", TABLE_SCHEMA as \"TABLE_SCHEM\", TABLE_NAME, CASE WHEN TABLE_TYPE\u003d\u0027BASE TABLE\u0027 THEN \u0027TABLE\u0027 ELSE TABLE_TYPE END AS \"TABLE_TYPE\", REMARKS\nfrom information_schema.tables\nwhere TABLE_CATALOG\u003d\u0027${catalog}\u0027 and TABLE_SCHEMA\u003d\u0027${schema}\u0027",
+            "props": {}
+        },
+        {
+            "stockItem": true,
+            "name": "H2 Server",
+            "driverClass": "org.h2.Driver",
+            "urlTemplate": "jdbc:h2:tcp://<databaseHost>[:9092]/<database file>",
+            "defaultQuery": "h2database",
+            "icon": "stock:h2.png",
+            "useTables": true,
+            "tablesSql": "select TABLE_CATALOG as \"TABLE_CAT\", TABLE_SCHEMA as \"TABLE_SCHEM\", TABLE_NAME, CASE WHEN TABLE_TYPE\u003d\u0027BASE TABLE\u0027 THEN \u0027TABLE\u0027 ELSE TABLE_TYPE END AS \"TABLE_TYPE\", REMARKS\nfrom information_schema.tables\nwhere TABLE_CATALOG\u003d\u0027${catalog}\u0027 and TABLE_SCHEMA\u003d\u0027${schema}\u0027",
+            "props": {}
+        },
+        {
+            "stockItem": true,
             "name": "Microsoft SQL Server",
             "driverClass": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
             "urlTemplate": "jdbc:sqlserver://<databaseHost>:1433;databaseName=<database>",

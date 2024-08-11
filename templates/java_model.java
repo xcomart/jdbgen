@@ -1,4 +1,4 @@
-package com.abc.sample.${name.prefix.camel}.model;
+package com.abc.sample.${name.suffix.camel};
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -16,20 +16,17 @@ import org.apache.ibatis.type.Alias;
  *
  */
 @Data
-@Alias("${name.prefix.lower}")
-public class ${name.prefix.pascal}Model
+@Alias("${name.suffix.lower}")
+public class ${name.suffix.pascal}Model
 {
-    ${for:item=keys,inStr="\n"}
-    // ${remarks}
+    ${for:item=keys}// ${remarks}
     @NotBlank(message="${remarks}: Required Item.")
     private ${item:key=javaType,padSize=10,padDir=right} ${name.camel};
     ${endfor}
 
-    ${for:item=notKeys,inStr="\n",skipList="last_updater_id,last_updated_date"}
-    // ${remarks}
-    ${if:key=nullable,value=0}@NotBlank(message="${remarks}: Required Item.", groups=PostMethod.class)
-    ${elif:key=typeName,value="varchar"}@Size(max=${length}, message="${remarks}: Cannot exceeds ${length}.", groups=PostMethod.class)
+    ${for:item=notKeys}// ${remarks}
+    ${if:key=nullable,value=0}@NotBlank(message="${remarks}: Required Item.")
+    ${endif}${if:key=typeName,startsWith="char"}@Size(max=${length}, message="${remarks}: Cannot exceeds ${length}.")
     ${endif}private ${item:key=javaType,padSize=10,padDir=right} ${name.camel};
-
     ${endfor}
 }

@@ -6,12 +6,11 @@
  * User: ${user}
  * Date: ${date:yyyy-MM-dd HH:mm:ss}
  */
-class ${name.prefix.pascal}_model extends CI_Model {
+class ${name.suffix.pascal}_Model extends CI_Model {
 
     public $table = '${name}';
 
-    ${for:key=keys,inStr=",\n"}
-    public ${name};
+    ${for:key=keys}public ${name}; // ${remarks}
     ${endfor}
     
     public function __construct() {
@@ -19,9 +18,8 @@ class ${name.prefix.pascal}_model extends CI_Model {
 
     // ${remarks} get detail
     public function get() {
-        ${for:key=keys,inStr="\n"}
-        $this->db->where(${item:key=name,padSize=15,quote='\''}, $_POST[${item:key=name,padSize=15,quote='\''}]);
-        ${endfor}
+        ${for:key=keys}
+        $this->db->where(${item:key=name,padSize=15,quote='\''}, $_POST[${item:key=name,padSize=15,quote='\''}]);${endfor}
         $query = $this->db->get($table);
         return $query->result();
     }
@@ -35,9 +33,8 @@ class ${name.prefix.pascal}_model extends CI_Model {
     // ${remarks} input values
     public function getData() {
         return array(
-            ${for:key=columns,inStr="\n,",indent=-1}
-            ${item:key=name,quote='\'',padSize=20} => $_POST['${name}']
-            ${endfor}
+            ${for:key=columns,inStr=","}
+            ${item:key=name,quote='\'',padSize=20} => $_POST['${name}']${endfor}
         );
     }
 
@@ -50,18 +47,16 @@ class ${name.prefix.pascal}_model extends CI_Model {
     // ${remarks} modify
     public function update() {
         $data = getData();
-        ${for:key=keys,inStr="\n"}
-        $this->db->where(${item:key=name,padSize=15,quote='\''}, $_POST[${item:key=name,padSize=15,quote='\''}]);
-        ${endfor}
+        ${for:key=keys}
+        $this->db->where(${item:key=name,padSize=15,quote='\''}, $_POST[${item:key=name,padSize=15,quote='\''}]);${endfor}
         $this->db->update($table, data);
     }
 
     // ${remarks} delete
     public function delete() {
         $data = getData();
-        ${for:key=keys,inStr="\n"}
-        $this->db->where(${item:key=name,padSize=15,quote='\''}, $_POST[${item:key=name,padSize=15,quote='\''}]);
-        ${endfor}
+        ${for:key=keys}
+        $this->db->where(${item:key=name,padSize=15,quote='\''}, $_POST[${item:key=name,padSize=15,quote='\''}]);${endfor}
         $this->db->delete($table);
     }
 }

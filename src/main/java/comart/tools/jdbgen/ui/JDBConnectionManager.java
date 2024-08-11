@@ -31,6 +31,7 @@ import comart.tools.jdbgen.types.TemplateType;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
+import java.awt.Point;
 import java.awt.TextField;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -118,6 +119,10 @@ public class JDBConnectionManager extends JDialog {
         tabTemplate.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         refreshDrivers();
         resetControls();
+        
+        if (!connections.isEmpty()) {
+            lstConnections.setSelectedIndex(0);
+        }
     }
     
     public void tabTemplateSelectionChanged(ListSelectionEvent e) {
@@ -174,7 +179,7 @@ public class JDBConnectionManager extends JDialog {
     
     private void refreshDrivers() {
         String dname = (String)cboDriver.getSelectedItem();
-        int idx = 0;
+        int idx = -1;
         cboDriver.removeAllItems();
         for (int i=0; i<conf.getDrivers().size(); i++) {
             JDBDriver d = conf.getDrivers().get(i);
@@ -410,6 +415,11 @@ public class JDBConnectionManager extends JDialog {
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel2.setText("Connection Name:");
 
+        cboDriver.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboDriverItemStateChanged(evt);
+            }
+        });
         cboDriver.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboDriverActionPerformed(evt);
@@ -581,6 +591,11 @@ public class JDBConnectionManager extends JDialog {
             }
         });
         tabTemplate.getTableHeader().setReorderingAllowed(false);
+        tabTemplate.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                tabTemplateMouseMoved(evt);
+            }
+        });
         jScrollPane2.setViewportView(tabTemplate);
 
         btnTemplateHelp.setText("?");
@@ -845,31 +860,23 @@ public class JDBConnectionManager extends JDialog {
         setVisible(false);
     }//GEN-LAST:event_btnCancelActionPerformed
 
-    private void btnManageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageActionPerformed
+    private boolean manageDrivers(int driverIndex) {
         JDBDriverManager dm = JDBDriverManager.getInstance();
         dm.setModal(true);
         dm.setLocationRelativeTo(this);
+        if (driverIndex > -1)
+            dm.setDriverIndex(driverIndex);
         dm.setVisible(true);
-        if (dm.changed)
+        return dm.changed;
+    }
+    
+    private void btnManageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageActionPerformed
+        if (manageDrivers(cboDriver.getSelectedIndex()))
             refreshDrivers();
     }//GEN-LAST:event_btnManageActionPerformed
 
     private void cboDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboDriverActionPerformed
-        if (autoReset) {
-        String dname = (String)cboDriver.getSelectedItem();
-            JDBDriver driver = driverMap.get(dname);
-            if (driver != null) {
-                if (txtConnUrl.getText().contains("<"))
-                    txtConnUrl.setText(driver.getUrlTemplate());
-                if (txtIcon.getText().startsWith("stock:"))
-                    txtIcon.setText(driver.getIcon());
-                for(int i = propsModel.getRowCount() - 1; i >= 0; --i) {
-                    propsModel.removeRow(i);
-                }
-                driver.getProps().forEach((key, value) -> 
-                    propsModel.addRow(new String[]{key, value}));
-            }
-        }
+
     }//GEN-LAST:event_cboDriverActionPerformed
 
     private void btnCloneConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneConnActionPerformed
@@ -883,11 +890,22 @@ public class JDBConnectionManager extends JDialog {
                 newOne.setConnectionProps(new LinkedHashMap(conn.getConnectionProps()));
 
             connections.add(newOne);
+            connMap.put(newOne.getName(), newOne);
             listModel.addElement(newOne.getName());
             lstConnections.setSelectedIndex(listModel.size() - 1);
         }
     }//GEN-LAST:event_btnCloneConnActionPerformed
 
+    public void setSelection(JDBConnection conn) {
+        for (int i=0; i<connections.size(); i++) {
+            if (connections.get(i) == conn) {
+                lstConnections.setSelectedIndex(i);
+                lstConnectionsValueChanged(null);
+                break;
+            }
+        }
+    }
+    
     private void lstConnectionsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstConnectionsValueChanged
         int idx = lstConnections.getSelectedIndex();
         if (idx > -1) {
@@ -906,8 +924,14 @@ public class JDBConnectionManager extends JDialog {
             txtUser.setText(conn.getUserName());
             chkKeepAlive.setSelected(conn.isUseKeepAlive());
             cboDriver.getModel().setSelectedItem(conn.getDriverType());
+//            for (int i=0; i<cboDriver.getItemCount(); i++)
+//                if (conn.getDriverType().equals(cboDriver.getItemAt(i))) {
+//                    cboDriver.setSelectedIndex(i);
+//                    break;
+//                }
             removeProps();
             removeTemplates();
+            removeVars();
             
             conn.getConnectionProps().forEach((k, v) -> propsModel.addRow(new String[]{k, v}));
             conn.getTemplates().forEach(t -> tplModel.addRow(
@@ -918,11 +942,21 @@ public class JDBConnectionManager extends JDialog {
             if (conn.getCustomVars() != null)
                 conn.getCustomVars().forEach((k, v) -> varsModel.addRow(new String[]{k, v}));
             autoReset = true;
+            cboDriverItemStateChanged(null);
         }
     }//GEN-LAST:event_lstConnectionsValueChanged
 
     private void btnNewConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewConnActionPerformed
         resetControls();
+        JDBConnection newConn = new JDBConnection();
+        newConn.setName(NamingUtils.nextNameOf(connections, "New Connection"));
+        newConn.setConnectionProps(new HashMap<>());
+        newConn.setCustomVars(new HashMap<>());
+        newConn.setTemplates(new ArrayList<>());
+        connections.add(newConn);
+        connMap.put(newConn.getName(), newConn);
+        listModel.addElement(newConn.getName());
+        lstConnections.setSelectedIndex(connections.size() - 1);
     }//GEN-LAST:event_btnNewConnActionPerformed
 
     private Map<String, String> applyToPropsMap() {
@@ -934,9 +968,7 @@ public class JDBConnectionManager extends JDialog {
     }
     
     private List<JDBTemplate> applyToTplList(List<JDBTemplate> tpls) {
-        if (tpls == null)
-            tpls = new ArrayList<>();
-        tpls.clear();
+        tpls = new ArrayList<>();
         for (int i=0; i<tplModel.getRowCount(); i++) {
             String name = (String)tplModel.getValueAt(i, 0);
             String tplf = (String)tplModel.getValueAt(i, 1);
@@ -988,8 +1020,10 @@ public class JDBConnectionManager extends JDialog {
             txtOutputDir.requestFocusInWindow();
         } else if (!driver.validate()) {
             UIUtils.error(this, "Driver information is not fulfilled.");
-            this.btnManageActionPerformed(evt);
+            manageDrivers(cboDriver.getSelectedIndex());
         } else {
+            connMap.remove(target.getName());
+            
             target.setAuthor(txtAuthor.getText());
             target.setConnectionUrl(txtConnUrl.getText());
             target.setIcon(txtIcon.getText());
@@ -1004,6 +1038,8 @@ public class JDBConnectionManager extends JDialog {
             target.setCustomVars(applyToVarsMap());
             target.setTemplates(applyToTplList(target.getTemplates()));
 
+            connMap.put(target.getName(), target);
+            
             if (idx == -1) {
                 connections.add(target);
                 listModel.addElement(target.getName());
@@ -1112,6 +1148,30 @@ public class JDBConnectionManager extends JDialog {
             target.setCustomVars(applyToVarsMap());
         }
     }//GEN-LAST:event_btnDelVarActionPerformed
+
+    private void cboDriverItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboDriverItemStateChanged
+        if (autoReset) {
+            String dname = (String)cboDriver.getSelectedItem();
+            JDBDriver driver = driverMap.get(dname);
+            if (driver != null) {
+                if (txtConnUrl.getText().contains("<") || StrUtils.isEmpty(txtConnUrl.getText()))
+                    txtConnUrl.setText(driver.getUrlTemplate());
+                if (txtIcon.getText().startsWith("stock:"))
+                    txtIcon.setText(driver.getIcon());
+                for(int i = propsModel.getRowCount() - 1; i >= 0; --i) {
+                    propsModel.removeRow(i);
+                }
+                driver.getProps().forEach((key, value) -> 
+                    propsModel.addRow(new String[]{key, value}));
+                txtUser.setEnabled(!driver.isNoAuth());
+                txtPassword.setEnabled(!driver.isNoAuth());
+            }
+        }
+    }//GEN-LAST:event_cboDriverItemStateChanged
+
+    private void tabTemplateMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplateMouseMoved
+        UIUtils.templateTooltip(tabTemplate, 0, evt);
+    }//GEN-LAST:event_tabTemplateMouseMoved
 
     /**
      * @param args the command line arguments

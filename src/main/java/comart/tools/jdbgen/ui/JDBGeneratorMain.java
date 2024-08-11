@@ -68,6 +68,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
     private final JDBGenConfig conf;
     private final Map<String, JDBConnection> connMap = new HashMap<>();
+    private JDBConnection currConn = null;
     private DBMeta dbmeta = null;
     private List<DBTable> tables;
     /**
@@ -85,11 +86,21 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             cm.setVisible(true);
             if (cm.selectedConnection == null)
                 System.exit(0);
-            applyConnection(cm.selectedConnection, false);
+            applyConnection(cm.selectedConnection);
         });
         
         initTemplates();
         applyIcons();
+        clearContents();
+    }
+    
+    private void clearContents() {
+        ((DefaultTableModel)this.tblTemplates.getModel()).setRowCount(0);
+        ((DefaultTableModel)this.tabVars.getModel()).setRowCount(0);
+        ((DefaultTableModel)this.tblTemplates.getModel()).setRowCount(0);
+        this.lstTables.removeAll();
+        this.txtAuthor.setText("");
+        this.txtOutputDir.setText("");
     }
 
     private void initTemplates() {
@@ -126,28 +137,33 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }    
     
     private boolean suppressCboConnEvent = false;
-    private void applyConnection(JDBConnection conn, boolean comboOnly) {
+    private void applyConnection(JDBConnection conn) {
         suppressCboConnEvent = conn == null;
+        currConn = conn;
         String preName = null;
         if (suppressCboConnEvent)
             preName = (String)cboConnection.getSelectedItem();
             
         connMap.clear();
+        
+        boolean back = suppressCboConnEvent;
+        suppressCboConnEvent = true;
         cboConnection.removeAllItems();
         conf.getConnections().forEach(c -> {
             connMap.put(c.getName(), c);
             cboConnection.addItem(c.getName());
         });
         cboConnection.setRenderer(UIUtils.getListCellRenderer(s -> connMap.get(s)));
+        suppressCboConnEvent = back;
         if (conn != null)
             cboConnection.setSelectedItem(conn.getName());
         else if (suppressCboConnEvent) {
             cboConnection.setSelectedItem(preName);
             suppressCboConnEvent = false;
         }
-        DefaultTableModel tplModel = (DefaultTableModel)this.tblTemplates.getModel();
+        DefaultTableModel tplModel = (DefaultTableModel)tblTemplates.getModel();
         tplModel.setRowCount(0);
-        DefaultTableModel cstModel = (DefaultTableModel)this.tabVars.getModel();
+        DefaultTableModel cstModel = (DefaultTableModel)tabVars.getModel();
         cstModel.setRowCount(0);
         if (conn != null) {
             List<JDBTemplate> tpls = conn.getTemplates();
@@ -158,7 +174,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 tplModel.setValueAt(t.getTemplateFile(), row, 2);
                 tplModel.setValueAt(t.getOutTemplate(), row, 3);
             }
-            this.txtAuthor.setText(conn.getAuthor());
+            txtAuthor.setText(conn.getAuthor());
+            txtOutputDir.setText(conn.getOutputDir());
             conn.getCustomVars().forEach((k, v) -> cstModel.addRow(new String[]{k, v}));
         }
     }
@@ -276,6 +293,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addComponent(jScrollPane1))
         );
 
+        lstTables.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                lstTablesMouseMoved(evt);
+            }
+        });
         lstTables.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 lstTablesMouseClicked(evt);
@@ -345,6 +367,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         });
         tblTemplates.getTableHeader().setReorderingAllowed(false);
+        tblTemplates.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            public void mouseMoved(java.awt.event.MouseEvent evt) {
+                tblTemplatesMouseMoved(evt);
+            }
+        });
         jScrollPane3.setViewportView(tblTemplates);
 
         txtOutputDir.setText("output");
@@ -477,6 +504,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
 
         cboConnection.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        cboConnection.addItemListener(new java.awt.event.ItemListener() {
+            public void itemStateChanged(java.awt.event.ItemEvent evt) {
+                cboConnectionItemStateChanged(evt);
+            }
+        });
         cboConnection.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboConnectionActionPerformed(evt);
@@ -595,9 +627,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private void btnManageConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageConnActionPerformed
         JDBConnectionManager cm = JDBConnectionManager.getInstance();
         cm.setModal(true);
-        cm.setLocationRelativeTo(null);
+        cm.setLocationRelativeTo(this);
+        cm.setSelection(currConn);
         cm.setVisible(true);
-        applyConnection(cm.selectedConnection, false);
+        if (cm.selectedConnection != null)
+            applyConnection(cm.selectedConnection);
     }//GEN-LAST:event_btnManageConnActionPerformed
 
     private void treSchemasValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treSchemasValueChanged
@@ -628,7 +662,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_chkShowViewActionPerformed
 
+    @SuppressWarnings("UseSpecificCatch")
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+        try { dbmeta.close(); } catch(Exception ignored) {}
         System.exit(0);
     }//GEN-LAST:event_btnCloseActionPerformed
 
@@ -719,6 +755,24 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         // TODO add your handling code here:
         Acknowledgements.getInstance(this).setVisible(true);
     }//GEN-LAST:event_btnAckActionPerformed
+
+    private void cboConnectionItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboConnectionItemStateChanged
+        
+    }//GEN-LAST:event_cboConnectionItemStateChanged
+
+    private void tblTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblTemplatesMouseMoved
+        UIUtils.templateTooltip(tblTemplates, 1, evt);
+    }//GEN-LAST:event_tblTemplatesMouseMoved
+
+    private void lstTablesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseMoved
+        int idx = lstTables.locationToIndex(evt.getPoint());
+        if (idx > -1) {
+            DBTable table = tables.get(idx);
+            lstTables.setToolTipText(table.getName());
+        } else {
+            lstTables.setToolTipText(null);
+        }
+    }//GEN-LAST:event_lstTablesMouseMoved
 
     /**
      * @param args the command line arguments

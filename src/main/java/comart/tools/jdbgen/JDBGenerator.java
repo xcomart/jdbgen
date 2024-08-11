@@ -26,6 +26,8 @@ package comart.tools.jdbgen;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.ui.JDBGeneratorMain;
 import comart.utils.UIUtils;
+import java.awt.Font;
+import javax.swing.UIManager;
 
 /**
  *
@@ -38,6 +40,7 @@ public class JDBGenerator {
         } else {
             UIUtils.setFlatLightLaf();
         }
+        UIManager.put("ToolTip.font", new Font("Monospaced", Font.PLAIN, 13));
         JDBGeneratorMain win = new JDBGeneratorMain();
         win.setLocationRelativeTo(null);
         win.setVisible(true);

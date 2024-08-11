@@ -1150,10 +1150,16 @@ public class StrUtils
     
     public static void main(String []args) throws ParseException
     {
-        byte[] enc = encrypt(raw, "12345678".getBytes());
-        System.out.println(bytesToHex(enc));
-        byte[] dec = decrypt(raw, enc);
-        System.out.println(new String(dec, StandardCharsets.UTF_8));
+//        byte[] enc = encrypt(raw, "12345678".getBytes());
+//        System.out.println(bytesToHex(enc));
+//        byte[] dec = decrypt(raw, enc);
+//        System.out.println(new String(dec, StandardCharsets.UTF_8));
+
+        String sample = "   \"\n\"   ";
+        System.out.println("Sample String: '"+sample+"'");
+        System.out.println("Trimmed Sample String: '"+trim(sample)+"'");
+
+
 //        String encrypt = encrypt("1234567890123456");
 //        System.out.println("encrypted value:" + encrypt);
 //        System.out.println("decrypted value:" + (decrypt(encrypt)));

@@ -90,6 +90,8 @@ public class JDBGenConfig {
                             }
                         }
                     }
+                } else {
+                    break;
                 }
             }
 

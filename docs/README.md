@@ -28,13 +28,13 @@ options.
 |Field Name|Descriptions|
 |---:|:---|
 |Connection Name|Unique connection name which will be shown in left list|
-|Driver|JDBC driver(can be managed by [Driver Manager Window](### Driver Manager Window)|
+|Driver|JDBC driver(can be managed by [Driver Manager Window](#driver-manager-window)|
 |Connection URL|JDBC driver specific connection URL to database|
 |User Name|Database user name|
 |User Password|Database user password|
-|Icon|Icon used in connection list(see [Icons Usage](## Icons Usage))|
+|Icon|Icon used in connection list(see [Icons Usage](#icons-usage))|
 |Connection Props|Additional connection properties|
-|Keep Alive|Execute dummy query every n seconds to keep alive connection|
+|Keep Alive|Execute dummy query every N seconds to keep alive connection|
 
 #### Templates Tab
 

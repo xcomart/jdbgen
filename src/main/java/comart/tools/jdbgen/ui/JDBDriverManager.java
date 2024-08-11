@@ -550,7 +550,7 @@ public class JDBDriverManager extends JDialog {
         txtColumns.setRows(5);
         jScrollPane7.setViewportView(txtColumns);
 
-        chkColumns.setText("Get table list");
+        chkColumns.setText("Get table column list");
         chkColumns.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkColumnsActionPerformed(evt);

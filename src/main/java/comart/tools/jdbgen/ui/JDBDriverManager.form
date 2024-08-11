@@ -669,7 +669,7 @@
                     </Container>
                     <Component class="javax.swing.JCheckBox" name="chkColumns">
                       <Properties>
-                        <Property name="text" type="java.lang.String" value="Get table list"/>
+                        <Property name="text" type="java.lang.String" value="Get table column list"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="chkColumnsActionPerformed"/>

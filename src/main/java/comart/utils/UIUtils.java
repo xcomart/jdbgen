@@ -327,6 +327,8 @@ public class UIUtils {
                     String pass = String.valueOf(pwdField.getPassword());
                     String conf = String.valueOf(confirmField.getPassword());
                     isSame = pass.equals(conf);
+                    if (!isSame)
+                        UIUtils.error(null, "Password/Confirm does not match.");
                 }
             } while (responseOK && !isSame);
             this.password = responseOK ? String.valueOf(pwdField.getPassword()) : null;

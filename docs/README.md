@@ -1,7 +1,5 @@
 # jdbgen
 
-<link rel="stylesheet" href="font-awesome/css/font-awesome.min.css">
-
 ## Introduction
 
 jdbgen is a tool for generating text(source) files from database table
@@ -177,9 +175,9 @@ Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|<i class="fa-solid fa-table"></i>|fa:table|
-|<i class="fa-solid fa-eye"></i>|fa:eye|
-|<i class="fa-solid fa-window-restore"></i>|fa:window_restore|
+|![table](images/table.svg)|fa:table|
+|![eye](images/eye.svg)|fa:eye|
+|![window-restore](images/window-restore.svg)|fa:window_restore|
 
 ### Color bullet
 
@@ -193,9 +191,9 @@ Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|<font color="blue"><i class="fa-solid fa-circle"></i></font>|color:blue|
-|<font color="green"><i class="fa-solid fa-circle"></i></font>|color:green|
-|<font color="red"><i class="fa-solid fa-circle"></i></font>|color:red|
+|<font color="blue">![circle](images/circle.svg)</font>|color:blue|
+|<font color="green">![circle](images/circle.svg)</font>|color:green|
+|<font color="red">![circle](images/circle.svg)</font>|color:red|
 
 ### Stock icons
 

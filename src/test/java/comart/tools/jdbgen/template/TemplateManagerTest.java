@@ -91,34 +91,34 @@ public class TemplateManagerTest {
     public static void tearDownClass() {
     }
 
-    /**
-     * Test of applyMapper method, of class TemplateManager.
-     */
-    @Test
-    public void testUsingDBTable() throws Exception {
-        System.out.println("DBTable mapper");
-        Object mapper = createDBTable();
-        TemplateManager instance = null;
-        String expResult = "";
-        String result = instance.applyMapper(mapper);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-    
-    /**
-     * Test of applyMapper method, of class TemplateManager.
-     */
-    @Test
-    public void testApplyMapper() throws Exception {
-        System.out.println("applyMapper");
-        Object mapper = null;
-        TemplateManager instance = null;
-        String expResult = "";
-        String result = instance.applyMapper(mapper);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
+//    /**
+//     * Test of applyMapper method, of class TemplateManager.
+//     */
+//    @Test
+//    public void testUsingDBTable() throws Exception {
+//        System.out.println("DBTable mapper");
+//        Object mapper = createDBTable();
+//        TemplateManager instance = null;
+//        String expResult = "";
+//        String result = instance.applyMapper(mapper);
+//        assertEquals(expResult, result);
+//        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
+//    }
+//    
+//    /**
+//     * Test of applyMapper method, of class TemplateManager.
+//     */
+//    @Test
+//    public void testApplyMapper() throws Exception {
+//        System.out.println("applyMapper");
+//        Object mapper = null;
+//        TemplateManager instance = null;
+//        String expResult = "";
+//        String result = instance.applyMapper(mapper);
+//        assertEquals(expResult, result);
+//        // TODO review the generated test code and remove the default call to fail.
+//        fail("The test case is a prototype.");
+//    }
     
 }

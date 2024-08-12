@@ -471,11 +471,11 @@ public class UIUtils {
     
     public static void iconHelpAction(JButton btn) {
         btn.addActionListener(e -> PlatformUtils.openURL(
-                "https://github.com/xcomart/jdbgen/blob/master/docs/README.md#icon-usage"));
+                "https://github.com/xcomart/jdbgen/blob/master/docs/README.md#icons-usage"));
     }
     
     public static void templateHelpAction(JButton btn) {
         btn.addActionListener(e -> PlatformUtils.openURL(
-                "https://github.com/xcomart/jdbgen/blob/master/docs/README.md#icon-usage"));
+                "https://github.com/xcomart/jdbgen/blob/master/docs/README.md#template-instructions"));
     }
 }

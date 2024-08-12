@@ -132,7 +132,7 @@ Generating text files using table information and templates.
 |Catalogs/Schemas|Database catalog and schema tree, select leaf node to be generated.|
 |Show Views|Toggle to show/hidden views in table list|
 |Tables|Table/View list of current schema|
-|Templates|Select template to be generated, click `Select` to select/deselect all template|
+|Templates|Select template to be generated, click `Select` table header to select/deselect all template|
 |Output Directory|Output location of generated text/source files|
 |Author Name|Author text(`${author}` in template) which used in template.<br/>(ex. John Doe &lt;john.doe@abc.com&gt;)|
 |Custom Variables|User defined `item type` variables which used in templates.|
@@ -175,9 +175,9 @@ Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|![table](images/table.svg)|fa:table|
-|![eye](images/eye.svg)|fa:eye|
-|![window-restore](images/window-restore.svg)|fa:window_restore|
+|![table](images/table.svg)|`fa:table`|
+|![eye](images/eye.svg)|`fa:eye`|
+|![window-restore](images/window-restore.svg)|`fa:window_restore`|
 
 ### Color bullet
 
@@ -191,9 +191,9 @@ Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|<font color="blue">![circle](images/circle.svg)</font>|color:blue|
-|<font color="green">![circle](images/circle.svg)</font>|color:green|
-|<font color="red">![circle](images/circle.svg)</font>|color:red|
+|<font color="blue">![circle](images/circle.svg)</font>|`color:blue`|
+|<font color="green">![circle](images/circle.svg)</font>|`color:green`|
+|<font color="red">![circle](images/circle.svg)</font>|`color:red`|
 
 ### Stock icons
 
@@ -203,15 +203,15 @@ All available stock icons are:
 
 |Icon|Field String|
 |:---:|:---|
-|<img src="../src/main/resources/icons/altibase.png" width="17" width="17"/>|stock:altibase.png|
-|<img src="../src/main/resources/icons/cubrid.png" width="17" width="17"/>|stock:cubrid.png|
-|<img src="../src/main/resources/icons/generic.png" width="17" width="17"/>|stock:generic.png|
-|<img src="../src/main/resources/icons/h2.png" width="17" width="17"/>|stock:h2.png|
-|<img src="../src/main/resources/icons/mariadb.png" width="17" width="17"/>|stock:mariadb.png|
-|<img src="../src/main/resources/icons/mongodb.png" width="17" width="17"/>|stock:mongodb.png|
-|<img src="../src/main/resources/icons/mssql.png" width="17" width="17"/>|stock:mssql.png|
-|<img src="../src/main/resources/icons/mysql.png" width="17" width="17"/>|stock:mysql.png|
-|<img src="../src/main/resources/icons/oracle.png" width="17" width="17"/>|stock:oracle.png|
-|<img src="../src/main/resources/icons/postgresql.png" width="17" width="17"/>|stock:postgresql.png|
-|<img src="../src/main/resources/icons/sqlite.png" width="17" width="17"/>|stock:sqlite.png|
+|<img src="../src/main/resources/icons/altibase.png" width="17" width="17"/>|`stock:altibase.png`|
+|<img src="../src/main/resources/icons/cubrid.png" width="17" width="17"/>|`stock:cubrid.png`|
+|<img src="../src/main/resources/icons/generic.png" width="17" width="17"/>|`stock:generic.png`|
+|<img src="../src/main/resources/icons/h2.png" width="17" width="17"/>|`stock:h2.png`|
+|<img src="../src/main/resources/icons/mariadb.png" width="17" width="17"/>|`stock:mariadb.png`|
+|<img src="../src/main/resources/icons/mongodb.png" width="17" width="17"/>|`stock:mongodb.png`|
+|<img src="../src/main/resources/icons/mssql.png" width="17" width="17"/>|`stock:mssql.png`|
+|<img src="../src/main/resources/icons/mysql.png" width="17" width="17"/>|`stock:mysql.png`|
+|<img src="../src/main/resources/icons/oracle.png" width="17" width="17"/>|`stock:oracle.png`|
+|<img src="../src/main/resources/icons/postgresql.png" width="17" width="17"/>|`stock:postgresql.png`|
+|<img src="../src/main/resources/icons/sqlite.png" width="17" width="17"/>|`stock:sqlite.png`|
 

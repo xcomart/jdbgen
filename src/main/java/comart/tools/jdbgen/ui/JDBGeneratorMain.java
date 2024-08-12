@@ -95,29 +95,29 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
     
     private void clearContents() {
-        ((DefaultTableModel)this.tblTemplates.getModel()).setRowCount(0);
+        ((DefaultTableModel)this.tabTemplates.getModel()).setRowCount(0);
         ((DefaultTableModel)this.tabVars.getModel()).setRowCount(0);
-        ((DefaultTableModel)this.tblTemplates.getModel()).setRowCount(0);
+        ((DefaultTableModel)this.tabTemplates.getModel()).setRowCount(0);
         this.lstTables.removeAll();
         this.txtAuthor.setText("");
         this.txtOutputDir.setText("");
     }
 
     private void initTemplates() {
-        tblTemplates.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        TableColumnModel colModel = tblTemplates.getColumnModel();
+        tabTemplates.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        TableColumnModel colModel = tabTemplates.getColumnModel();
         colModel.getColumn(0).setPreferredWidth(50);
         colModel.getColumn(1).setPreferredWidth(130);
         colModel.getColumn(2).setPreferredWidth(130);
         colModel.getColumn(3).setPreferredWidth(130);
 
-        DefaultTableModel tpls = (DefaultTableModel)this.tblTemplates.getModel();
-        JTableHeader tplHeader = this.tblTemplates.getTableHeader();
+        DefaultTableModel tpls = (DefaultTableModel)this.tabTemplates.getModel();
+        JTableHeader tplHeader = this.tabTemplates.getTableHeader();
         tplHeader.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 Point p = e.getPoint();
-                if (tblTemplates.columnAtPoint(p) == 0) {
+                if (tabTemplates.columnAtPoint(p) == 0) {
                     if (tpls.getRowCount() > 0) {
                         Object val = tpls.getValueAt(0, 0);
                         boolean checked = val != null ? (boolean)val:false;
@@ -161,7 +161,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             cboConnection.setSelectedItem(preName);
             suppressCboConnEvent = false;
         }
-        DefaultTableModel tplModel = (DefaultTableModel)tblTemplates.getModel();
+        DefaultTableModel tplModel = (DefaultTableModel)tabTemplates.getModel();
         tplModel.setRowCount(0);
         DefaultTableModel cstModel = (DefaultTableModel)tabVars.getModel();
         cstModel.setRowCount(0);
@@ -231,7 +231,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jPanel4 = new javax.swing.JPanel();
         jLabel4 = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
-        tblTemplates = new javax.swing.JTable();
+        tabTemplates = new javax.swing.JTable();
         txtOutputDir = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
         btnBrowseOutput = new javax.swing.JButton();
@@ -340,7 +340,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jLabel4.setFont(jLabel4.getFont().deriveFont(jLabel4.getFont().getStyle() | java.awt.Font.BOLD, jLabel4.getFont().getSize()+4));
         jLabel4.setText("Generation Options");
 
-        tblTemplates.setModel(new javax.swing.table.DefaultTableModel(
+        tabTemplates.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
                 {null, null, null, null},
@@ -366,13 +366,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        tblTemplates.getTableHeader().setReorderingAllowed(false);
-        tblTemplates.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+        tabTemplates.getTableHeader().setReorderingAllowed(false);
+        tabTemplates.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseMoved(java.awt.event.MouseEvent evt) {
-                tblTemplatesMouseMoved(evt);
+                tabTemplatesMouseMoved(evt);
             }
         });
-        jScrollPane3.setViewportView(tblTemplates);
+        jScrollPane3.setViewportView(tabTemplates);
 
         txtOutputDir.setText("output");
 
@@ -592,7 +592,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
         SwingUtilities.updateComponentTreeUI(this);
         conf.setDarkUI(this.chkDarkUI.isSelected());
-        JDBGenConfig.saveInstace(this);
+        JDBGenConfig.saveInstance(this);
     }//GEN-LAST:event_chkDarkUIActionPerformed
 
     private void cboConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboConnectionActionPerformed
@@ -683,8 +683,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         tbls.add(t);
                     }
                     List<JDBTemplate> tpls = new ArrayList<>();
-                    DefaultTableModel tplModel = (DefaultTableModel)tblTemplates.getModel();
-                    for (int i=0; i<tblTemplates.getRowCount(); i++) {
+                    DefaultTableModel tplModel = (DefaultTableModel)tabTemplates.getModel();
+                    for (int i=0; i<tabTemplates.getRowCount(); i++) {
                         Object val = tplModel.getValueAt(i, 0);
                         if (val != null && (boolean)val) {
                             tpls.add(new JDBTemplate(
@@ -760,9 +760,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         
     }//GEN-LAST:event_cboConnectionItemStateChanged
 
-    private void tblTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblTemplatesMouseMoved
-        UIUtils.templateTooltip(tblTemplates, 1, evt);
-    }//GEN-LAST:event_tblTemplatesMouseMoved
+    private void tabTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplatesMouseMoved
+        UIUtils.templateTooltip(tabTemplates, 1, evt);
+    }//GEN-LAST:event_tabTemplatesMouseMoved
 
     private void lstTablesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseMoved
         int idx = lstTables.locationToIndex(evt.getPoint());
@@ -815,8 +815,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JLabel lblConnectionInfo;
     private javax.swing.JList<String> lstTables;
+    private javax.swing.JTable tabTemplates;
     private javax.swing.JTable tabVars;
-    private javax.swing.JTable tblTemplates;
     private javax.swing.JTree treSchemas;
     private javax.swing.JTextField txtAuthor;
     private javax.swing.JTextField txtOutputDir;

@@ -35,6 +35,7 @@ import java.awt.Point;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import javax.swing.DefaultListModel;
 import javax.swing.JComponent;
@@ -53,6 +54,7 @@ public class JDBPresets extends JDialog {
 
     private final DefaultTableModel templateModel;
     private final DefaultListModel presetModel;
+    private final HashMap<String, JDBPreset> presetMap;
     
     private final JDBGenConfig conf = JDBGenConfig.getInstance();
     
@@ -71,10 +73,12 @@ public class JDBPresets extends JDialog {
         
         templateModel = (DefaultTableModel)tabTemplates.getModel();
         presetModel = new DefaultListModel();
+        presetMap = new HashMap<>();
         //presetModel = (DefaultListModel)lstPresets.getModel();
         lstPresets.setModel(presetModel);
-        
+        presets.forEach(p -> presetMap.put(p.getName(), p));
         presets.forEach(p -> presetModel.addElement(p.getName()));
+        lstPresets.setCellRenderer(UIUtils.getListCellRenderer(s -> presetMap.get(s)));
         
         tabTemplates.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabTemplates.getSelectionModel().addListSelectionListener(e -> {
@@ -465,10 +469,13 @@ public class JDBPresets extends JDialog {
     }//GEN-LAST:event_btnNewFromConnActionPerformed
 
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
-        lstPresets.setSelectedIndex(-1);
-        templateModel.setRowCount(0);
-        setTemplate(-1);
-        txtPresetName.setText(NamingUtils.nextNameOf(presets, "New Preset"));
+        JDBPreset preset = new JDBPreset();
+        preset.setName(NamingUtils.nextNameOf(presets, "New Preset"));
+        preset.setTemplates(new ArrayList<>());
+        presets.add(preset);
+        presetMap.put(preset.getName(), preset);
+        presetModel.addElement(preset.getName());
+        lstPresets.setSelectedIndex(presets.size()-1);
     }//GEN-LAST:event_btnNewActionPerformed
 
     private void btnCloneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneActionPerformed
@@ -479,6 +486,7 @@ public class JDBPresets extends JDialog {
                 npreset.setName(NamingUtils.nextNameOf(
                         presets, "Copy of "+npreset.getName()));
                 presets.add(npreset);
+                presetMap.put(npreset.getName(), npreset);
                 presetModel.addElement(npreset.getName());
                 lstPresets.setSelectedIndex(presets.size()-1);
             } catch(Exception ignored) {}
@@ -489,10 +497,18 @@ public class JDBPresets extends JDialog {
         int idx = lstPresets.getSelectedIndex();
         if (idx > -1) {
             boolean isDel = UIUtils.confirm(this, "Delete Preset",
-                    "Do you want to delete '"+this.txtPresetName+"'?");
+                    "Do you want to delete '"+
+                            txtPresetName.getText()+"' preset?");
             if (isDel) {
+                presetMap.remove(txtPresetName.getText());
                 presets.remove(idx);
                 presetModel.remove(idx);
+                txtPresetName.setText("");
+                templateModel.setRowCount(0);
+                
+                txtTemplateName.setText("");
+                txtTemplateFile.setText("");
+                txtOutTemplate.setText("");
             }
         }
     }//GEN-LAST:event_btnDelActionPerformed
@@ -574,32 +590,46 @@ public class JDBPresets extends JDialog {
     private boolean savePreset() {
         if (!saveTemplate())
             return false;
-        if (!UIUtils.checkNotEmpty(this, txtPresetName))
-            return false;
         int idx = lstPresets.getSelectedIndex();
+        boolean isNameExists;
         JDBPreset target = null;
         if (idx > -1) {
             target = presets.get(idx);
+            isNameExists = !target.getName().equals(txtPresetName.getText()) &&
+                    NamingUtils.nameExists(presets, txtPresetName.getText());
         } else {
             target = new JDBPreset();
+            isNameExists = NamingUtils.nameExists(presets, txtPresetName.getText());
         }
-        target.setName(txtPresetName.getText());
-        target.setIcon("FA:paw");
-        ArrayList<JDBTemplate> tpls = new ArrayList<>();
-        for (int i=0; i<tabTemplates.getRowCount(); i++) {
-            String name = (String)tabTemplates.getValueAt(i, 0);
-            String tplf = (String)tabTemplates.getValueAt(i, 1);
-            String otpl = (String)tabTemplates.getValueAt(i, 2);
-            tpls.add(new JDBTemplate(name, tplf, otpl));
+        
+        if (isNameExists) {
+            UIUtils.error(this, "Name " + txtPresetName.getText() + " exists already.");
+            txtPresetName.requestFocusInWindow();
+        } else if (StrUtils.isEmpty(txtPresetName.getText())) {
+            UIUtils.error(this, "Preset name required.");
+            txtPresetName.requestFocusInWindow();
+        } else {
+            presetMap.remove(target.getName());
+            target.setName(txtPresetName.getText());
+            target.setIcon("FA:paw");
+            ArrayList<JDBTemplate> tpls = new ArrayList<>();
+            for (int i=0; i<tabTemplates.getRowCount(); i++) {
+                String name = (String)tabTemplates.getValueAt(i, 0);
+                String tplf = (String)tabTemplates.getValueAt(i, 1);
+                String otpl = (String)tabTemplates.getValueAt(i, 2);
+                tpls.add(new JDBTemplate(name, tplf, otpl));
+            }
+            target.setTemplates(tpls);
+            presetMap.put(target.getName(), target);
+            if (idx < 0) {
+                presets.add(target);
+                presetModel.addElement(target.getName());
+                lstPresets.setSelectedIndex(presets.size() - 1);
+            }
+            JDBGenConfig.saveInstance(this);
+            return true;
         }
-        target.setTemplates(tpls);
-        if (idx < 0) {
-            presets.add(target);
-            presetModel.addElement(target.getName());
-            lstPresets.setSelectedIndex(presets.size() - 1);
-        }
-        JDBGenConfig.saveInstace(this);
-        return true;
+        return false;
     }
     
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed

@@ -33,6 +33,7 @@ import java.awt.Container;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -75,7 +76,7 @@ public class JDBGenConfig {
                 StrUtils.setMaster(master);
                 if (f.exists() && f.isFile()) {
                     try {
-                        INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f), JDBGenConfig.class);
+                        INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f, StandardCharsets.UTF_8), JDBGenConfig.class);
                         break;
                     } catch (Exception e) {
                         if (cnt < 2) {
@@ -98,8 +99,9 @@ public class JDBGenConfig {
             if (INSTANCE == null) {
                 logger.info("config file not found, creating default one.");
 
-                try (InputStream is = JDBGenConfig.class.getResourceAsStream("/defaultConfig.json")) {
-                    INSTANCE = (JDBGenConfig)gson.fromJson(new InputStreamReader(is, StandardCharsets.UTF_8), JDBGenConfig.class);
+                try (InputStreamReader ir = new InputStreamReader(
+                        JDBGenConfig.class.getResourceAsStream("/defaultConfig.json"), StandardCharsets.UTF_8)) {
+                    INSTANCE = (JDBGenConfig)gson.fromJson(ir, JDBGenConfig.class);
                     
                     // create sample connection with H2 Embedded
                     JDBConnection jcon = new JDBConnection();
@@ -117,6 +119,7 @@ public class JDBGenConfig {
                     ));
                     jcon.setTemplates(templates);
                     INSTANCE.connections = new ArrayList<>(Arrays.asList(jcon));
+                    saveInstance(null);
                 } catch (Exception e) {
                     UIUtils.error(null, "Cannot load default configuration: " + e.getLocalizedMessage());
                     logger.log(Level.SEVERE, "cannot recover previous error.", e);
@@ -128,13 +131,12 @@ public class JDBGenConfig {
         return INSTANCE;
     }
 
-    public static synchronized boolean saveInstace(Container parent) {
+    public static synchronized boolean saveInstance(Container parent) {
         Gson gson = (new GsonBuilder()).setPrettyPrinting().create();
 
         try {
             String json = gson.toJson(INSTANCE);
-//            System.out.println(json);
-            try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(CONF_PATH), StandardCharsets.UTF_8)) {
+            try (FileWriter fw = new FileWriter(CONF_PATH, StandardCharsets.UTF_8)) {
                 fw.write(json);
             }
             return true;

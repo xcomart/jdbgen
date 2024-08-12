@@ -168,6 +168,7 @@
                 <Component class="javax.swing.JButton" name="btnNewConn">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="+"/>
+                    <Property name="toolTipText" type="java.lang.String" value="Create New Connection"/>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[30, 26]"/>
                     </Property>
@@ -179,6 +180,7 @@
                 <Component class="javax.swing.JButton" name="btnCloneConn">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="c"/>
+                    <Property name="toolTipText" type="java.lang.String" value="Clone Current Connection"/>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[30, 26]"/>
                     </Property>
@@ -190,10 +192,14 @@
                 <Component class="javax.swing.JButton" name="btnDelConn">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="-"/>
+                    <Property name="toolTipText" type="java.lang.String" value="Remove Current Connection"/>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[30, 26]"/>
                     </Property>
                   </Properties>
+                  <Events>
+                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDelConnActionPerformed"/>
+                  </Events>
                 </Component>
               </SubComponents>
             </Container>
@@ -285,6 +291,8 @@
                                       <Component id="txtIcon" max="32767" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="btnBrowseIcon" min="-2" max="-2" attributes="0"/>
+                                      <EmptySpace max="-2" attributes="0"/>
+                                      <Component id="btnIconHelp" min="-2" max="-2" attributes="0"/>
                                   </Group>
                                   <Group type="102" attributes="0">
                                       <EmptySpace min="21" pref="21" max="-2" attributes="0"/>
@@ -296,7 +304,7 @@
                                       <Component id="txtKeepAliveSec" min="-2" pref="35" max="-2" attributes="0"/>
                                       <EmptySpace max="-2" attributes="0"/>
                                       <Component id="jLabel15" min="-2" max="-2" attributes="0"/>
-                                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                                      <EmptySpace min="0" pref="20" max="32767" attributes="0"/>
                                   </Group>
                               </Group>
                           </Group>
@@ -336,6 +344,7 @@
                                   <Component id="txtIcon" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="btnBrowseIcon" alignment="3" min="-2" max="-2" attributes="0"/>
                                   <Component id="jLabel12" alignment="3" min="-2" max="-2" attributes="0"/>
+                                  <Component id="btnIconHelp" alignment="3" min="-2" max="-2" attributes="0"/>
                               </Group>
                               <EmptySpace max="-2" attributes="0"/>
                               <Group type="103" groupAlignment="0" attributes="0">
@@ -413,6 +422,7 @@
                     <Component class="javax.swing.JButton" name="btnManage">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="Manage"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Manage Drivers"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnManageActionPerformed"/>
@@ -463,12 +473,16 @@
                       <Properties>
                         <Property name="text" type="java.lang.String" value="Keep connection alive using below statement every"/>
                       </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="chkKeepAliveActionPerformed"/>
+                      </Events>
                     </Component>
                     <Component class="javax.swing.JTextField" name="txtIcon">
                     </Component>
                     <Component class="javax.swing.JButton" name="btnBrowseIcon">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="..."/>
+                        <Property name="toolTipText" type="java.lang.String" value="Browse Icon File"/>
                         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                           <Dimension value="[30, 26]"/>
                         </Property>
@@ -503,6 +517,17 @@
                     <Component class="javax.swing.JLabel" name="jLabel15">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="seconds."/>
+                      </Properties>
+                    </Component>
+                    <Component class="javax.swing.JButton" name="btnIconHelp">
+                      <Properties>
+                        <Property name="text" type="java.lang.String" value="?"/>
+                        <Property name="location" type="java.awt.Point" editor="org.netbeans.beaninfo.editors.PointEditor">
+                          <Point value="[0, 0]"/>
+                        </Property>
+                        <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
+                          <Dimension value="[30, 26]"/>
+                        </Property>
                       </Properties>
                     </Component>
                   </SubComponents>
@@ -597,7 +622,7 @@
 
                       <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
                       <SubComponents>
-                        <Component class="javax.swing.JTable" name="tabTemplate">
+                        <Component class="javax.swing.JTable" name="tabTemplates">
                           <Properties>
                             <Property name="model" type="javax.swing.table.TableModel" editor="org.netbeans.modules.form.editors2.TableModelEditor">
                               <Table columnCount="3" rowCount="0">
@@ -611,7 +636,7 @@
                             </Property>
                           </Properties>
                           <Events>
-                            <EventHandler event="mouseMoved" listener="java.awt.event.MouseMotionListener" parameters="java.awt.event.MouseEvent" handler="tabTemplateMouseMoved"/>
+                            <EventHandler event="mouseMoved" listener="java.awt.event.MouseMotionListener" parameters="java.awt.event.MouseEvent" handler="tabTemplatesMouseMoved"/>
                           </Events>
                         </Component>
                       </SubComponents>
@@ -619,6 +644,7 @@
                     <Component class="javax.swing.JButton" name="btnTemplateHelp">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="?"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Template Help"/>
                         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                           <Dimension value="[30, 26]"/>
                         </Property>
@@ -627,6 +653,7 @@
                     <Component class="javax.swing.JButton" name="btnSaveTemplate">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="Apply"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Apply Selected Template Modification"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSaveTemplateActionPerformed"/>
@@ -635,6 +662,7 @@
                     <Component class="javax.swing.JButton" name="btnDelTemplate">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="Delete"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Remove Current Template"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDelTemplateActionPerformed"/>
@@ -643,16 +671,21 @@
                     <Component class="javax.swing.JButton" name="btnNewTemplate">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="New"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Create New Template"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnNewTemplateActionPerformed"/>
                       </Events>
                     </Component>
                     <Component class="javax.swing.JTextField" name="txtTemplateName">
+                      <Properties>
+                        <Property name="toolTipText" type="java.lang.String" value="Name of Template"/>
+                      </Properties>
                     </Component>
                     <Component class="javax.swing.JButton" name="btnBrowseTemplate">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="..."/>
+                        <Property name="toolTipText" type="java.lang.String" value="Browse Template File"/>
                         <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                           <Dimension value="[30, 26]"/>
                         </Property>
@@ -662,6 +695,9 @@
                       </Events>
                     </Component>
                     <Component class="javax.swing.JTextField" name="txtTemplateFile">
+                      <Properties>
+                        <Property name="toolTipText" type="java.lang.String" value="Template File Location"/>
+                      </Properties>
                     </Component>
                     <Component class="javax.swing.JLabel" name="jLabel8">
                       <Properties>
@@ -682,10 +718,14 @@
                       </Properties>
                     </Component>
                     <Component class="javax.swing.JTextField" name="txtOutTemplate">
+                      <Properties>
+                        <Property name="toolTipText" type="java.lang.String" value="Output File Name Template"/>
+                      </Properties>
                     </Component>
                     <Component class="javax.swing.JButton" name="btnPresets">
                       <Properties>
                         <Property name="text" type="java.lang.String" value="Presets"/>
+                        <Property name="toolTipText" type="java.lang.String" value="Manage Template Presets"/>
                       </Properties>
                       <Events>
                         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnPresetsActionPerformed"/>

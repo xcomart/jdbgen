@@ -56,6 +56,6 @@ public class DBTable extends DBMetaModel implements HasTitle, HasIcon {
     
     @Override
     public String getIcon() {
-        return "FA:"+("TABLE".equals(type) ? FontAwesome.TABLE:FontAwesome.EYE);
+        return "fa:"+("TABLE".equals(type) ? FontAwesome.TABLE:FontAwesome.EYE);
     }
 }

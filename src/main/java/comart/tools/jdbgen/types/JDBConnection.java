@@ -53,6 +53,7 @@ public class JDBConnection extends JDBListBase {
     private String userPassword;
     private Map<String, String> connectionProps;
     private boolean useKeepAlive;
+    private String keepAliveSec;
     private String keepAliveQuery;
     private List<JDBTemplate> templates;
     private String outputDir;

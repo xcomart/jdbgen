@@ -36,6 +36,8 @@ import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -56,6 +58,7 @@ import javax.imageio.ImageIO;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -139,10 +142,12 @@ public class UIUtils {
 
     public static void setFlatDarkLaf() {
         setLAF(FlatDarkLaf.class.getName());
+        System.setProperty("apple.awt.application.appearance", "NSAppearanceNameDarkAqua");
     }
 
     public static void setFlatLightLaf() {
         setLAF(FlatLightLaf.class.getName());
+        System.setProperty("apple.awt.application.appearance", "NSAppearanceNameAqua");
     }
 
     public static void registerFrame(Container frame) {
@@ -188,6 +193,7 @@ public class UIUtils {
             boolean isStock = path.toLowerCase().startsWith("stock:");
             boolean isUrl = path.toLowerCase().startsWith("http");
             boolean isFA = path.toLowerCase().startsWith("fa:");
+            boolean isCol = path.toLowerCase().startsWith("color:");
             String npath = path;
             if (isStock) {
                 npath = "/icons/" + path.substring(6);
@@ -197,12 +203,17 @@ public class UIUtils {
                 if (isUrl) {
                     OkHttpClient client = HttpUtils.getClient();
                     Request req = new Request.Builder().url(path).build();
-                    try (Response response = client.newCall(req).execute()) {
-                        res = new ImageIcon(resize(ImageIO.read(response.body().byteStream())));
+                    try (Response response = client.newCall(req).execute();
+                            InputStream is = response.body().byteStream()) {
+                        res = new ImageIcon(resize(ImageIO.read(is)));
                     }
                 } else if (isFA) {
                     IconCode code = FontAwesome.valueOf(npath.substring(3).toUpperCase());
                     res = IconFontSwing.buildIcon( code, (float)fontSize, color);
+                } else if (isCol) {
+                    String colName = path.substring(6);
+                    Color col = (Color)Color.class.getDeclaredField(colName.toUpperCase()).get(null);
+                    res = IconFontSwing.buildIcon( FontAwesome.CIRCLE, (float)(fontSize * 1.2), col);
                 } else {
                     if (StrUtils.isEmpty(path))
                         npath = "/icons/generic.png";
@@ -244,11 +255,7 @@ public class UIUtils {
                     HasIcon hi = (HasIcon)lb;
                     String icon = hi.getIcon();
                     if (!StrUtils.isEmpty(icon)) {
-                        if (icon.startsWith("FA:")) {
-                            UIUtils.addIcon(label, FontAwesome.valueOf(icon.substring(3)));
-                        } else {
-                            label.setIcon(UIUtils.getIcon(hi.getIcon()));
-                        }
+                        label.setIcon(UIUtils.getIcon(hi.getIcon()));
                     }
                 }
                 label.setText(lb.getTitle());
@@ -460,5 +467,15 @@ public class UIUtils {
         sb.append("Template File  : ").append(tfile).append("\n");
         sb.append("Output Template: ").append(tout);
         tabTemplates.setToolTipText(sb.toString());
+    }
+    
+    public static void iconHelpAction(JButton btn) {
+        btn.addActionListener(e -> PlatformUtils.openURL(
+                "https://github.com/xcomart/jdbgen/blob/master/docs/README.md#icon-usage"));
+    }
+    
+    public static void templateHelpAction(JButton btn) {
+        btn.addActionListener(e -> PlatformUtils.openURL(
+                "https://github.com/xcomart/jdbgen/blob/master/docs/README.md#icon-usage"));
     }
 }

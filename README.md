@@ -121,4 +121,4 @@ class SampleAlbumModel {
 
 Awesome!
 
-If you more information, read [full document](docs/README.md)
+If you need more information, read [full document](docs/README.md)

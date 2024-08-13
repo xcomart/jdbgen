@@ -85,6 +85,8 @@ public class JDBPresets extends JDialog {
             int row = tabTemplates.getSelectedRow();
             setTemplate(row);
         });
+        
+        UIUtils.templateHelpAction(btnTemplateHelp);
 
         this.addWindowListener(new WindowAdapter() {
 //            @Override
@@ -279,11 +281,6 @@ public class JDBPresets extends JDialog {
 
         btnTemplateHelp.setText("?");
         btnTemplateHelp.setPreferredSize(new java.awt.Dimension(30, 26));
-        btnTemplateHelp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTemplateHelpActionPerformed(evt);
-            }
-        });
 
         btnNewTemplate.setText("New");
         btnNewTemplate.addActionListener(new java.awt.event.ActionListener() {
@@ -512,10 +509,6 @@ public class JDBPresets extends JDialog {
             }
         }
     }//GEN-LAST:event_btnDelActionPerformed
-
-    private void btnTemplateHelpActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTemplateHelpActionPerformed
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/blob/master/docs/README.md#template-management");
-    }//GEN-LAST:event_btnTemplateHelpActionPerformed
 
     private void btnNewTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewTemplateActionPerformed
         tabTemplates.clearSelection();

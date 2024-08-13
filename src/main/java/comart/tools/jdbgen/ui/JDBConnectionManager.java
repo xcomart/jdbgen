@@ -121,6 +121,7 @@ public class JDBConnectionManager extends JDialog {
         resetControls();
         
         UIUtils.iconHelpAction(btnIconHelp);
+        UIUtils.templateHelpAction(btnTemplateHelp);
         
         if (!connections.isEmpty()) {
             lstConnections.setSelectedIndex(0);

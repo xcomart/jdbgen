@@ -9,7 +9,7 @@ import org.apache.ibatis.type.Alias;
 /**
  * ${remarks} model class
  * 
- * @ClassName ${name.prefix.pascal}.java
+ * @ClassName ${name.suffix.pascal}.java
  * @Description ${remarks} model class
  * @author ${user}
  * @since ${date:YYYY. M. d.}

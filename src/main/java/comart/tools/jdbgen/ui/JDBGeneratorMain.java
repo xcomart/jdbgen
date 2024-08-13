@@ -131,9 +131,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     
     private void applyIcons() {
         UIUtils.addIcon(btnManageConn, FontAwesome.COG);
-        UIUtils.addIcon(this.btnGenerate, FontAwesome.COGS);
-        UIUtils.addIcon(this.btnClose, FontAwesome.TIMES);
-        UIUtils.applyIcon(this.btnBrowseOutput, FontAwesome.FOLDER_O);
+        UIUtils.applyIcon(btnDelVar, FontAwesome.MINUS);
+        UIUtils.addIcon(btnGenerate, FontAwesome.COGS);
+        UIUtils.addIcon(btnClose, FontAwesome.TIMES);
+        UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
     }    
     
     private boolean suppressCboConnEvent = false;
@@ -466,7 +467,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel16)
-                        .addGap(87, 87, 87)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnDelVar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );

@@ -411,9 +411,13 @@ and `controls` can be a combination of -
 |:---:|:---|
 |`inStr=<infix>`|Appends `<infix>` between iterations.|
 |`indent=<spaces>`|An integer value applied after line break, can be negative.|
-|`skipList=<skips>`|When item value ends with `<suffix>`|
+|`skipList=<skips>`|`,` separated column names string to skip loop|
 
-> Note! Only collection item is accessible inside `for` statement, if you want
+Start location of `for` statement is important, every line after inside line break
+will be indented to the start position, `indent` control will applied relatively
+with this position.
+
+> Note! Only collection item(obviously column item) is accessible inside `for` statement, if you want
 > to access outer object use `super` statement.
 
 Examples:
@@ -424,6 +428,18 @@ SELECT ${for:item=columns, inStr=","}
  WHERE ${for:item=keys, inStr="AND ", indent=-4}${name} = #{${name.camel}}
        ${endfor}
 ```
+
+results like:
+```sql
+SELECT ALBUM_ID AS "albumId",
+       ALBUM_NAME AS "albumName",
+       ARTIST_NAME AS "artistName",
+       PUBLISH_DATE AS "publishDate"
+  FROM T_SAMPLE_ALBUM
+ WHERE ALBUM_ID = #{albumId}
+
+```
+
 
 ### `item` Statement
 

@@ -30,3 +30,4 @@ config*.json
 /output/
 /nbproject/
 *.trace.db
+/jdbgen-*/

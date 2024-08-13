@@ -979,12 +979,12 @@ public class JDBDriverManager extends JDialog {
 
     private void btnTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableCommentsActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-table-comments-sql");
     }//GEN-LAST:event_btnTableCommentsActionPerformed
 
     private void btnColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnCommentsActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-column-comments-sql");
     }//GEN-LAST:event_btnColumnCommentsActionPerformed
 
     private void chkTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTablesActionPerformed
@@ -993,7 +993,7 @@ public class JDBDriverManager extends JDialog {
 
     private void btnTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTablesActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-table-list-sql");
     }//GEN-LAST:event_btnTablesActionPerformed
 
     private void chkColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnsActionPerformed
@@ -1002,7 +1002,7 @@ public class JDBDriverManager extends JDialog {
 
     private void btnColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnsActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen");
+        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-column-list-sql");
     }//GEN-LAST:event_btnColumnsActionPerformed
 
     /**

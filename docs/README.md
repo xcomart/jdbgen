@@ -100,6 +100,9 @@ create/clone driver informations.
 |Get table list|Getting tables from schema in SQL(`${catalog}` and `${schema}` available)|
 |Get table column list|Getting table column list from table in SQL(`${catalog}`, `${schema}` and `${table}` available)|
 
+If table list does not shows, you need to write these database dependent queries,
+refer [Custom Queries](#custom-queries).
+
 ### Template Presets Window
 
 ![Template preset window](images/template_preset.png "Driver Manager Window")
@@ -178,9 +181,9 @@ Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|<img src="images/table.png" width="17" width="17"/>|`fa:table`|
-|<img src="images/eye.png" width="17" width="17"/>|`fa:eye`|
-|<img src="images/window-restore.png" width="17" width="17"/>|`fa:window_restore`|
+|<img src="images/table.svg" width="17" width="17"/>|`fa:table`|
+|<img src="images/eye.svg" width="17" width="17"/>|`fa:eye`|
+|<img src="images/window-restore.svg" width="17" width="17"/>|`fa:window_restore`|
 
 ### Color bullet
 
@@ -194,9 +197,9 @@ Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|<font color="blue">&#x2B24;</font>|`color:blue`|
-|<font color="green">&#x2B24;</font>|`color:green`|
-|<font color="red">&#x2B24;</font>|`color:red`|
+|$${\color{blue}&#x2B24;}$$|`color:blue`|
+|$${\color{green}&#x2B24;}$$|`color:green`|
+|$${\color{red}&#x2B24;}$$|`color:red`|
 
 ### Stock icons
 
@@ -513,3 +516,162 @@ There are several utility statements for convenience like,
 |`user`|`${user[:<extra decorator>]}`|OS login user ID.|
 
 
+## Custom Queries
+
+If JDBC driver is not fully compliant with JDBC specifications, getting information
+of table or column will not performed successfully.
+So database dependent query must be supplied to get these informations.
+
+### Get Table Comments SQL
+
+A SQL to get all table name and it's comments.
+
+Results must contain table name and it's comments with ordered.
+
+Supplied parameters:
+
+|Parameter|Description|
+|:---:|:---|
+|`catalog`|Database catalog where schema included|
+|`schema`|Database schema where table included|
+
+Result set must contain these fields:
+
+|Fields|Type|Description|
+|:---:|:---:|:---|
+|First field|String|Table name|
+|Second field|String|Table comments|
+
+Example for MS SQL Server:
+```sql
+SELECT OBJNAME, cast(value as varchar(8000)) as VALUE 
+FROM fn_listextendedproperty ('MS_DESCRIPTION','schema','${schema}','table',null,null,null)
+```
+
+
+### Get Column Comments SQL
+
+A SQL to get all column name of a table and it's comments.
+
+Results must contain column name and it's comments with ordered.
+
+Supplied parameters:
+
+|Parameter|Description|
+|:---:|:---|
+|`catalog`|Database catalog where schema included|
+|`schema`|Database schema where table included|
+|`table`|Database table where columns included|
+
+Result set must contain these fields:
+
+|Fields|Type|Description|
+|:---:|:---:|:---|
+|First field|String|Table column name|
+|Second field|String|Table column comments|
+
+Example for MS SQL Server:
+```sql
+SELECT OBJNAME, cast(value as varchar(8000)) as VALUE 
+FROM fn_listextendedproperty ('MS_DESCRIPTION','schema','${schema}','table','${table}','column',null)
+```
+
+### Get Table List SQL
+
+A SQL to get all table informations.
+
+Results must contain correct field name and informations.
+
+Supplied parameters:
+
+|Parameter|Description|
+|:---:|:---|
+|`catalog`|Database catalog where schema included|
+|`schema`|Database schema where table included|
+
+Result set must contain these fields:
+
+|Fields|Type|Description|
+|:---:|:---:|:---|
+|`TABLE_CAT`|String|Database catalog where schema included|
+|`TABLE_SCHEM`|String|Database schema where table included|
+|`TABLE_NAME`|String|Table name|
+|`TABLE_TYPE`|String|JDBC table type(ex. `TABLE`, `VIEW)|
+|`REMARKS`|String|Table comments|
+
+Example for H2 database:
+```sql
+select TABLE_CATALOG as "TABLE_CAT",
+       TABLE_SCHEMA as "TABLE_SCHEM",
+       TABLE_NAME,
+       CASE WHEN TABLE_TYPE='BASE TABLE' THEN 'TABLE' ELSE TABLE_TYPE END AS "TABLE_TYPE",
+       REMARKS
+  from information_schema.tables
+ where TABLE_CATALOG='${catalog}'
+   and TABLE_SCHEMA='${schema}'
+```
+
+### Get Column List SQL
+
+A SQL to get all column informations of a table.
+
+Results must contain correct field name and informations.
+
+Supplied parameters:
+
+|Parameter|Description|
+|:---:|:---|
+|`catalog`|Database catalog where schema included|
+|`schema`|Database schema where table included|
+|`table`|Database table where columns included|
+
+Result set must contain these fields:
+
+|Fields|Type|Description|
+|:---:|:---:|:---|
+|`TABLE_CAT`|String|Database catalog where schema included|
+|`TABLE_SCHEM`|String|Database schema where table included|
+|`TABLE_NAME`|String|Table name|
+|`COLUMN_NAME`|String|Column name|
+|`DATA_TYPE`|Integer|Integer value corresponding to [java.sql.Types](https://docs.oracle.com/javase/8/docs/api/java/sql/Types.html)|
+|`TYPE_NAME`|String|Database specific data type name|
+|`COLUMN_SIZE`|Integer|Column size(length)|
+|`NULLABLE`|Integer|`0` or `1`. `1` means nullable|
+|`REMARKS`|String|Column comments|
+|`COLUMN_DEF`|String|Column default value|
+|`IS_KEY`|Integer|`0` or `1`. `1` means this column is member of primary key|
+
+Example for H2 database:
+```sql
+select TABLE_CATALOG as "TABLE_CAT",
+       TABLE_SCHEMA as "TABLE_SCHEM",
+       TABLE_NAME,
+       COLUMN_NAME,
+       CASE WHEN DATA_TYPE LIKE 'CHAR%' THEN 12
+            WHEN DATA_TYPE='INTEGER' THEN 4
+            WHEN DATA_TYPE='DATE' THEN 91
+            WHEN DATA_TYPE='BIGINT' THEN -5
+            WHEN DATA_TYPE='BOOLEAN' THEN 16
+            ELSE 0 END AS "DATA_TYPE",
+       DATA_TYPE as "TYPE_NAME",
+       CHARACTER_MAXIMUM_LENGTH as "COLUMN_SIZE",
+       CASE WHEN IS_NULLABLE='YES' THEN 1 ELSE 0 END as "NULLABLE",
+       REMARKS,
+       COLUMN_DEFAULT as "COLUMN_DEF",
+       CASE WHEN exists(select 1
+                          from information_schema.index_columns B
+                         where TABLE_CATALOG='${catalog}'
+                           and TABLE_SCHEMA='${schema}'
+                           and TABLE_NAME='${table}'
+                           and COLUMN_NAME=A.COLUMN_NAME
+                           and INDEX_NAME=(select INDEX_NAME from information_schema.indexes
+                                            where TABLE_CATALOG='${catalog}'
+                                              and TABLE_SCHEMA='${schema}'
+                                              and TABLE_NAME='${table}'
+                                              and INDEX_TYPE_NAME='PRIMARY KEY'))
+           THEN 1 ELSE 0 END AS "IS_KEY"
+  from information_schema.columns A
+ where TABLE_CATALOG='${catalog}'
+   and TABLE_SCHEMA='${schema}'
+   and TABLE_NAME='${table}'
+```

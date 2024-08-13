@@ -112,6 +112,7 @@ public class DBMeta implements AutoCloseable {
     
     private ArrayList<DBTable> getTables(DBSchema schema) throws Exception {
         ArrayList<DBTable> tables = new ArrayList<>();
+        HashMap<String, DBTable> tableMap = new HashMap<>();
         if (driver.isUseTables()) {
             String sql = driver.getTablesSql();
             sql = StrUtils.replaceWith(sql, schema, "${", "}");
@@ -121,6 +122,7 @@ public class DBMeta implements AutoCloseable {
                 while (rs.next()) {
                     DBTable table = new DBTable(rs);
                     tables.add(table);
+                    tableMap.put(table.getName(), table);
                 }
             }
             
@@ -131,6 +133,22 @@ public class DBMeta implements AutoCloseable {
                 while (rs.next()) {
                     DBTable table = new DBTable(rs);
                     tables.add(table);
+                    tableMap.put(table.getName(), table);
+                }
+            }
+        }
+        if (driver.isUseTableComments()) {
+            String sql = driver.getTableCommentsSql();
+            sql = StrUtils.replaceWith(sql, schema, "${", "}");
+            try (Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql))
+            {
+                while (rs.next()) {
+                    String tname = rs.getString(1);
+                    String remarks = rs.getString(2);
+                    DBTable table = tableMap.get(tname);
+                    if (table != null)
+                        table.setRemarks(remarks);
                 }
             }
         }
@@ -143,18 +161,6 @@ public class DBMeta implements AutoCloseable {
             if (schema.getTables() == null) {
                 ArrayList<DBTable> tables = getTables(schema);
                 schema.setTables(tables);
-                if (driver.isUseTableComments()) {
-                    String sql = driver.getTableCommentsSql();
-                    sql = StrUtils.replaceWith(sql, schema, "${", "}");
-                    Map<String,String> comments = new HashMap<>();
-                    try (Statement stmt = conn.createStatement();
-                        ResultSet rs = stmt.executeQuery(sql))
-                    {
-                        while (rs.next())
-                            comments.put(rs.getString(1), rs.getString(2));
-                    }
-                    tables.forEach(t -> t.setRemarks(comments.get(t.getTable())));
-                }
             }
         }
         return schema.getTables().stream()
@@ -171,23 +177,41 @@ public class DBMeta implements AutoCloseable {
                 ArrayList<DBColumn> columns = new ArrayList<>();
                 ArrayList<DBColumn> keyFields = new ArrayList<>();
                 ArrayList<DBColumn> notKeys = new ArrayList<>();
-                try (ResultSet rs = dbm.getColumns(
-                        table.getCatalog(), table.getSchema(), table.getTable(), null)) {
-                    while (rs.next()) {
+                if (driver.isUseColumns()) {
+                    String sql = driver.getColumnsSql();
+                    sql = StrUtils.replaceWith(sql, table, "${", "}");
+                    try (Statement stmt = conn.createStatement();
+                        ResultSet rs = stmt.executeQuery(sql))
+                    {
                         DBColumn column = new DBColumn(rs);
                         columns.add(column);
                         column.setNo(columns.size());
                         colmap.put(column.getName(), column);
+                        if (StrUtils.toInt(rs.getString("IS_KEY")) == 0) {
+                            notKeys.add(column);
+                        } else {
+                            keyFields.add(column);
+                        }
+                    }                    
+                } else {
+                    try (ResultSet rs = dbm.getColumns(
+                            table.getCatalog(), table.getSchema(), table.getTable(), null)) {
+                        while (rs.next()) {
+                            DBColumn column = new DBColumn(rs);
+                            columns.add(column);
+                            column.setNo(columns.size());
+                            colmap.put(column.getName(), column);
+                        }
                     }
-                }
 
-                try (ResultSet rs = dbm.getPrimaryKeys(
-                        table.getCatalog(), table.getSchema(), table.getTable())) {
-                    while (rs.next()) {
-                        String key = rs.getString("COLUMN_NAME");
-                        DBColumn column = colmap.get(key);
-                        column.setKey(true);
-                        keyFields.add(column);
+                    try (ResultSet rs = dbm.getPrimaryKeys(
+                            table.getCatalog(), table.getSchema(), table.getTable())) {
+                        while (rs.next()) {
+                            String key = rs.getString("COLUMN_NAME");
+                            DBColumn column = colmap.get(key);
+                            column.setKey(true);
+                            keyFields.add(column);
+                        }
                     }
                 }
                 

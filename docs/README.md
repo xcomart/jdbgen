@@ -44,6 +44,8 @@ options.
 |Connection Props|Additional connection properties|
 |Keep Alive|Execute dummy query every N seconds to keep alive connection|
 
+Managing basic connection informations.
+
 #### Templates Tab
 
 ![Connection manager templates](images/connection_templates.png "Connection Manager Templates Tab")
@@ -220,7 +222,7 @@ All available stock icons are:
 
 ## Template Instructions
 
-Template is created in text and uses predefined character sequence,
+Template is a text which uses predefined character sequence,
 basically opened with `${` and closed with `}` characters.
 
 Here is a sample which shows how does it works.
@@ -241,7 +243,7 @@ comment on column t_sample_album.artist_name is 'Creator artist name';
 comment on column t_sample_album.publish_date is 'Published date';
 ```
 
-And we have a template like:
+and we have a template like:
 ```java
 /**
  * ${remarks} Model class
@@ -268,7 +270,7 @@ class ${table.suffix.pascal}Model {
 }
 ```
 
-This template will generate below code:
+then will generate below code:
 ```java
 /**
  * Music Album Model class
@@ -331,9 +333,11 @@ class SampleAlbumModel {
 }
 ```
 
-### Control Templates
+Awesome!
 
-Contol templates branch with condition or iterates items.
+### Control Statements
+
+Contol statements branchs process with condition or iterates items.
 
 #### `if` Statement
 
@@ -361,7 +365,7 @@ Where `field` is a member of current object(table or column).
 |`contains=<item>`|When item collection contains `<item>`|
 |`notContains=<item>`|When item collection not contains `<item>`|
 
-Multiple `elif` statement can be used and `else` statement is optional.
+Like many other language, multiple `elif` statement can be used and `else` statement is optional.
 `if` statement must be closed with `endif` statement.
 
 Examples:
@@ -387,7 +391,7 @@ ${for:item=<collection field>[, <controls>]}
 ${endfor}
 ```
 
-Where `collection field` is a collection type member of current object(obiously table object),
+Where `collection field` is a collection type member of current object(obviously table object),
 `for` statement must be closed with `endfor` statement.
 
 `collection field` can be one of -
@@ -398,7 +402,7 @@ Where `collection field` is a collection type member of current object(obiously 
 |`keys`|Primary key fields in current table object|
 |`notKeys`|All columns except primary keys in current table object|
 
-and `controls` can be combination of -
+and `controls` can be a combination of -
 
 |Control|Description|
 |:---:|:---|
@@ -423,13 +427,14 @@ SELECT ${for:item=columns, inStr=","}
 Item means member field of table/column object in this application.
 
 ```
-${<field name>[<decorators>]} or
-${item:key=<field name>[<decorators>][, <extra decorators>]}
+${(<field name>|<custom variable>)[<decorators>]} or
+${item:key=(<field name>|<custom variable>)[<decorators>][, <extra decorators>]}
 ```
 
-Where `field name` is member field name of table/column.
+Where `field name` is member field name of table/column, and `custom variable`
+is user supplied variable in [Generator Main Window](#generator-main-window).
 
-`decorators` can be combination of -
+`decorators` can be a combination of -
 
 |Decorator|Repeatable|Description|
 |:---:|:---:|:---|
@@ -440,7 +445,7 @@ Where `field name` is member field name of table/column.
 |`.lower`|&#x2715;|Change value to lower case(ex. `SAMPLE_ALBUM` -> `sample_album`)|
 |`.upper`|&#x2715;|Change value to upper case(ex. `sample_album` -> `SAMPLE_ALBUM`)|
 
-`extra decorators` can be combination of -
+`extra decorators` can be a combination of -
 
 |Decorator|Description|
 |:---:|:---|
@@ -493,3 +498,18 @@ Database column object member fields:
 |`typeString`|String|Combination of `typeName` and `length`(ex. `VARCHAR(40)`).|
 |`jdbcType`|String|JDBC compliant type name.|
 |`javaType`|String|Corresponding java type name|
+
+User created custom variables can be used anywhere with same usage of `item` statement.
+
+
+### Other Statements
+
+There are several utility statements for convenience like,
+
+|Statement|Usage|Description|
+|:---:|:---:|:---|
+|`author`|`${author[:<extra decorator>]}`|User supplied `Author Name` field in [Generator Main Window](#generator-main-window).|
+|`date`|`${date[:format=<date format>]}`|Current date with `date format` which compliant with [SimpleDateFormat](https://docs.oracle.com/en%2Fjava%2Fjavase%2F11%2Fdocs%2Fapi%2F%2F/java.base/java/text/SimpleDateFormat.html).|
+|`user`|`${user[:<extra decorator>]}`|OS login user ID.|
+
+

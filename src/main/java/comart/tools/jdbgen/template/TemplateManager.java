@@ -55,7 +55,7 @@ public class TemplateManager {
     }
     
     private static enum TemplateType {
-        TEXT, ITEM, SUPER, FOR, IF, USER, DATE;
+        TEXT, ITEM, SUPER, FOR, IF, USER, DATE, AUTHOR;
     }
     
     private static class TemplateItem {
@@ -252,8 +252,8 @@ public class TemplateManager {
     }
     
     private static TemplateItem parseOne(String itemString, ParseContext ctx) throws ParseException {
-        if (itemString.toLowerCase().equals("user") ||
-                itemString.toLowerCase().equals("date")) {
+        if (StrUtils.contains(new String[]{"user", "date", "author"},
+                itemString.toLowerCase())) {
             itemString += ":";
         } else if (itemString.indexOf(':') < 0) {
             itemString = "item:key=" + itemString;
@@ -381,6 +381,11 @@ public class TemplateManager {
         return new TemplateItem(TemplateType.USER, parseNVPairs(ctx, extra));
     }
     
+    @SuppressWarnings("unused")
+    private static TemplateItem parseAuthor(String extra, ParseContext ctx) throws ParseException {
+        return new TemplateItem(TemplateType.AUTHOR, parseNVPairs(ctx, extra));
+    }
+    
     private static String procPrefix(String item) {
         int idx = item.lastIndexOf("_");
         if (idx > -1) {
@@ -423,12 +428,13 @@ public class TemplateManager {
     private static final Map<String, TemplateHandler> handlers = new HashMap<>();
     private static final Map<String, ItemProcHandler> procs = new HashMap<>();
     static {
-        handlers.put("item" , TemplateManager::parseItem );
-        handlers.put("super", TemplateManager::parseSuper);
-        handlers.put("if"   , TemplateManager::parseIf   );
-        handlers.put("for"  , TemplateManager::parseFor  );
-        handlers.put("date" , TemplateManager::parseDate );
-        handlers.put("user" , TemplateManager::parseUser );
+        handlers.put("item"  , TemplateManager::parseItem  );
+        handlers.put("super" , TemplateManager::parseSuper );
+        handlers.put("if"    , TemplateManager::parseIf    );
+        handlers.put("for"   , TemplateManager::parseFor   );
+        handlers.put("date"  , TemplateManager::parseDate  );
+        handlers.put("user"  , TemplateManager::parseUser  );
+        handlers.put("author", TemplateManager::parseAuthor);
         
         procs.put("prefix", TemplateManager::procPrefix);
         procs.put("suffix", TemplateManager::procSuffix);
@@ -445,13 +451,14 @@ public class TemplateManager {
     private Map<String, String> customs = null;
     
     public TemplateManager(String template, Map<String, String> customs) throws ParseException {
-        appenders.put(TemplateType.TEXT , this::appendText );
-        appenders.put(TemplateType.ITEM , this::appendItem );
-        appenders.put(TemplateType.SUPER, this::appendSuper);
-        appenders.put(TemplateType.IF   , this::appendIf   );
-        appenders.put(TemplateType.FOR  , this::appendFor  );
-        appenders.put(TemplateType.DATE , this::appendDate );
-        appenders.put(TemplateType.USER , this::appendUser );
+        appenders.put(TemplateType.TEXT  , this::appendText  );
+        appenders.put(TemplateType.ITEM  , this::appendItem  );
+        appenders.put(TemplateType.SUPER , this::appendSuper );
+        appenders.put(TemplateType.IF    , this::appendIf    );
+        appenders.put(TemplateType.FOR   , this::appendFor   );
+        appenders.put(TemplateType.DATE  , this::appendDate  );
+        appenders.put(TemplateType.USER  , this::appendUser  );
+        appenders.put(TemplateType.AUTHOR, this::appendAuthor);
 
         // preserve line end with source
         int idx = template.indexOf("\n");
@@ -645,6 +652,12 @@ public class TemplateManager {
     private void appendUser(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         appendBase(sb, map, USER_ID);
+    }
+    
+    @SuppressWarnings("unused")
+    private void appendAuthor(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
+        Map<String,Object> map = (Map<String,Object>)template.cont;
+        appendBase(sb, map, ObjUtils.getValue(customs, "author"));
     }
     
     private void appendMapper(StringBuilder sb, List<TemplateItem> templates, Object mapper, Object supr) throws Exception {

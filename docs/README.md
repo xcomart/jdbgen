@@ -36,7 +36,7 @@ options.
 |Name|Descriptions|
 |---:|:---|
 |Connection Name|Unique connection name which will be shown in left list|
-|Driver|JDBC driver(can be managed by [Driver Manager Window](#driver-manager-window)|
+|Driver|JDBC driver(can be managed by [Driver Manager Window](#driver-manager-window))|
 |Connection URL|JDBC driver specific connection URL to database|
 |User Name|Database user name|
 |User Password|Database user password|
@@ -170,14 +170,15 @@ Actually [`jiconfont-font_awesome`](https://jiconfont.github.io/fontawesome)
 is used in this application.
 
 You can specify FontAwesome icon using 'fa:' prefix in `Icon` field.
+Icon color will be same as default font color.
 
 Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|![table](images/table.svg)|`fa:table`|
-|![eye](images/eye.svg)|`fa:eye`|
-|![window-restore](images/window-restore.svg)|`fa:window_restore`|
+|<img src="images/table.png" width="17" width="17"/>|`fa:table`|
+|<img src="images/eye.png" width="17" width="17"/>|`fa:eye`|
+|<img src="images/window-restore.png" width="17" width="17"/>|`fa:window_restore`|
 
 ### Color bullet
 
@@ -191,9 +192,9 @@ Examples:
 
 |Icon|Field String|
 |:---:|:---|
-|<font color="blue">![circle](images/circle.svg)</font>|`color:blue`|
-|<font color="green">![circle](images/circle.svg)</font>|`color:green`|
-|<font color="red">![circle](images/circle.svg)</font>|`color:red`|
+|<font color="blue">&#x2B24;</font>|`color:blue`|
+|<font color="green">&#x2B24;</font>|`color:green`|
+|<font color="red">&#x2B24;</font>|`color:red`|
 
 ### Stock icons
 
@@ -215,3 +216,280 @@ All available stock icons are:
 |<img src="../src/main/resources/icons/postgresql.png" width="17" width="17"/>|`stock:postgresql.png`|
 |<img src="../src/main/resources/icons/sqlite.png" width="17" width="17"/>|`stock:sqlite.png`|
 
+
+
+## Template Instructions
+
+Template is created in text and uses predefined character sequence,
+basically opened with `${` and closed with `}` characters.
+
+Here is a sample which shows how does it works.
+
+If we have a database table created with below SQL script:
+```sql
+create table t_sample_album (
+  album_id int not null,
+  album_name varchar(256) not null,
+  artist_name varchar(512) not null,
+  publish_date DATE,
+  primary key (album_id)
+);
+comment on table t_sample_album is 'Music Album';
+comment on column t_sample_album.album_id is 'Album identifier';
+comment on column t_sample_album.album_name is 'Album display name';
+comment on column t_sample_album.artist_name is 'Creator artist name';
+comment on column t_sample_album.publish_date is 'Published date';
+```
+
+And we have a template like:
+```java
+/**
+ * ${remarks} Model class
+ *
+ * @author ${author}
+ * @version 1.0 ${date:yyyy-MM-dd}
+ */
+class ${table.suffix.pascal}Model {
+    ${for:item=columns}// ${remarks}
+    private ${item:key=javaType, padSize=10, padDir=right} ${name.camel};
+    ${endfor}
+    // Getters and Setters
+    ${for:item=columns}
+    // get ${remarks}
+    public ${javaType} ${if:item=javaType, equals='boolean'}is${else}get${endif}${name.pascal}() {
+        return ${name.camel};
+    }
+
+    // set ${remarks}
+    public void set${name.pascal}(${javaType} ${name.camel}) {
+        this.${name.camel} = ${name.camel};
+    }
+    ${endfor}
+}
+```
+
+This template will generate below code:
+```java
+/**
+ * Music Album Model class
+ *
+ * @author John Doe <john.doe@abc.com>
+ * @version 1.0 2024-08-12
+ */
+class SampleAlbumModel {
+    // Album identifier
+    private Integer    albumId;
+    // Album display name
+    private String     albumName;
+    // Creator artist name
+    private String     artistName;
+    // Published date
+    private Date       publishDate;
+    
+    // Getters and Setters
+    
+    // get Album identifier
+    public Integer getAlbumId() {
+        return albumId;
+    }
+
+    // set Album identifier
+    public void setAlbumId(Integer albumId) {
+        this.albumId = albumId;
+    }
+    
+    // get Album display name
+    public String getAlbumName() {
+        return albumName;
+    }
+
+    // set Album display name
+    public void setAlbumName(String albumName) {
+        this.albumName = albumName;
+    }
+    
+    // get Creator artist name
+    public String getArtistName() {
+        return artistName;
+    }
+
+    // set Creator artist name
+    public void setArtistName(String artistName) {
+        this.artistName = artistName;
+    }
+    
+    // get Published date
+    public Date getPublishDate() {
+        return publishDate;
+    }
+
+    // set Published date
+    public void setPublishDate(Date publishDate) {
+        this.publishDate = publishDate;
+    }
+    
+}
+```
+
+### Control Templates
+
+Contol templates branch with condition or iterates items.
+
+#### `if` Statement
+
+`if` statement branchs process with conditional statement.
+
+```
+${if:item=<field>, <condition>}
+ ...    // conditions met
+[${elif:item=<field>, <conditions>} ...]
+ ...    // another condition met, multiple elif can be used
+[${else}]
+ ...    // condition not met
+${endif}
+```
+
+Where `field` is a member of current object(table or column).
+`conditions` can be one of -
+
+|Condition|Description|
+|:---:|:---|
+|`[value\|equals]=<value>`|When item value is equals `<value>`|
+|`notEquals=<value>`|When item value is not equals `<value>`|
+|`startsWith=<prefix>`|When item value starts with `<prefix>`|
+|`endsWith=<suffix>`|When item value ends with `<suffix>`|
+|`contains=<item>`|When item collection contains `<item>`|
+|`notContains=<item>`|When item collection not contains `<item>`|
+
+Multiple `elif` statement can be used and `else` statement is optional.
+`if` statement must be closed with `endif` statement.
+
+Examples:
+```
+This is ${if:item="type", startsWith="TABLE"}physical table${else}not table${endif}.
+This is
+${if:item="type", equals="albumId"}
+pysical table
+${elif:item="type", equals="VIEW"}
+virtual view
+${else}
+unknown object ${type}
+${endif}.
+```
+
+#### `for` Statement
+
+`for` statement repeats inside contents using collection items.
+
+```
+${for:item=<collection field>[, <controls>]}
+ ...    // repeats
+${endfor}
+```
+
+Where `collection field` is a collection type member of current object(obiously table object),
+`for` statement must be closed with `endfor` statement.
+
+`collection field` can be one of -
+
+|Collection Field|Description|
+|:---:|:---|
+|`columns`|All columns in current table object|
+|`keys`|Primary key fields in current table object|
+|`notKeys`|All columns except primary keys in current table object|
+
+and `controls` can be combination of -
+
+|Control|Description|
+|:---:|:---|
+|`inStr=<infix>`|Appends `<infix>` between iterations.|
+|`indent=<spaces>`|An integer value applied after line break, can be negative.|
+|`skipList=<skips>`|When item value ends with `<suffix>`|
+
+> Note! Only collection item is accessible inside `for` statement, if you want
+> to access outer object use `super` statement.
+
+Examples:
+```sql
+SELECT ${for:item=columns, inStr=","}
+       ${name} AS "${name.camel}"${endfor}
+  FROM ${table}
+ WHERE ${for:item=keys, inStr="AND ", indent=-4}${name} = #{${name.camel}}
+       ${endfor}
+```
+
+### `item` Statement
+
+Item means member field of table/column object in this application.
+
+```
+${<field name>[<decorators>]} or
+${item:key=<field name>[<decorators>][, <extra decorators>]}
+```
+
+Where `field name` is member field name of table/column.
+
+`decorators` can be combination of -
+
+|Decorator|Repeatable|Description|
+|:---:|:---:|:---|
+|`.suffix`|&#x25EF;|Remove prefix including first `_` in value(ex. `T_SAMPLE_ALBUM` -> `SAMPLE_ALBUM`)|
+|`.prefix`|&#x25EF;|Remove suffix including last `_` in value(ex. `SAMPLE_ALBUM_T` -> `SAMPLE_ALBUM`)|
+|`.camel`|&#x2715;|Change value to camel case(ex. `SAMPLE_ALBUM` -> `sampleAlbum`)|
+|`.pascal`|&#x2715;|Change value to pascal case(ex. `SAMPLE_ALBUM` -> `SampleAlbum`)|
+|`.lower`|&#x2715;|Change value to lower case(ex. `SAMPLE_ALBUM` -> `sample_album`)|
+|`.upper`|&#x2715;|Change value to upper case(ex. `sample_album` -> `SAMPLE_ALBUM`)|
+
+`extra decorators` can be combination of -
+
+|Decorator|Description|
+|:---:|:---|
+|`padSize=<size>`|Appends spaces to make value length fit to `size`.|
+|`padDir=<direction>`|`left` or `right`, where the spaces appended to.|
+|`quote=<quote>`|Wrap value with `quote` string.|
+|`prepend=<prepend>`|Prepend `prepend` string to value.|
+|`postpend=<postpend>`|Postpend `postpend` string to value.|
+
+Examples:
+```
+// if table like : T_SAMPLE_ALBUM ( ALBUM_ID, ALBUM_NAME )
+
+${name.suffix.pascal}   // same as ${item:key=name.suffix.pascal}
+// results SampleAlbum
+
+[${for:item=columns, inStr=", "}${item:key=name.camel, quote="\""}${endfor}]
+// results ["albumId", "albumName"]
+```
+
+Databse table object member fields:
+
+|Member Field|Type|Description|
+|:---:|:---:|:---|
+|`catalog`|String|Database catalog where this table included.|
+|`schema`|String|Database schema where this table included.|
+|`name`|String|Table name.|
+|`table`|String|Alias of `name`|
+|`type`|String|JDBC compliant table type(`TABLE`, `VIEW`)|
+|`remark`|String|Table comments|
+|`columns`|Collection|All columns in current table|
+|`keys`|Collection|Primary keys of current table|
+|`notKeys`|Collection|All columns of current table except primary keys.|
+
+Database column object member fields:
+
+|Member Field|Type|Description|
+|:---:|:---:|:---|
+|`catalog`|String|Database catalog where this column included.|
+|`schema`|String|Database schema where this column included.|
+|`table`|String|Database table where this column included.|
+|`name`|String|Column name.|
+|`column`|String|Alias of `name`|
+|`typeName`|String|Column data type name|
+|`length`|Integer|Column data type length|
+|`remarks`|String|Column comments|
+|`nullable`|Integer|`0` or `1`. `1` is nullable|
+|`isKey`|Boolean|`true` if this column is primary key|
+|`defVal`|String|Default value of this column|
+|`typeString`|String|Combination of `typeName` and `length`(ex. `VARCHAR(40)`).|
+|`jdbcType`|String|JDBC compliant type name.|
+|`javaType`|String|Corresponding java type name|

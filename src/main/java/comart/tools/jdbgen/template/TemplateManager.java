@@ -520,7 +520,7 @@ public class TemplateManager {
         for (int i=1; i<keys.length; i++) {
             String proc = StrUtils.trim(keys[i]).toLowerCase();
             if (!procs.containsKey(proc))
-                throw new RuntimeException("cannot find '"+proc+"' in string processors, valid values: [prefix, postfix, camel, pascal, lower, upper]");
+                throw new RuntimeException("cannot find '"+proc+"' in string processors, valid values are: [prefix, suffix, camel, pascal, lower, upper]");
             val = procs.get(proc).process(val.toString());
         }
         appendBase(sb, map, val);
@@ -542,10 +542,17 @@ public class TemplateManager {
         Object ftpls = map.get("false");
         String mkey = getKey(map);
         boolean condMet = false;
-        if (map.containsKey("value")) {
-            String cval = (String)map.get("value");
+        if (map.containsKey("value"))
+            map.put("equals", map.get("value"));
+
+        if (map.containsKey("equals")) {
+            String cval = (String)map.get("equals");
             String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
             condMet = cval.equalsIgnoreCase(oval);
+        } else if (map.containsKey("notequals")) {
+            String cval = (String)map.get("notequals");
+            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            condMet = !cval.equalsIgnoreCase(oval);
         } else if (map.containsKey("contains") || map.containsKey("notcontains")) {
             String cons = (String)map.get("contains");
             String ncons = (String)map.get("notcontains");

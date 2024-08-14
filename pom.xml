@@ -70,7 +70,7 @@
                             <resources>
                                 <resource>
                                     <directory>templates</directory>
-                                    <filtering>true</filtering>
+                                    <filtering>false</filtering>
                                 </resource>
                             </resources>
                         </configuration>
@@ -104,7 +104,7 @@
                             <resources>
                                 <resource>
                                     <directory>shells</directory>
-                                    <filtering>true</filtering>
+                                    <filtering>false</filtering>
                                 </resource>
                             </resources>
                         </configuration>

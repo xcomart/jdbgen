@@ -35,6 +35,7 @@ import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Image;
+import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -171,12 +172,15 @@ public class UIUtils {
 
     public static void applyIcon(JComponent button, IconCode code) {
         applyIcon(button, code, "");
+        if (button instanceof JButton) {
+            ((JButton)button).setMargin(new Insets(5, 5, 5, 5));
+        }
     }
 
     private static void addIconPrivate(JComponent button, IconCode code) {
         try {
             Method setIcon = button.getClass().getMethod("setIcon", new Class[]{Icon.class});
-            setIcon.invoke(button, IconFontSwing.buildIcon(code, (float)fontSize, color));
+            setIcon.invoke(button, IconFontSwing.buildIcon(code, (float)(fontSize), color));
         } catch (Exception ignored) {}
 
     }
@@ -384,6 +388,7 @@ public class UIUtils {
         if (fileTypeName != null && fileTypes != null) {
             FileNameExtensionFilter filter = new FileNameExtensionFilter(
                 fileTypeName, fileTypes);
+            fc.addChoosableFileFilter(filter);
         }
         if (fc.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
             String fpath = fc.getSelectedFile().getAbsolutePath();
@@ -477,5 +482,10 @@ public class UIUtils {
     public static void templateHelpAction(JButton btn) {
         btn.addActionListener(e -> PlatformUtils.openURL(
                 "https://github.com/xcomart/jdbgen/blob/master/docs/README.md#template-instructions"));
+    }
+    
+    public static void fitButton(JComponent ref, JButton btn) {
+        int size = ref.getHeight();
+        btn.setSize(size, size);
     }
 }

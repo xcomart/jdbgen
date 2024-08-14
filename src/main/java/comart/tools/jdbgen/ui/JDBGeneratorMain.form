@@ -291,8 +291,8 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jLabel11" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="btnBrowseOutput" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="txtOutputDir" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="btnBrowseOutput" linkSize="2" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="txtOutputDir" linkSize="2" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
@@ -304,7 +304,7 @@
                           <Group type="102" attributes="0">
                               <Component id="jLabel16" min="-2" max="-2" attributes="0"/>
                               <EmptySpace max="-2" attributes="0"/>
-                              <Component id="btnDelVar" min="-2" max="-2" attributes="0"/>
+                              <Component id="btnDelVar" linkSize="2" min="-2" max="-2" attributes="0"/>
                           </Group>
                           <Component id="jScrollPane4" min="-2" pref="130" max="-2" attributes="0"/>
                       </Group>
@@ -364,9 +364,6 @@
             <Component class="javax.swing.JButton" name="btnBrowseOutput">
               <Properties>
                 <Property name="text" type="java.lang.String" value="..."/>
-                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                  <Dimension value="[30, 26]"/>
-                </Property>
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="jLabel14">
@@ -410,9 +407,6 @@
             <Component class="javax.swing.JButton" name="btnDelVar">
               <Properties>
                 <Property name="text" type="java.lang.String" value="-"/>
-                <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
-                  <Dimension value="[30, 26]"/>
-                </Property>
               </Properties>
             </Component>
           </SubComponents>

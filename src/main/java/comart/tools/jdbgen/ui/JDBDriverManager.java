@@ -94,8 +94,9 @@ public class JDBDriverManager extends JDialog {
         JDBGenConfig conf = JDBGenConfig.getInstance();
         drivers = conf.getDrivers();
         drivers.forEach((d) -> listModel.addElement(d.getName()));
-        
+
         UIUtils.iconHelpAction(btnIconHelp);
+        this.pack();
     }
     
     public void setDriverIndex(int index) {
@@ -267,7 +268,6 @@ public class JDBDriverManager extends JDialog {
         jPanel3.setLayout(new java.awt.GridLayout(1, 0));
 
         btnNewDriver.setText("+");
-        btnNewDriver.setPreferredSize(new java.awt.Dimension(30, 26));
         btnNewDriver.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNewDriverActionPerformed(evt);
@@ -276,7 +276,6 @@ public class JDBDriverManager extends JDialog {
         jPanel3.add(btnNewDriver);
 
         btnCloneDriver.setText("c");
-        btnCloneDriver.setPreferredSize(new java.awt.Dimension(30, 26));
         btnCloneDriver.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCloneDriverActionPerformed(evt);
@@ -285,7 +284,6 @@ public class JDBDriverManager extends JDialog {
         jPanel3.add(btnCloneDriver);
 
         btnDelDriver.setText("-");
-        btnDelDriver.setPreferredSize(new java.awt.Dimension(30, 26));
         btnDelDriver.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDelDriverActionPerformed(evt);
@@ -339,7 +337,6 @@ public class JDBDriverManager extends JDialog {
         jLabel4.setText("JDBC Jar:");
 
         btnBrowseJar.setText("...");
-        btnBrowseJar.setPreferredSize(new java.awt.Dimension(30, 26));
         btnBrowseJar.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnBrowseJarActionPerformed(evt);
@@ -376,7 +373,6 @@ public class JDBDriverManager extends JDialog {
         jLabel10.setText("Icon:");
 
         btnBrowseIcon.setText("...");
-        btnBrowseIcon.setPreferredSize(new java.awt.Dimension(30, 26));
         btnBrowseIcon.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnBrowseIconActionPerformed(evt);
@@ -408,7 +404,6 @@ public class JDBDriverManager extends JDialog {
         jScrollPane2.setViewportView(tabProps);
 
         btnDelProp.setText("-");
-        btnDelProp.setPreferredSize(new java.awt.Dimension(30, 26));
         btnDelProp.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDelPropActionPerformed(evt);
@@ -418,7 +413,6 @@ public class JDBDriverManager extends JDialog {
         chkNoAuth.setText("Authentication is not required for this driver.");
 
         btnIconHelp.setText("?");
-        btnIconHelp.setPreferredSize(new java.awt.Dimension(30, 26));
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -427,7 +421,7 @@ public class JDBDriverManager extends JDialog {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnDelProp, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDelProp, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -440,20 +434,20 @@ public class JDBDriverManager extends JDialog {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(txtJarFile)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseJar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btnBrowseJar))
                     .addComponent(btnDownJdbc, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(txtUrlTemplate)
                     .addComponent(txtDriverClass)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 443, Short.MAX_VALUE)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(chkNoAuth)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(txtIcon)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseIcon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnBrowseIcon)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnIconHelp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(btnIconHelp)))
                 .addContainerGap())
         );
 
@@ -469,7 +463,7 @@ public class JDBDriverManager extends JDialog {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel4)
-                    .addComponent(btnBrowseJar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnBrowseJar)
                     .addComponent(txtJarFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnDownJdbc)
@@ -485,8 +479,8 @@ public class JDBDriverManager extends JDialog {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel10)
                     .addComponent(txtIcon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnBrowseIcon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnIconHelp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnBrowseIcon)
+                    .addComponent(btnIconHelp))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(chkNoAuth)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -494,8 +488,8 @@ public class JDBDriverManager extends JDialog {
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnDelProp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(172, 195, Short.MAX_VALUE))
+                        .addComponent(btnDelProp)
+                        .addGap(172, 216, Short.MAX_VALUE))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                         .addContainerGap())))
@@ -504,7 +498,6 @@ public class JDBDriverManager extends JDialog {
         jTabbedPane1.addTab("General", jPanel2);
 
         btnTableComments.setText("?");
-        btnTableComments.setPreferredSize(new java.awt.Dimension(30, 26));
         btnTableComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnTableCommentsActionPerformed(evt);
@@ -523,7 +516,6 @@ public class JDBDriverManager extends JDialog {
         jScrollPane4.setViewportView(txtColumnComments);
 
         btnColumnComments.setText("?");
-        btnColumnComments.setPreferredSize(new java.awt.Dimension(30, 26));
         btnColumnComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnColumnCommentsActionPerformed(evt);
@@ -553,7 +545,6 @@ public class JDBDriverManager extends JDialog {
         jScrollPane6.setViewportView(txtTables);
 
         btnTables.setText("?");
-        btnTables.setPreferredSize(new java.awt.Dimension(30, 26));
         btnTables.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnTablesActionPerformed(evt);
@@ -572,7 +563,6 @@ public class JDBDriverManager extends JDialog {
         });
 
         btnColumns.setText("?");
-        btnColumns.setPreferredSize(new java.awt.Dimension(30, 26));
         btnColumns.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnColumnsActionPerformed(evt);
@@ -589,23 +579,23 @@ public class JDBDriverManager extends JDialog {
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addComponent(chkColumnComments)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnColumnComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnColumnComments)
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(jPanel5Layout.createSequentialGroup()
                                 .addComponent(chkTableComments)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnTableComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(btnTableComments))
                             .addGroup(jPanel5Layout.createSequentialGroup()
                                 .addComponent(chkTables)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnTables, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(btnTables))
                             .addGroup(jPanel5Layout.createSequentialGroup()
                                 .addComponent(chkColumns)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnColumns, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addContainerGap(368, Short.MAX_VALUE))
+                                .addComponent(btnColumns)))
+                        .addContainerGap(391, Short.MAX_VALUE))
                     .addGroup(jPanel5Layout.createSequentialGroup()
                         .addGap(23, 23, 23)
                         .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -620,28 +610,28 @@ public class JDBDriverManager extends JDialog {
                 .addGap(7, 7, 7)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(chkTableComments)
-                    .addComponent(btnTableComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnTableComments))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(chkColumnComments)
-                    .addComponent(btnColumnComments, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnColumnComments))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(chkTables)
-                    .addComponent(btnTables, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnTables))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(chkColumns)
-                    .addComponent(btnColumns, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnColumns))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane7, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(26, Short.MAX_VALUE))
+                .addContainerGap(93, Short.MAX_VALUE))
         );
 
         jScrollPane3.setViewportView(jPanel5);

@@ -82,6 +82,7 @@ public class ProcessProgress extends javax.swing.JDialog {
             this.worker = worker;
             worker.parent = this;
         }
+        this.pack();
     }
     
     public void start() {

@@ -98,6 +98,7 @@ public class JDBPresets extends JDialog {
                 toFront();
             }
         });
+        this.pack();
     }
     
     private void applyIcons() {
@@ -195,7 +196,6 @@ public class JDBPresets extends JDialog {
         jPanel3.setLayout(new java.awt.GridLayout(1, 0));
 
         btnNew.setText("+");
-        btnNew.setPreferredSize(new java.awt.Dimension(23, 26));
         btnNew.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNewActionPerformed(evt);
@@ -204,7 +204,6 @@ public class JDBPresets extends JDialog {
         jPanel3.add(btnNew);
 
         btnClone.setText("C");
-        btnClone.setPreferredSize(new java.awt.Dimension(23, 26));
         btnClone.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCloneActionPerformed(evt);
@@ -213,7 +212,6 @@ public class JDBPresets extends JDialog {
         jPanel3.add(btnClone);
 
         btnDel.setText("-");
-        btnDel.setPreferredSize(new java.awt.Dimension(23, 26));
         btnDel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDelActionPerformed(evt);
@@ -236,7 +234,7 @@ public class JDBPresets extends JDialog {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 415, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -280,7 +278,6 @@ public class JDBPresets extends JDialog {
         jScrollPane3.setViewportView(tabTemplates);
 
         btnTemplateHelp.setText("?");
-        btnTemplateHelp.setPreferredSize(new java.awt.Dimension(30, 26));
 
         btnNewTemplate.setText("New");
         btnNewTemplate.addActionListener(new java.awt.event.ActionListener() {
@@ -310,7 +307,6 @@ public class JDBPresets extends JDialog {
         jLabel8.setText("Template File:");
 
         btnBrowseTemplate.setText("...");
-        btnBrowseTemplate.setPreferredSize(new java.awt.Dimension(30, 26));
 
         jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel13.setText("Output Name Template:");
@@ -334,12 +330,12 @@ public class JDBPresets extends JDialog {
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
                         .addComponent(txtTemplateFile)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseTemplate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(btnBrowseTemplate))
                     .addComponent(txtOutTemplate)
                     .addComponent(txtTemplateName)))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addComponent(btnTemplateHelp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 125, Short.MAX_VALUE)
+                .addComponent(btnTemplateHelp)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 257, Short.MAX_VALUE)
                 .addComponent(btnNewTemplate)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnDelTemplate)
@@ -362,14 +358,14 @@ public class JDBPresets extends JDialog {
                     .addComponent(btnSaveTemplate)
                     .addComponent(btnDelTemplate)
                     .addComponent(btnNewTemplate)
-                    .addComponent(btnTemplateHelp, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(btnTemplateHelp))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel9)
                     .addComponent(txtTemplateName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnBrowseTemplate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnBrowseTemplate)
                     .addComponent(txtTemplateFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel8))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -434,7 +430,7 @@ public class JDBPresets extends JDialog {
                         .addComponent(btnSave)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnCancel))
-                    .addComponent(splPreset, javax.swing.GroupLayout.DEFAULT_SIZE, 671, Short.MAX_VALUE))
+                    .addComponent(splPreset, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(

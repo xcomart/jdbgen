@@ -70,6 +70,7 @@ public class JDBTableView extends javax.swing.JDialog {
             row.add(c.isKey());
             model.addRow(row.toArray());
         });
+        this.pack();
     }
 
     /**

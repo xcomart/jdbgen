@@ -110,6 +110,7 @@ public class MavenExplorer extends JDialog {
         
         applyIcons();
         eventSetup();
+        this.pack();
     }
 
     private void applyIcons() {

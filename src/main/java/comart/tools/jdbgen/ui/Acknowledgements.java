@@ -57,6 +57,7 @@ public class Acknowledgements extends javax.swing.JDialog {
             logger.log(Level.SEVERE, "cannot read acknowledges.", e);
         }
         txtContents.setText(sb.toString());
+        this.pack();
     }
 
     /**

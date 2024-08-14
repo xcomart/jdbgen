@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>comart.tools</groupId>
     <artifactId>jdbgen</artifactId>
-    <name>DB Generator</name>
+    <name>jdbgen</name>
     <packaging>jar</packaging>
     <version>0.1.1</version>
     <build>
@@ -143,12 +143,6 @@
             <version>1.18.34</version>
             <scope>provided</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/com.github.jiconfont/jiconfont -->
-<!--        <dependency>
-            <groupId>com.github.jiconfont</groupId>
-            <artifactId>jiconfont</artifactId>
-            <version>1.0.0</version>
-        </dependency>-->
         <!-- https://mvnrepository.com/artifact/com.github.jiconfont/jiconfont-swing -->
         <dependency>
             <groupId>com.github.jiconfont</groupId>
@@ -173,12 +167,6 @@
             <artifactId>flatlaf</artifactId>
             <version>3.5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/net.sourceforge.htmlcleaner/htmlcleaner -->
-<!--        <dependency>
-            <groupId>net.sourceforge.htmlcleaner</groupId>
-            <artifactId>htmlcleaner</artifactId>
-            <version>2.24</version>
-        </dependency>-->
         <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp -->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
@@ -191,12 +179,6 @@
             <artifactId>commons-io</artifactId>
             <version>2.16.1</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.json/json -->
-<!--        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20230227</version>
-        </dependency>-->
         <dependency>
             <groupId>org.netbeans.external</groupId>
             <artifactId>AbsoluteLayout</artifactId>

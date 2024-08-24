@@ -463,6 +463,7 @@ is user supplied variable in [Generator Main Window](#generator-main-window).
 |`.pascal`|&#x2715;|Change value to pascal case(ex. `SAMPLE_ALBUM` -> `SampleAlbum`)|
 |`.lower`|&#x2715;|Change value to lower case(ex. `SAMPLE_ALBUM` -> `sample_album`)|
 |`.upper`|&#x2715;|Change value to upper case(ex. `sample_album` -> `SAMPLE_ALBUM`)|
+|`.replace('X','Y')`|&#x2715;|Replace `X` string to 'Y' string(ex. `sample_album` `name.replace('album', 'music')` -> `sample_music`)|
 
 `extra decorators` can be a combination of -
 
@@ -480,6 +481,9 @@ Examples:
 
 ${name.suffix.pascal}   // same as ${item:key=name.suffix.pascal}
 // results SampleAlbum
+
+${name.replace('SAMPLE', 'TEST').suffix.pascal} // same as ${item:key=name.replace('SAMPLE', 'TEST').suffix.pascal}
+// results TestAlbum
 
 [${for:item=columns, inStr=", "}${item:key=name.camel, quote="\""}${endfor}]
 // results ["albumId", "albumName"]

@@ -51,7 +51,7 @@ public class TemplateManager {
     }
     
     private interface ItemProcHandler {
-        String process(String item);
+        String process(String item, List<Object> params);
     }
     
     private static enum TemplateType {
@@ -207,8 +207,8 @@ public class TemplateManager {
                     default : sb.append(c);
                 }
             } else {
-                if (openChar < 0 && (c == '\"' || c == '\'')) {
-                    openChar = c;
+                if (openChar < 0 && (c == '\"' || c == '\'' || c =='(')) {
+                    openChar = c == '('? ')':c;
                     sb.append(c);
                 } else if (c == openChar) {
                     sb.append(c);
@@ -386,7 +386,7 @@ public class TemplateManager {
         return new TemplateItem(TemplateType.AUTHOR, parseNVPairs(ctx, extra));
     }
     
-    private static String procPrefix(String item) {
+    private static String procPrefix(String item, List<Object> params) {
         int idx = item.lastIndexOf("_");
         if (idx > -1) {
             return item.substring(0, idx);
@@ -395,7 +395,7 @@ public class TemplateManager {
         }
     }
     
-    private static String procSuffix(String item) {
+    private static String procSuffix(String item, List<Object> params) {
         int idx = item.indexOf("_");
         if (idx > -1) {
             return item.substring(idx+1);
@@ -404,24 +404,30 @@ public class TemplateManager {
         }
     }
     
-    private static String procCamel(String item) {
+    private static String procCamel(String item, List<Object> params) {
         return StrUtils.toCamelCase(item);
     }
     
-    private static String procPascal(String item) {
-        String camel = procCamel(item);
+    private static String procPascal(String item, List<Object> params) {
+        String camel = procCamel(item, params);
         String res = camel.substring(0, 1).toUpperCase();
         if (camel.length() > 1)
             res += camel.substring(1);
         return res;
     }
     
-    private static String procLower(String item) {
+    private static String procLower(String item, List<Object> params) {
         return item.toLowerCase();
     }
     
-    private static String procUpper(String item) {
+    private static String procUpper(String item, List<Object> params) {
         return item.toUpperCase();
+    }
+    
+    private static String procReplace(String item, List<Object> params) {
+        String find = params.get(0).toString();
+        String repl = params.get(1).toString();
+        return StrUtils.replace(item, find, repl);
     }
     
     
@@ -436,12 +442,13 @@ public class TemplateManager {
         handlers.put("user"  , TemplateManager::parseUser  );
         handlers.put("author", TemplateManager::parseAuthor);
         
-        procs.put("prefix", TemplateManager::procPrefix);
-        procs.put("suffix", TemplateManager::procSuffix);
-        procs.put("camel" , TemplateManager::procCamel );
-        procs.put("pascal", TemplateManager::procPascal);
-        procs.put("lower" , TemplateManager::procLower );
-        procs.put("upper" , TemplateManager::procUpper );
+        procs.put("prefix" , TemplateManager::procPrefix );
+        procs.put("suffix" , TemplateManager::procSuffix );
+        procs.put("camel"  , TemplateManager::procCamel  );
+        procs.put("pascal" , TemplateManager::procPascal );
+        procs.put("lower"  , TemplateManager::procLower  );
+        procs.put("upper"  , TemplateManager::procUpper  );
+        procs.put("replace", TemplateManager::procReplace);
     }
     
     private final List<TemplateItem> items;
@@ -511,11 +518,56 @@ public class TemplateManager {
         sb.append(template.cont.toString());
     }
     
+    private static class ItemKey {
+        String key = null;
+        List<Object> params = new ArrayList<>();
+    }
+    
+    private static List<ItemKey> parseKeys(String mkey) {
+        if (!mkey.endsWith("."))
+            mkey = mkey + ".";
+
+        int i=0, len = mkey.length();
+        List<ItemKey> res = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        ItemKey curr = new ItemKey();
+        int openchar = -1;
+        while (i < len) {
+            char c = mkey.charAt(i);
+            if (openchar > -1 && c == openchar) {
+                curr.params.add(sb.toString());
+                sb = new StringBuilder();
+                openchar = -1;
+            } else if (openchar > -1) {
+                sb.append(c);
+            } else if (openchar < 0 && StrUtils.contains(new char[]{'\'','"'}, c)) {
+                openchar = c;
+                sb = new StringBuilder();
+            } else if (c == '.') {
+                if (curr.key == null) {
+                    curr.key = sb.toString();
+                }
+                res.add(curr);
+                curr = new ItemKey();
+                sb = new StringBuilder();
+            } else if (c == '(') {
+                curr.key = sb.toString();
+                sb = new StringBuilder();
+            } else if (!StrUtils.isSpace(c, " \r\n,)")) {
+                sb.append(c);
+            }
+            i++;
+        }
+        
+        return res;
+    }
+    
     private void appendItemBase(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         String mkey = getKey(map);
-        String []keys = StrUtils.split(mkey, ".");
-        String key = StrUtils.trim(keys[0]);
+        List<ItemKey> keys = parseKeys(mkey);
+        logger.info(mkey);
+        String key = StrUtils.trim(keys.get(0).key);
         Object val = ObjUtils.getValue(mapper, key);
         if (val == null)
             val = ObjUtils.getValue(customs, key);
@@ -524,11 +576,12 @@ public class TemplateManager {
             //throw new RuntimeException("cannot find '"+key+"' information from database/custom variables");
             val = "";
         }
-        for (int i=1; i<keys.length; i++) {
-            String proc = StrUtils.trim(keys[i]).toLowerCase();
+        for (int i=1; i<keys.size(); i++) {
+            ItemKey ikey = keys.get(i);
+            String proc = StrUtils.trim(ikey.key).toLowerCase();
             if (!procs.containsKey(proc))
                 throw new RuntimeException("cannot find '"+proc+"' in string processors, valid values are: [prefix, suffix, camel, pascal, lower, upper]");
-            val = procs.get(proc).process(val.toString());
+            val = procs.get(proc).process(val.toString(), ikey.params);
         }
         appendBase(sb, map, val);
     }

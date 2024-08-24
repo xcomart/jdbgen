@@ -431,10 +431,24 @@ public class UIUtils {
         for (int i=0; i<model.getRowCount(); i++) {
             String k = (String)model.getValueAt(i, 0);
             String v = (String)model.getValueAt(i, 1);
-            if (ObjectUtils.isNotEmpty(k) && ObjectUtils.isNotEmpty(v))
+            if (!StrUtils.isEmpty(k) && !StrUtils.isEmpty(v))
                 props.put(k, v);
         }
         return props;
+    }
+    
+    public static void tableSetLastEmpty(TableModel model) {
+        boolean lastEmpty = false;
+        for (int i=0; i<model.getRowCount(); i++) {
+            String k = (String)model.getValueAt(i, 0);
+            String v = (String)model.getValueAt(i, 1);
+            if (!StrUtils.isEmpty(k) && !StrUtils.isEmpty(v))
+                lastEmpty = false;
+            else
+                lastEmpty = true;
+        }
+        if (!lastEmpty)
+            ((DefaultTableModel)model).addRow(new String[]{"", ""});
     }
     
     public static boolean checkNotEmpty(Component parent, JComponent target) {

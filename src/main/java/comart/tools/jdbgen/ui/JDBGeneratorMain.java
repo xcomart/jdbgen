@@ -92,6 +92,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         initTemplates();
         applyIcons();
         clearContents();
+        
+        tabVars.getModel().addTableModelListener((evt) -> {
+            UIUtils.tableSetLastEmpty(tabVars.getModel());
+        });
+        
         this.pack();
     }
     
@@ -179,6 +184,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             txtAuthor.setText(conn.getAuthor());
             txtOutputDir.setText(conn.getOutputDir());
             conn.getCustomVars().forEach((k, v) -> cstModel.addRow(new String[]{k, v}));
+            cstModel.addRow(new String[]{"", ""});
         }
     }
     

@@ -259,7 +259,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         btnAck = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("DB Generator");
+        setTitle("JDBGen Main");
 
         btnClose.setText("Close");
         btnClose.addActionListener(new java.awt.event.ActionListener() {

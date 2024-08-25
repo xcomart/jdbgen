@@ -121,4 +121,14 @@ class SampleAlbumModel {
 
 Awesome!
 
+## Installation
+
+> Note! JRE 11 or above is required to run this application.
+> Make sure JRE `bin` directory in `PATH` or `JAVA_HOME` has been set.
+
+1. Download application from [latest release](https://github.com/xcomart/jdbgen/releases/latest).
+1. Unzip downloaded archive to desired location.
+1. Run jdbgen.sh(for Linux/Unix/Mac) or jdbgen.cmd(for Windows) or run jdbgen-xx.jar directly as java application.
+
+
 If you need more information, read [full document](docs/README.md)

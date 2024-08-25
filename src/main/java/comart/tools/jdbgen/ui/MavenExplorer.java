@@ -67,6 +67,7 @@ public class MavenExplorer extends JDialog {
             INSTANCE = new MavenExplorer();
             UIUtils.registerFrame(INSTANCE);
         }
+        UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
         INSTANCE.changed = false;
@@ -416,6 +417,7 @@ public class MavenExplorer extends JDialog {
                     String url = MavenREST.downloadLink(sitem);
                     String fname = "drivers/" + url.substring(url.lastIndexOf('/') + 1);
                     File f = new File(fname);
+                    publish("driver saving to " + f.getAbsolutePath() + "...");
                     FileUtils.forceMkdirParent(f);
                     OkHttpClient client = HttpUtils.getClient();
                     Request req = new Request.Builder().url(url).build();
@@ -426,7 +428,6 @@ public class MavenExplorer extends JDialog {
                         long totallen = response.body().contentLength();
                         long curlen = 0;
                         int cnt;
-                        publish("driver saving to " + f.getAbsolutePath() + "...");
                         while ((cnt = is.read(buffer)) > -1) {
                             if (cnt > 0) {
                                 fos.write(buffer, 0, cnt);

@@ -71,6 +71,7 @@ public class JDBDriverManager extends JDialog {
             INSTANCE = new JDBDriverManager();
             UIUtils.registerFrame(INSTANCE);
         }
+        UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
         INSTANCE.changed = false;
@@ -81,7 +82,7 @@ public class JDBDriverManager extends JDialog {
      * Creates new form JDBDriverManager
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public JDBDriverManager() {
+    private JDBDriverManager() {
         initComponents();
         setModal(true);
 

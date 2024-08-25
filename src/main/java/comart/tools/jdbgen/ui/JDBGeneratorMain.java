@@ -79,6 +79,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         conf = JDBGenConfig.getInstance();
         chkDarkUI.setSelected(conf.isDarkUI());
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        UIUtils.setApplicationIcon(this);
 
         EventQueue.invokeLater(() -> {
             JDBConnectionManager cm = JDBConnectionManager.getInstance();

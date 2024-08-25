@@ -26,6 +26,7 @@ public class Acknowledgements extends javax.swing.JDialog {
             INSTANCE = new Acknowledgements(parent, true);
             UIUtils.registerFrame(INSTANCE);
         }
+        UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
         return INSTANCE;
@@ -38,7 +39,7 @@ public class Acknowledgements extends javax.swing.JDialog {
     /**
      * Creates new form Acknowledgements
      */
-    public Acknowledgements(java.awt.Frame parent, boolean modal) {
+    private Acknowledgements(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
         

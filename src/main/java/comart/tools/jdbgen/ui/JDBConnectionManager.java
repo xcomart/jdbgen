@@ -71,6 +71,7 @@ public class JDBConnectionManager extends JDialog {
             INSTANCE = new JDBConnectionManager();
             UIUtils.registerFrame(INSTANCE);
         }
+        UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
         INSTANCE.selectedConnection = null;
@@ -95,7 +96,7 @@ public class JDBConnectionManager extends JDialog {
      * Creates new form JDBConnectionManager
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public JDBConnectionManager() {
+    private JDBConnectionManager() {
         initComponents();
         setModal(true);
         

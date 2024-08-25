@@ -85,6 +85,12 @@ public class ProcessProgress extends javax.swing.JDialog {
         this.pack();
     }
     
+    @Override
+    public void setVisible(boolean b) {
+        start();
+        super.setVisible(b);
+    }
+    
     public void start() {
         worker.execute();
     }

@@ -34,9 +34,11 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -44,6 +46,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -431,10 +434,24 @@ public class UIUtils {
         for (int i=0; i<model.getRowCount(); i++) {
             String k = (String)model.getValueAt(i, 0);
             String v = (String)model.getValueAt(i, 1);
-            if (ObjectUtils.isNotEmpty(k) && ObjectUtils.isNotEmpty(v))
+            if (!StrUtils.isEmpty(k) && !StrUtils.isEmpty(v))
                 props.put(k, v);
         }
         return props;
+    }
+    
+    public static void tableSetLastEmpty(TableModel model) {
+        boolean lastEmpty = false;
+        for (int i=0; i<model.getRowCount(); i++) {
+            String k = (String)model.getValueAt(i, 0);
+            String v = (String)model.getValueAt(i, 1);
+            if (!StrUtils.isEmpty(k) && !StrUtils.isEmpty(v))
+                lastEmpty = false;
+            else
+                lastEmpty = true;
+        }
+        if (!lastEmpty)
+            ((DefaultTableModel)model).addRow(new String[]{"", ""});
     }
     
     public static boolean checkNotEmpty(Component parent, JComponent target) {
@@ -487,5 +504,13 @@ public class UIUtils {
     public static void fitButton(JComponent ref, JButton btn) {
         int size = ref.getHeight();
         btn.setSize(size, size);
+    }
+    
+    public static void setApplicationIcon(Window wnd) {
+        try {
+            wnd.setIconImage(ImageIO.read(new File("resource/icon.png")));
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, null, ex);
+        }
     }
 }

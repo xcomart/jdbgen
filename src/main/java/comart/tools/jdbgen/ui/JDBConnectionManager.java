@@ -49,6 +49,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
@@ -69,6 +71,7 @@ public class JDBConnectionManager extends JDialog {
             INSTANCE = new JDBConnectionManager();
             UIUtils.registerFrame(INSTANCE);
         }
+        UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
         INSTANCE.selectedConnection = null;
@@ -93,7 +96,7 @@ public class JDBConnectionManager extends JDialog {
      * Creates new form JDBConnectionManager
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public JDBConnectionManager() {
+    private JDBConnectionManager() {
         initComponents();
         setModal(true);
         
@@ -126,6 +129,23 @@ public class JDBConnectionManager extends JDialog {
         if (!connections.isEmpty()) {
             lstConnections.setSelectedIndex(0);
         }
+        
+        tabProps.getModel().addTableModelListener((evt) -> {
+            int idx = lstConnections.getSelectedIndex();
+            if (idx > -1) {
+                JDBConnection target = connections.get(idx);
+                target.setConnectionProps(applyToPropsMap());
+            }
+            UIUtils.tableSetLastEmpty(propsModel);
+        });
+        tabVars.getModel().addTableModelListener((evt) -> {
+            int idx = lstConnections.getSelectedIndex();
+            if (idx > -1) {
+                JDBConnection target = connections.get(idx);
+                target.setCustomVars(applyToVarsMap());
+            }
+            UIUtils.tableSetLastEmpty(varsModel);
+        });
         this.pack();
     }
     
@@ -968,6 +988,9 @@ public class JDBConnectionManager extends JDialog {
             removeVars();
             
             conn.getConnectionProps().forEach((k, v) -> propsModel.addRow(new String[]{k, v}));
+            // add last empty row
+            propsModel.addRow(new String[]{"", ""});
+            
             conn.getTemplates().forEach(t -> tplModel.addRow(
                     new String[]{
                         t.getName(),
@@ -975,6 +998,8 @@ public class JDBConnectionManager extends JDialog {
                         t.getOutTemplate()}));
             if (conn.getCustomVars() != null)
                 conn.getCustomVars().forEach((k, v) -> varsModel.addRow(new String[]{k, v}));
+            // add last empty row
+            varsModel.addRow(new String[]{"", ""});
             autoReset = true;
             cboDriverItemStateChanged(null);
         }

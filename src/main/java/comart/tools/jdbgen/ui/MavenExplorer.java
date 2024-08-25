@@ -35,6 +35,8 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import jiconfont.icons.font_awesome.FontAwesome;
@@ -64,6 +67,7 @@ public class MavenExplorer extends JDialog {
             INSTANCE = new MavenExplorer();
             UIUtils.registerFrame(INSTANCE);
         }
+        UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
         INSTANCE.changed = false;
@@ -403,34 +407,61 @@ public class MavenExplorer extends JDialog {
         PlatformUtils.openURL("https://maven.org");
     }//GEN-LAST:event_lblMvnLinkMouseClicked
 
-    @SuppressWarnings("UseSpecificCatch")
-    private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
-        int vidx = lstVersion.getSelectedIndex();
-        if (vidx > -1) {
-            SearchResponseItem sitem = versionItems.get(vidx);
-            EventQueue.invokeLater(() -> {
+    private ProcessProgress.Worker getProgressWorker() {
+        return new ProcessProgress.Worker() {
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                int vidx = lstVersion.getSelectedIndex();
+                SearchResponseItem sitem = versionItems.get(vidx);
                 try {
                     String url = MavenREST.downloadLink(sitem);
                     String fname = "drivers/" + url.substring(url.lastIndexOf('/') + 1);
+                    File f = new File(fname);
+                    publish("driver saving to " + f.getAbsolutePath() + "...");
+                    FileUtils.forceMkdirParent(f);
                     OkHttpClient client = HttpUtils.getClient();
                     Request req = new Request.Builder().url(url).build();
-                    try (Response response = client.newCall(req).execute()) {
-                        @SuppressWarnings("null")
-                        byte[] data = response.body().bytes();
-                        File f = new File(fname);
-                        FileUtils.forceMkdirParent(f);
-                        FileUtils.writeByteArrayToFile(f, data);
+                    byte[] buffer = new byte[1024];
+                    try (Response response = client.newCall(req).execute();
+                            InputStream is = response.body().byteStream();
+                            FileOutputStream fos = new FileOutputStream(fname)) {
+                        long totallen = response.body().contentLength();
+                        long curlen = 0;
+                        int cnt;
+                        while ((cnt = is.read(buffer)) > -1) {
+                            if (cnt > 0) {
+                                fos.write(buffer, 0, cnt);
+                                curlen += cnt;
+                                setProgress((int)(curlen * 100 / totallen));
+                                publish("" + curlen + "/" + totallen + " bytes received.");
+                            }
+                        }
                         saveLocation = fname;
                         changed = true;
-                        setVisible(false);
+                        publish("Download complete.");
+                        UIUtils.info(parent, "Download complete!");
+                        return true;
                     }
                 } catch(Exception e) {
                     logger.log(Level.SEVERE, null, e);
-                    UIUtils.error(this, e.getLocalizedMessage());
+                    UIUtils.error(parent, e.getLocalizedMessage());
                 }
-            });
-        } else {
-            UIUtils.error(this, "Select version to download");
+                return false;
+            }
+        };
+    }
+
+    @SuppressWarnings("UseSpecificCatch")
+    private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
+        // We need to show modal dialog in front of another modal dialog.
+        JFrame dummy = new JFrame();
+        ProcessProgress pp = new ProcessProgress(dummy, true, getProgressWorker());
+        pp.setModal(true);
+        pp.setLocationRelativeTo(this);
+        pp.start();
+        pp.setVisible(true);
+        if (pp.result) {
+            setVisible(false);
         }
     }//GEN-LAST:event_btnDownloadActionPerformed
 

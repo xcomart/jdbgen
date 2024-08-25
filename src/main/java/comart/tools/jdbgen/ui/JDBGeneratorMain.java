@@ -79,6 +79,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         conf = JDBGenConfig.getInstance();
         chkDarkUI.setSelected(conf.isDarkUI());
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        UIUtils.setApplicationIcon(this);
 
         EventQueue.invokeLater(() -> {
             JDBConnectionManager cm = JDBConnectionManager.getInstance();
@@ -92,6 +93,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         initTemplates();
         applyIcons();
         clearContents();
+        
+        tabVars.getModel().addTableModelListener((evt) -> {
+            UIUtils.tableSetLastEmpty(tabVars.getModel());
+        });
+        
         this.pack();
     }
     
@@ -179,6 +185,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             txtAuthor.setText(conn.getAuthor());
             txtOutputDir.setText(conn.getOutputDir());
             conn.getCustomVars().forEach((k, v) -> cstModel.addRow(new String[]{k, v}));
+            cstModel.addRow(new String[]{"", ""});
         }
     }
     
@@ -253,7 +260,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         btnAck = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("DB Generator");
+        setTitle("JDBGen Main");
 
         btnClose.setText("Close");
         btnClose.addActionListener(new java.awt.event.ActionListener() {

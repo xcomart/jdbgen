@@ -25,6 +25,7 @@
 package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.db.DBTable;
+import comart.utils.UIUtils;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,7 @@ public class JDBTableView extends javax.swing.JDialog {
             row.add(c.isKey());
             model.addRow(row.toArray());
         });
+        UIUtils.setApplicationIcon(this);
         this.pack();
     }
 

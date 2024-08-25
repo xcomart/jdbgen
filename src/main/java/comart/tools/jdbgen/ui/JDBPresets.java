@@ -89,15 +89,12 @@ public class JDBPresets extends JDialog {
         UIUtils.templateHelpAction(btnTemplateHelp);
 
         this.addWindowListener(new WindowAdapter() {
-//            @Override
-//            public void windowClosing(WindowEvent e) {
-//                btnCancelActionPerformed(null);
-//            }
             @Override
             public void windowActivated(WindowEvent e) {
                 toFront();
             }
         });
+        UIUtils.setApplicationIcon(this);
         this.pack();
     }
     

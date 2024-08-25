@@ -71,6 +71,7 @@ public class JDBDriverManager extends JDialog {
             INSTANCE = new JDBDriverManager();
             UIUtils.registerFrame(INSTANCE);
         }
+        UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
         INSTANCE.changed = false;
@@ -81,7 +82,7 @@ public class JDBDriverManager extends JDialog {
      * Creates new form JDBDriverManager
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
-    public JDBDriverManager() {
+    private JDBDriverManager() {
         initComponents();
         setModal(true);
 
@@ -96,7 +97,21 @@ public class JDBDriverManager extends JDialog {
         drivers.forEach((d) -> listModel.addElement(d.getName()));
 
         UIUtils.iconHelpAction(btnIconHelp);
+        
+        tabProps.getModel().addTableModelListener((evt) -> {
+            int idx = lstDrivers.getSelectedIndex();
+            if (idx > -1) {
+                JDBDriver target = drivers.get(idx);
+                target.setProps(applyToPropsMap());
+            }
+            UIUtils.tableSetLastEmpty(tableModel);
+        });
+        
         this.pack();
+    }
+    
+    private Map<String, String> applyToPropsMap() {
+        return UIUtils.applyTableToMap(tableModel);
     }
     
     public void setDriverIndex(int index) {
@@ -740,20 +755,8 @@ public class JDBDriverManager extends JDialog {
             target.setUrlTemplate(txtUrlTemplate.getText());
             target.setNoAuth(chkNoAuth.isSelected());
 
-            if (tableModel.getRowCount() > 1) {
-                Map<String, String> props = new LinkedHashMap();
-                int rcnt = tableModel.getRowCount() - 1;
-
-                for(int i = 0; i < rcnt; ++i) {
-                    Object k = tableModel.getValueAt(i, 0);
-                    Object v = tableModel.getValueAt(i, 1);
-                    if (ObjectUtils.isNotEmpty(k) && ObjectUtils.isNotEmpty(v)) {
-                        props.put(k.toString(), v.toString());
-                    }
-                }
-
-                target.setProps(props);
-            }
+            if (tableModel.getRowCount() > 1)
+                target.setProps(applyToPropsMap());
 
             target.setUseTableComments(chkTableComments.isSelected());
             target.setTableCommentsSql(txtTableComments.getText());

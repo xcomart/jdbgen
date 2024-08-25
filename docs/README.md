@@ -543,6 +543,7 @@ There are several utility statements for convenience like,
 |`author`|`${author[:<extra decorator>]}`|User supplied `Author Name` field in [Generator Main Window](#generator-main-window).|
 |`date`|`${date[:format=<date format>]}`|Current date with `date format` which compliant with [SimpleDateFormat](https://docs.oracle.com/en%2Fjava%2Fjavase%2F11%2Fdocs%2Fapi%2F%2F/java.base/java/text/SimpleDateFormat.html).|
 |`user`|`${user[:<extra decorator>]}`|OS login user ID.|
+|Text|`${"any string can include '${' or '}'"}`|Any text can escape `${` or `}`|
 
 
 ## Custom Queries

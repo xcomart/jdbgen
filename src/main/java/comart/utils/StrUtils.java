@@ -148,6 +148,7 @@ public class StrUtils
     {
         String retStrs[] = null;
         ArrayList<String> res = new ArrayList<>();
+        src = src + delim;  // add last delimiter for convenience(no need to process last item)
         int idx, prevIdx = 0;
         if (src != null && delim != null) {
             int delimlen = delim.length();
@@ -161,7 +162,6 @@ public class StrUtils
                     prevIdx = idx + delimlen;
                 }
             }
-            res.add(src.substring(prevIdx, src.length()));
             retStrs = new String[res.size()];
             retStrs = (String[]) res.toArray(retStrs);
         }

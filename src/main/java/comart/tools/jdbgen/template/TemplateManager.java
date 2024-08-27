@@ -290,7 +290,7 @@ public class TemplateManager {
     }
     
     private static void checkIfConditions(Map<String, Object> pairs, String extra, ParseContext ctx) throws ParseException {
-        String[] conds = new String[] {"value", "contains", "notcontains", "startswith", "endswith"};
+        String[] conds = new String[] {"value", "equals", "contains", "notcontains", "startswith", "endswith"};
         for (String cond: conds) {
             if (pairs.containsKey(cond))
                 return;
@@ -617,13 +617,27 @@ public class TemplateManager {
             String cons = (String)map.get("contains");
             String ncons = (String)map.get("notcontains");
             String iname = cons == null? ncons:cons;
-            List<Object> collection = (List<Object>)ObjUtils.getValue(mapper, mkey);
+            Object objValue = ObjUtils.getValue(mapper, mkey);
             boolean contains = false;
-            for(Object o: collection) {
-                if (String.valueOf(ObjUtils.getValue(o, "name")).equalsIgnoreCase(iname)) {
-                    contains = true;
-                    break;
+            if (objValue instanceof List) {
+                List<Object> collection = (List<Object>)objValue;
+                for(Object o: collection) {
+                    if (String.valueOf(ObjUtils.getValue(o, "name")).equalsIgnoreCase(iname)) {
+                        contains = true;
+                        break;
+                    }
                 }
+            } else if (iname.contains(",")) {
+                String strValue = String.valueOf(objValue);
+                String []items = StrUtils.split(iname, ",", true);
+                for (String item:items) {
+                    if (strValue.equalsIgnoreCase(item)) {
+                        contains = true;
+                        break;
+                    }
+                }
+            } else {
+                throw new RuntimeException("contains/notcontains in if statement item must be a collection object or contain/notcontain value must be a ',' separated string.");
             }
             condMet = cons == null? !contains:contains;
         } else if (map.containsKey("startswith")) {

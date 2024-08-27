@@ -64,6 +64,7 @@ public class JDBDriverManager extends JDialog {
     private final DefaultListModel<String> listModel;
     private final DefaultTableModel tableModel;
     public boolean changed = false;
+    private boolean autoreset = true;
 
     private static JDBDriverManager INSTANCE = null;
     public static synchronized JDBDriverManager getInstance() {
@@ -99,12 +100,14 @@ public class JDBDriverManager extends JDialog {
         UIUtils.iconHelpAction(btnIconHelp);
         
         tabProps.getModel().addTableModelListener((evt) -> {
-            int idx = lstDrivers.getSelectedIndex();
-            if (idx > -1) {
-                JDBDriver target = drivers.get(idx);
-                target.setProps(applyToPropsMap());
+            if (autoreset) {
+                int idx = lstDrivers.getSelectedIndex();
+                if (idx > -1) {
+                    JDBDriver target = drivers.get(idx);
+                    target.setProps(applyToPropsMap());
+                }
+                UIUtils.tableSetLastEmpty(tableModel);
             }
-            UIUtils.tableSetLastEmpty(tableModel);
         });
         
         this.pack();
@@ -783,6 +786,7 @@ public class JDBDriverManager extends JDialog {
     private void lstDriversValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstDriversValueChanged
         int idx = lstDrivers.getSelectedIndex();
         if (idx < 0) return;
+        autoreset = false;
         JDBDriver driver = (JDBDriver)drivers.get(lstDrivers.getSelectedIndex());
         txtDriverName.setText(driver.getName());
         txtDriverClass.setText(driver.getDriverClass());
@@ -797,7 +801,8 @@ public class JDBDriverManager extends JDialog {
         }
 
         driver.getProps().forEach((k, v) -> {
-            tableModel.addRow(new String[]{k, v});
+            if (!"".equals(k))
+                tableModel.addRow(new String[]{k, v});
         });
 
         chkTableComments.setSelected(driver.isUseTableComments());
@@ -819,7 +824,7 @@ public class JDBDriverManager extends JDialog {
         btnBrowseIcon.setEnabled(!isStockItem);
         btnDelDriver.setEnabled(!isStockItem);
         txtIcon.setEditable(!isStockItem);
-        
+        autoreset = true;
 
     }//GEN-LAST:event_lstDriversValueChanged
 

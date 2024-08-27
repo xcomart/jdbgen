@@ -131,20 +131,24 @@ public class JDBConnectionManager extends JDialog {
         }
         
         tabProps.getModel().addTableModelListener((evt) -> {
-            int idx = lstConnections.getSelectedIndex();
-            if (idx > -1) {
-                JDBConnection target = connections.get(idx);
-                target.setConnectionProps(applyToPropsMap());
+            if (autoReset) {
+                int idx = lstConnections.getSelectedIndex();
+                if (idx > -1) {
+                    JDBConnection target = connections.get(idx);
+                    target.setConnectionProps(applyToPropsMap());
+                }
+                UIUtils.tableSetLastEmpty(propsModel);
             }
-            UIUtils.tableSetLastEmpty(propsModel);
         });
         tabVars.getModel().addTableModelListener((evt) -> {
-            int idx = lstConnections.getSelectedIndex();
-            if (idx > -1) {
-                JDBConnection target = connections.get(idx);
-                target.setCustomVars(applyToVarsMap());
+            if (autoReset) {
+                int idx = lstConnections.getSelectedIndex();
+                if (idx > -1) {
+                    JDBConnection target = connections.get(idx);
+                    target.setCustomVars(applyToVarsMap());
+                }
+                UIUtils.tableSetLastEmpty(varsModel);
             }
-            UIUtils.tableSetLastEmpty(varsModel);
         });
         this.pack();
     }
@@ -987,7 +991,7 @@ public class JDBConnectionManager extends JDialog {
             removeTemplates();
             removeVars();
             
-            conn.getConnectionProps().forEach((k, v) -> propsModel.addRow(new String[]{k, v}));
+            conn.getConnectionProps().forEach((k, v) -> {if (!"".equals(k)) propsModel.addRow(new String[]{k, v});});
             // add last empty row
             propsModel.addRow(new String[]{"", ""});
             
@@ -997,7 +1001,7 @@ public class JDBConnectionManager extends JDialog {
                         t.getTemplateFile(),
                         t.getOutTemplate()}));
             if (conn.getCustomVars() != null)
-                conn.getCustomVars().forEach((k, v) -> varsModel.addRow(new String[]{k, v}));
+                conn.getCustomVars().forEach((k, v) -> {if (!"".equals(k)) varsModel.addRow(new String[]{k, v});});
             // add last empty row
             varsModel.addRow(new String[]{"", ""});
             autoReset = true;

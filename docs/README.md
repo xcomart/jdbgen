@@ -374,8 +374,8 @@ Where `field` is a member of current object(table or column).
 |`notEquals=<value>`|When item value is not equals `<value>`|
 |`startsWith=<prefix>`|When item value starts with `<prefix>`|
 |`endsWith=<suffix>`|When item value ends with `<suffix>`|
-|`contains=<item>`|When item collection contains `<item>`|
-|`notContains=<item>`|When item collection not contains `<item>`|
+|`contains=<item>`|When item collection contains `<item>` or when item is string and `<item>` is `,` separated string then item contained in `<item>`|
+|`notContains=<item>`|When item collection not contains `<item>` or when item is string and `<item>` is `,` separated string then item not contained in `<item>`|
 
 Like many other language, multiple `elif` statement can be used and `else` statement is optional.
 `if` statement must be closed with `endif` statement.

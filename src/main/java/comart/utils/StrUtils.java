@@ -763,14 +763,48 @@ public class StrUtils
         return trim(input, new String(SPACE_CHARS));
     }
     
+    public static String trimLeft(String input) {
+        return trimLeft(input, new String(SPACE_CHARS));
+    }
+    
+    public static String trimRight(String input) {
+        return trimRight(input, new String(SPACE_CHARS));
+    }
+        
     public static String trim(String input, String spaceChars) {
         return trim(input, spaceChars.toCharArray());
+    }
+    
+    public static String trimLeft(String input, String spaceChars) {
+        return trimLeft(input, spaceChars.toCharArray());
+    }
+    
+    public static String trimRight(String input, String spaceChars) {
+        return trimRight(input, spaceChars.toCharArray());
     }
     
     public static boolean contains(char[] charArr, char c) {
         for (char ca:charArr)
             if (ca == c) return true;
         return false;
+    }
+    
+    public static String trimLeft(String input, char[] spaceChars) {
+        int st = 0, ed = input.length();
+        while (st < ed && contains(spaceChars, input.charAt(st)))
+            st++;
+        if (st < ed)
+            return input.substring(st);
+        return "";
+    }
+    
+    public static String trimRight(String input, char[] spaceChars) {
+        int st = 0, ed = input.length();
+        while (st < ed && contains(spaceChars, input.charAt(ed-1)))
+            ed--;
+        if (st < ed)
+            return input.substring(0, ed);
+        return "";
     }
     
     public static String trim(String input, char[] spaceChars) {
@@ -1002,7 +1036,7 @@ public class StrUtils
         return dtvals[0]+dtvals[1]+dtvals[2];
     }
 
-    public synchronized static String dateFormat(String format, Date dt)
+    public static String dateFormat(String format, Date dt)
     {
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         return sdf.format(dt);
@@ -1026,7 +1060,7 @@ public class StrUtils
         boolean upper = false;
         for (int i=0; i<s.length(); i++) {
             char c = s.charAt(i);
-            if (c == '_')
+            if (c == '_' || c == '-')
                 upper = true;
             else if (upper) {
                 sb.append(s.substring(i, i+1).toUpperCase());

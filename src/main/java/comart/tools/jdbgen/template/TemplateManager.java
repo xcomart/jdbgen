@@ -290,7 +290,7 @@ public class TemplateManager {
     }
     
     private static void checkIfConditions(Map<String, Object> pairs, String extra, ParseContext ctx) throws ParseException {
-        String[] conds = new String[] {"value", "equals", "contains", "notcontains", "startswith", "endswith"};
+        String[] conds = new String[] {"value", "equals", "notequals", "contains", "notcontains", "startswith", "endswith"};
         for (String cond: conds) {
             if (pairs.containsKey(cond))
                 return;
@@ -562,11 +562,8 @@ public class TemplateManager {
         return res;
     }
     
-    private void appendItemBase(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
-        Map<String,Object> map = (Map<String,Object>)template.cont;
-        String mkey = getKey(map);
+    private Object getItemProcessed(String mkey, Object mapper) throws Exception {
         List<ItemKey> keys = parseKeys(mkey);
-        logger.info(mkey);
         String key = StrUtils.trim(keys.get(0).key);
         Object val = ObjUtils.getValue(mapper, key);
         if (val == null)
@@ -583,6 +580,13 @@ public class TemplateManager {
                 throw new RuntimeException("cannot find '"+proc+"' in string processors, valid values are: [prefix, suffix, camel, pascal, lower, upper]");
             val = procs.get(proc).process(val.toString(), ikey.params);
         }
+        return val;
+    }
+    
+    private void appendItemBase(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
+        Map<String,Object> map = (Map<String,Object>)template.cont;
+        String mkey = getKey(map);
+        Object val = getItemProcessed(mkey, mapper);
         appendBase(sb, map, val);
     }
     
@@ -607,17 +611,17 @@ public class TemplateManager {
 
         if (map.containsKey("equals")) {
             String cval = (String)map.get("equals");
-            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            String oval = String.valueOf(getItemProcessed(mkey, mapper));
             condMet = cval.equalsIgnoreCase(oval);
         } else if (map.containsKey("notequals")) {
             String cval = (String)map.get("notequals");
-            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            String oval = String.valueOf(getItemProcessed(mkey, mapper));
             condMet = !cval.equalsIgnoreCase(oval);
         } else if (map.containsKey("contains") || map.containsKey("notcontains")) {
             String cons = (String)map.get("contains");
             String ncons = (String)map.get("notcontains");
             String iname = cons == null? ncons:cons;
-            Object objValue = ObjUtils.getValue(mapper, mkey);
+            Object objValue = getItemProcessed(mkey, mapper);
             boolean contains = false;
             if (objValue instanceof List) {
                 List<Object> collection = (List<Object>)objValue;
@@ -627,7 +631,7 @@ public class TemplateManager {
                         break;
                     }
                 }
-            } else if (iname.contains(",")) {
+            } else if (objValue instanceof CharSequence) {
                 String strValue = String.valueOf(objValue);
                 String []items = StrUtils.split(iname, ",", true);
                 for (String item:items) {
@@ -642,11 +646,11 @@ public class TemplateManager {
             condMet = cons == null? !contains:contains;
         } else if (map.containsKey("startswith")) {
             String stwith = (String)map.get("startswith");
-            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            String oval = String.valueOf(getItemProcessed(mkey, mapper));
             condMet = oval.toLowerCase().startsWith(stwith.toLowerCase());
         } else if (map.containsKey("endswith")) {
             String edwith = (String)map.get("endswith");
-            String oval = String.valueOf(ObjUtils.getValue(mapper, mkey));
+            String oval = String.valueOf(getItemProcessed(mkey, mapper));
             condMet = oval.toLowerCase().endsWith(edwith.toLowerCase());
         } else {
             throw new ParseException("Invalid if statement in template.", 0);

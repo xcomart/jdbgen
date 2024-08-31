@@ -54,7 +54,7 @@ public class TemplateManagerTest {
     
     private final SampleObject mapObj;
     
-    private final Map<String,String> custVars = new HashMap<>() {{
+    private final Map<String,String> custVars = new HashMap<String, String>() {{
         put("author", "John Doe");
     }};
     
@@ -314,6 +314,18 @@ public class TemplateManagerTest {
         result = tm.applyMapper(mapper);
         if (!"True".equals(result))
             fail("${if:key=single.suffix.lower, notcontains='sample, proc'}True${endif} mapper result fail.");
+
+
+        // if matches regex control statement test
+        tm = new TemplateManager("${if:key=single.lower, matches='[a-z]+_[a-z]+'}True${endif}", custVars);
+        result = tm.applyMapper(mapper);
+        if (!"True".equals(result))
+            fail("${if:key=single.lower, matches='[a-z]+_[a-z]+'}True${endif} mapper result fail.");
+        
+        tm = new TemplateManager("${if:key=single, matches='[a-z]+_[a-z]+'}True${endif}", custVars);
+        result = tm.applyMapper(mapper);
+        if (!"".equals(result))
+            fail("${if:key=single.lower, matches='[a-z]+_[a-z]+'}True${endif} mapper result fail.");
     }
 
     @Test

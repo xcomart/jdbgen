@@ -34,7 +34,6 @@ public class DBMeta implements AutoCloseable {
     private final Connection conn;
     
     private JDBDriver driver = null;
-//    private JDBConnection jconn = null;
     private DatabaseMetaData dbmeta = null;
     private ArrayList<DBSchema> schemas = null;
     private LinkedHashMap<String, List<DBSchema>> tree = null;
@@ -45,7 +44,7 @@ public class DBMeta implements AutoCloseable {
                 this.getClass().getClassLoader()
         );
         Class driverClass = Class.forName(driver.getDriverClass(), true, child);
-        Driver sqldriver = (Driver)driverClass.newInstance();
+        Driver sqldriver = (Driver)driverClass.getDeclaredConstructor().newInstance();
 
         Properties props = new Properties();
         props.setProperty("user", jconn.getUserName());
@@ -54,7 +53,6 @@ public class DBMeta implements AutoCloseable {
 
         this.conn = sqldriver.connect(jconn.getConnectionUrl(), props);
         this.driver = driver;
-//        this.jconn = jconn;
     }
     
     @Override

@@ -33,6 +33,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -290,7 +292,7 @@ public class TemplateManager {
     }
     
     private static void checkIfConditions(Map<String, Object> pairs, String extra, ParseContext ctx) throws ParseException {
-        String[] conds = new String[] {"value", "equals", "notequals", "contains", "notcontains", "startswith", "endswith"};
+        String[] conds = new String[] {"value", "equals", "notequals", "contains", "notcontains", "startswith", "endswith", "matches"};
         for (String cond: conds) {
             if (pairs.containsKey(cond))
                 return;
@@ -652,6 +654,10 @@ public class TemplateManager {
             String edwith = (String)map.get("endswith");
             String oval = String.valueOf(getItemProcessed(mkey, mapper));
             condMet = oval.toLowerCase().endsWith(edwith.toLowerCase());
+        } else if (map.containsKey("matches")) {
+            String regex = (String)map.get("matches");
+            String oval = String.valueOf(getItemProcessed(mkey, mapper));
+            condMet = Pattern.matches(regex, oval);
         } else {
             throw new ParseException("Invalid if statement in template.", 0);
         }

@@ -365,7 +365,7 @@ ${if:item=<field>, <condition>}
 ${endif}
 ```
 
-Where `field` is a member of current object(table or column).
+Where `field` is a member of current object(table or column) [decorator](#item-statement)(like .camel, .suffix etc) can be used.
 `conditions` can be one of -
 
 |Condition|Description|
@@ -376,6 +376,7 @@ Where `field` is a member of current object(table or column).
 |`endsWith=<suffix>`|When item value ends with `<suffix>`|
 |`contains=<item>`|When item collection contains `<item>` or when item is string and `<item>` is `,` separated string then item contained in `<item>`|
 |`notContains=<item>`|When item collection not contains `<item>` or when item is string and `<item>` is `,` separated string then item not contained in `<item>`|
+|`matches=<regex>`|When item value matches with regular expression `<regex>`, regex conformant with [Java Regex](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)|
 
 Like many other language, multiple `elif` statement can be used and `else` statement is optional.
 `if` statement must be closed with `endif` statement.

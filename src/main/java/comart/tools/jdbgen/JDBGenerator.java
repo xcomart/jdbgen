@@ -25,6 +25,7 @@ package comart.tools.jdbgen;
 
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.ui.JDBGeneratorMain;
+import comart.utils.PlatformUtils;
 import comart.utils.UIUtils;
 import java.awt.Font;
 import javax.swing.UIManager;
@@ -35,10 +36,10 @@ import javax.swing.UIManager;
  */
 public class JDBGenerator {
     public static void main(final String[] args) {
+        UIUtils.setFlatLightLaf();
+        PlatformUtils.updateCheck();
         if (JDBGenConfig.getInstance().isDarkUI()) {
             UIUtils.setFlatDarkLaf();
-        } else {
-            UIUtils.setFlatLightLaf();
         }
         UIManager.put("ToolTip.font", new Font("Monospaced", Font.PLAIN, 13));
         JDBGeneratorMain win = new JDBGeneratorMain();

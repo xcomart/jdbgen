@@ -90,7 +90,7 @@ public class MavenExplorer extends JDialog {
     
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
-        lblMvnLink.setForeground(UIManager.getDefaults().getColor("Actions.Blue"));
+        lblMvnLink.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
         lstSearchResult.setCellRenderer(UIUtils.getListCellRenderer(
                 s -> searchItems.stream()
                         .filter(d -> s.equals(d.getTitle()))
@@ -297,9 +297,9 @@ public class MavenExplorer extends JDialog {
 
         jLabel2.setText("Powered by");
 
-        lblMvnLink.setForeground(javax.swing.UIManager.getDefaults().getColor("Objects.Blue"));
+        lblMvnLink.setForeground(javax.swing.UIManager.getDefaults().getColor("Component.accentColor"));
         lblMvnLink.setText("Apache Maven");
-        lblMvnLink.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        lblMvnLink.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         lblMvnLink.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 lblMvnLinkMouseClicked(evt);

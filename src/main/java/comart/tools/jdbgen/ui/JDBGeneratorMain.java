@@ -32,10 +32,13 @@ import comart.tools.jdbgen.types.db.DBMeta;
 import comart.tools.jdbgen.types.db.DBSchema;
 import comart.tools.jdbgen.types.db.DBTable;
 import comart.utils.ObjUtils;
+import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
 import java.awt.Point;
+import java.awt.desktop.AboutEvent;
+import java.awt.desktop.AboutHandler;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -98,7 +101,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             UIUtils.tableSetLastEmpty(tabVars.getModel());
         });
         
+        PlatformUtils.registerHandlers(e -> showAbout(), null, null, null);
+        
         this.pack();
+    }
+    
+    private void showAbout() {
+        JDBAbout.getInstance(this).setVisible(true);
     }
     
     private void clearContents() {
@@ -513,11 +522,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
 
         cboConnection.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cboConnection.addItemListener(new java.awt.event.ItemListener() {
-            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-                cboConnectionItemStateChanged(evt);
-            }
-        });
         cboConnection.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cboConnectionActionPerformed(evt);
@@ -536,7 +540,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         lblConnectionInfo.setText("Connection Information Placeholder");
 
         btnAck.setText("A");
-        btnAck.setToolTipText("Acknowledgements");
+        btnAck.setToolTipText("About of this program");
         btnAck.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAckActionPerformed(evt);
@@ -761,13 +765,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }//GEN-LAST:event_lstTablesMouseClicked
 
     private void btnAckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAckActionPerformed
-        // TODO add your handling code here:
-        Acknowledgements.getInstance(this).setVisible(true);
+        showAbout();
     }//GEN-LAST:event_btnAckActionPerformed
-
-    private void cboConnectionItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboConnectionItemStateChanged
-        
-    }//GEN-LAST:event_cboConnectionItemStateChanged
 
     private void tabTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplatesMouseMoved
         UIUtils.templateTooltip(tabTemplates, 1, evt);

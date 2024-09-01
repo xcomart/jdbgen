@@ -126,7 +126,7 @@ public class JDBDriverManager extends JDialog {
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
         btnDownJdbc.setBorder((Border)null);
-        btnDownJdbc.setForeground(UIManager.getDefaults().getColor("Actions.Blue"));
+        btnDownJdbc.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
         lstDrivers.setCellRenderer(UIUtils.getListCellRenderer(
                 s -> drivers.stream()
                         .filter(d -> s.equals(d.getName()))
@@ -364,11 +364,11 @@ public class JDBDriverManager extends JDialog {
         txtJarFile.setEditable(false);
 
         btnDownJdbc.setFont(btnDownJdbc.getFont().deriveFont(btnDownJdbc.getFont().getSize()-1f));
-        btnDownJdbc.setForeground(javax.swing.UIManager.getDefaults().getColor("Actions.Blue"));
+        btnDownJdbc.setForeground(javax.swing.UIManager.getDefaults().getColor("Component.accentColor"));
         btnDownJdbc.setText("Download jdbc driver from Maven Repository");
         btnDownJdbc.setBorder(null);
         btnDownJdbc.setBorderPainted(false);
-        btnDownJdbc.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        btnDownJdbc.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         btnDownJdbc.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDownJdbcActionPerformed(evt);
@@ -977,12 +977,12 @@ public class JDBDriverManager extends JDialog {
 
     private void btnTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableCommentsActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-table-comments-sql");
+        PlatformUtils.openDoc("get-table-comments-sql");
     }//GEN-LAST:event_btnTableCommentsActionPerformed
 
     private void btnColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnCommentsActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-column-comments-sql");
+        PlatformUtils.openDoc("get-column-comments-sql");
     }//GEN-LAST:event_btnColumnCommentsActionPerformed
 
     private void chkTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTablesActionPerformed
@@ -991,7 +991,7 @@ public class JDBDriverManager extends JDialog {
 
     private void btnTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTablesActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-table-list-sql");
+        PlatformUtils.openDoc("get-table-list-sql");
     }//GEN-LAST:event_btnTablesActionPerformed
 
     private void chkColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnsActionPerformed
@@ -1000,7 +1000,7 @@ public class JDBDriverManager extends JDialog {
 
     private void btnColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnsActionPerformed
         // TODO add your handling code here:
-        PlatformUtils.openURL("https://github.com/xcomart/jdbgen/docs/README.md#get-column-list-sql");
+        PlatformUtils.openDoc("get-column-list-sql");
     }//GEN-LAST:event_btnColumnsActionPerformed
 
     /**

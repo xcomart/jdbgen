@@ -78,61 +78,73 @@ public class TemplateManagerTest {
         // base test
         TemplateManager tm = new TemplateManager("a${name}b", custVars);
         String result = tm.applyMapper(mapObj);
-        if (!("a"+mapObj.name+"b").equals(result))
+        if (!"aabc_def_ghi_jklb".equals(result))
             fail("${name} mapper result fail.");
         
         // function suffix test
         tm = new TemplateManager("${name.suffix}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(mapObj.name.substring(4)).equals(result))
+        if (!"def_ghi_jkl".equals(result))
             fail("${name.suffix} mapper result fail.");
         
         // function prefix test
         tm = new TemplateManager("${name.prefix}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(mapObj.name.substring(0, mapObj.name.length()-4)).equals(result))
+        if (!"abc_def_ghi".equals(result))
             fail("${name.prefix} mapper result fail.");
         
         // function lower test
         tm = new TemplateManager("${name.lower}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(mapObj.name.toLowerCase()).equals(result))
+        if (!"abc_def_ghi_jkl".equals(result))
             fail("${name.lower} mapper result fail.");
         
         // function upper test
         tm = new TemplateManager("${name.upper}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(mapObj.name.toUpperCase()).equals(result))
+        if (!"ABC_DEF_GHI_JKL".equals(result))
             fail("${name.upper} mapper result fail.");
         
         // function pascal test
         tm = new TemplateManager("${name.pascal}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(StrUtils.toPascalCase(mapObj.name)).equals(result))
+        if (!"AbcDefGhiJkl".equals(result))
             fail("${name.pascal} mapper result fail.");
         
         // function camel test
         tm = new TemplateManager("${name.camel}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(StrUtils.toCamelCase(mapObj.name)).equals(result))
+        if (!"abcDefGhiJkl".equals(result))
             fail("${name.camel} mapper result fail.");
+        
+        // function snake test
+        tm = new TemplateManager("${name.snake}", custVars);
+        result = tm.applyMapper(mapObj);
+        if (!"abc_def_ghi_jkl".equals(result))
+            fail("${name.snake} mapper result fail.");
+        
+        // function skewer test
+        tm = new TemplateManager("${name.skewer}", custVars);
+        result = tm.applyMapper(mapObj);
+        if (!"abc-def-ghi-jkl".equals(result))
+            fail("${name.skewer} mapper result fail.");
         
         // function replace test
         tm = new TemplateManager("${name.replace('ghi','mno')}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(StrUtils.replace(mapObj.name, "ghi", "mno")).equals(result))
+        if (!"abc_def_mno_jkl".equals(result))
             fail("${name.replace('ghi','mno')} mapper result fail.");
         
         // function combination test
         tm = new TemplateManager("${name.suffix.camel}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(StrUtils.toCamelCase(mapObj.name.substring(4))).equals(result))
+        if (!"defGhiJkl".equals(result))
             fail("${name.suffix.camel} mapper result fail.");
         
         // function camel test with item tag
         tm = new TemplateManager("${item:key=name.camel}", custVars);
         result = tm.applyMapper(mapObj);
-        if (!(StrUtils.toCamelCase(mapObj.name)).equals(result))
+        if (!"abcDefGhiJkl".equals(result))
             fail("${item:key=name.camel} mapper result fail.");
     }
 

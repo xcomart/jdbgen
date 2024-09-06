@@ -1056,19 +1056,23 @@ public class StrUtils
     }
     
     public static String toCamelCase(String s) {
-        StringBuilder sb = new StringBuilder();
-        boolean upper = false;
-        for (int i=0; i<s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '_' || c == '-')
-                upper = true;
-            else if (upper) {
-                sb.append(s.substring(i, i+1).toUpperCase());
-                upper = false;
-            } else
-                sb.append(s.substring(i, i+1).toLowerCase());
+        if (s.contains("_") || s.contains("-")) {
+            StringBuilder sb = new StringBuilder();
+            boolean upper = false;
+            for (int i=0; i<s.length(); i++) {
+                char c = s.charAt(i);
+                if (c == '_' || c == '-')
+                    upper = true;
+                else if (upper) {
+                    sb.append(s.substring(i, i+1).toUpperCase());
+                    upper = false;
+                } else
+                    sb.append(s.substring(i, i+1).toLowerCase());
+            }
+            return sb.toString();
+        } else {
+            return s.substring(0, 1).toLowerCase() + s.substring(1);
         }
-        return sb.toString();
     }
     
     public static String toPascalCase(String s) {
@@ -1078,6 +1082,34 @@ public class StrUtils
         } else {
             return res;
         }
+    }
+    
+    public static String toSnakeCase(String s) {
+        if (s.contains("_") || s.contains("-")) {
+            return replace(s, "-", "_").toLowerCase();
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (int i=0; i<s.length(); i++) {
+                char c = s.charAt(i);
+                if (c >= 'A' && c <= 'Z') {
+                    sb.append('_');
+                }
+                sb.append((""+c).toLowerCase());
+            }
+            return sb.toString();
+        }
+    }
+    
+    public static String toScreamingSnakeCase(String s) {
+        return toSnakeCase(s).toUpperCase();
+    }
+    
+    public static String toSkewerCase(String s) {
+        return replace(toSnakeCase(s), "_", "-");
+    }
+    
+    public static String toKebabCase(String s) {
+        return toSkewerCase(s);
     }
     
     public static String unCamelCase(String s) {

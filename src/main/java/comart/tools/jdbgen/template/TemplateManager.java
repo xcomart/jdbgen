@@ -423,12 +423,24 @@ public class TemplateManager {
         return StrUtils.toCamelCase(item);
     }
     
+    @SuppressWarnings("unused")
     private static String procPascal(String item, List<Object> params) {
-        String camel = procCamel(item, params);
-        String res = camel.substring(0, 1).toUpperCase();
-        if (camel.length() > 1)
-            res += camel.substring(1);
-        return res;
+        return StrUtils.toPascalCase(item);
+    }
+    
+    @SuppressWarnings("unused")
+    private static String procSnake(String item, List<Object> params) {
+        return StrUtils.toSnakeCase(item);
+    }
+    
+    @SuppressWarnings("unused")
+    private static String procScreaming(String item, List<Object> params) {
+        return StrUtils.toScreamingSnakeCase(item);
+    }
+    
+    @SuppressWarnings("unused")
+    private static String procSkewer(String item, List<Object> params) {
+        return StrUtils.toSkewerCase(item);
     }
     
     @SuppressWarnings("unused")
@@ -460,13 +472,17 @@ public class TemplateManager {
         handlers.put("user"  , TemplateManager::parseUser  );
         handlers.put("author", TemplateManager::parseAuthor);
         
-        procs.put("prefix" , TemplateManager::procPrefix );
-        procs.put("suffix" , TemplateManager::procSuffix );
-        procs.put("camel"  , TemplateManager::procCamel  );
-        procs.put("pascal" , TemplateManager::procPascal );
-        procs.put("lower"  , TemplateManager::procLower  );
-        procs.put("upper"  , TemplateManager::procUpper  );
-        procs.put("replace", TemplateManager::procReplace);
+        procs.put("prefix"   , TemplateManager::procPrefix   );
+        procs.put("suffix"   , TemplateManager::procSuffix   );
+        procs.put("camel"    , TemplateManager::procCamel    );
+        procs.put("pascal"   , TemplateManager::procPascal   );
+        procs.put("snake"    , TemplateManager::procSnake    );
+        procs.put("screaming", TemplateManager::procScreaming);
+        procs.put("skewer"   , TemplateManager::procSkewer   );
+        procs.put("kebab"    , TemplateManager::procSkewer   );
+        procs.put("lower"    , TemplateManager::procLower    );
+        procs.put("upper"    , TemplateManager::procUpper    );
+        procs.put("replace"  , TemplateManager::procReplace  );
         
         ifconds.put("equals", TemplateManager::condEquals);
         ifconds.put("value", TemplateManager::condEquals);

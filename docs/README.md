@@ -476,9 +476,16 @@ is user supplied variable in [Generator Main Window](#generator-main-window).
 |`.prefix`|&#x25EF;|Remove suffix including last `_` in value(ex. `SAMPLE_ALBUM_T` -> `SAMPLE_ALBUM`)|
 |`.camel`|&#x2715;|Change value to camel case(ex. `SAMPLE_ALBUM` -> `sampleAlbum`)|
 |`.pascal`|&#x2715;|Change value to pascal case(ex. `SAMPLE_ALBUM` -> `SampleAlbum`)|
+|`.snake`|&#x2715;|Change value to snake case(ex. `SAMPLE_ALBUM` -> `sample_album`)|
+|`.screaming`|&#x2715;|Change value to screaming snake case(ex. `sample_album` -> `SAMPLE_ALBUM`)|
+|`.skewer`|&#x2715;|Change value to skewer case(ex. `sample_album` -> `sample-album`)|
+|`.kebab`|&#x2715;|Alias of `.skewer`|
 |`.lower`|&#x2715;|Change value to lower case(ex. `SAMPLE_ALBUM` -> `sample_album`)|
 |`.upper`|&#x2715;|Change value to upper case(ex. `sample_album` -> `SAMPLE_ALBUM`)|
 |`.replace('X','Y')`|&#x25EF;|Replace `X` string to 'Y' string(ex. `sample_album` `name.replace('album', 'music')` -> `sample_music`)|
+
+> Note! multiple decorators are processed in pipelined manner,
+> in the other words, former decorator result will be the input of latter decorator.
 
 `extra decorators` can be a combination of -
 
@@ -514,9 +521,9 @@ Databse table object member fields:
 |`table`|String|Alias of `name`|
 |`type`|String|JDBC compliant table type(`TABLE`, `VIEW`)|
 |`remark`|String|Table comments|
-|`columns`|Collection|All columns in current table|
-|`keys`|Collection|Primary keys of current table|
-|`notKeys`|Collection|All columns of current table except primary keys.|
+|`columns`|Collection of column object|All columns in current table|
+|`keys`|Collection of column object|Primary key columns of current table|
+|`notKeys`|Collection of column object|All columns of current table except primary keys.|
 
 Database column object member fields:
 

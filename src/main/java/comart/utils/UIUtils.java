@@ -108,6 +108,8 @@ public class UIUtils {
     @SuppressWarnings("UseSpecificCatch")
     public static void setLAF(String className) {
         boolean hasSet = false;
+        
+        cachedIcon.clear();
 
         try {
             UIManager.setLookAndFeel(className);

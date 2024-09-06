@@ -42,6 +42,13 @@ public class DBTable extends DBMetaModel implements HasTitle, HasIcon {
         table = rs.getString("TABLE_NAME");
         setName(table);
         type = rs.getString("TABLE_TYPE");
+        if (!StrUtils.contains(new String[]{"TABLE", "VIEW"}, type)) {
+            // TODO: need more specific
+            if ((""+type).contains("TABLE"))
+                type = "TABLE";
+            else if ((""+type).contains("VIEW"))
+                type = "VIEW";
+        }
         remarks = rs.getString("REMARKS");
     }
 

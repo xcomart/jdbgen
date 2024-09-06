@@ -441,7 +441,6 @@
         </Property>
       </Properties>
       <Events>
-        <EventHandler event="itemStateChanged" listener="java.awt.event.ItemListener" parameters="java.awt.event.ItemEvent" handler="cboConnectionItemStateChanged"/>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cboConnectionActionPerformed"/>
       </Events>
       <AuxValues>
@@ -469,7 +468,7 @@
     <Component class="javax.swing.JButton" name="btnAck">
       <Properties>
         <Property name="text" type="java.lang.String" value="A"/>
-        <Property name="toolTipText" type="java.lang.String" value="Acknowledgements"/>
+        <Property name="toolTipText" type="java.lang.String" value="About of this program"/>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAckActionPerformed"/>

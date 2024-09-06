@@ -3,7 +3,7 @@
 ## Introduction
 
 jdbgen is a tool for generating text(source) files from database table
-informations.
+informations, using in-house template engine.
 
 If you want to create model class in java or table headers in html
 from database table, this tool will fit perfectly as you need.
@@ -356,16 +356,18 @@ Contol statements branchs process with condition or iterates items.
 `if` statement branchs process with conditional statement.
 
 ```
-${if:item=<field>, <condition>}
+${if:item=<field>, <condition>[, <condition>]}
  ...    // conditions met
-[${elif:item=<field>, <conditions>} ...]
+[${elif:item=<field>, <conditions>[, <condition>]} ...]
  ...    // another condition met, multiple elif can be used
 [${else}]
  ...    // condition not met
 ${endif}
 ```
 
-Where `field` is a member of current object(table or column).
+Where `field` is a member of current object(table or column) [decorator](#item-statement)(like .camel, .suffix etc) can be used.
+`conditions` can be added multiple times, in this case all conditions must met to execute `true` part.
+
 `conditions` can be one of -
 
 |Condition|Description|
@@ -373,9 +375,13 @@ Where `field` is a member of current object(table or column).
 |`[value\|equals]=<value>`|When item value is equals `<value>`|
 |`notEquals=<value>`|When item value is not equals `<value>`|
 |`startsWith=<prefix>`|When item value starts with `<prefix>`|
+|`notStartsWith=<prefix>`|When item value not starts with `<prefix>`|
 |`endsWith=<suffix>`|When item value ends with `<suffix>`|
+|`notEndsWith=<suffix>`|When item value ends with `<suffix>`|
 |`contains=<item>`|When item collection contains `<item>` or when item is string and `<item>` is `,` separated string then item contained in `<item>`|
 |`notContains=<item>`|When item collection not contains `<item>` or when item is string and `<item>` is `,` separated string then item not contained in `<item>`|
+|`matches=<regex>`|When item value matches with regular expression `<regex>`, regex conformant with [Java Regex](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)|
+|`notMatches=<regex>`|When item value not matches with regular expression `<regex>`, regex conformant with [Java Regex](https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html)|
 
 Like many other language, multiple `elif` statement can be used and `else` statement is optional.
 `if` statement must be closed with `endif` statement.
@@ -384,7 +390,7 @@ Examples:
 ```
 This is ${if:item="type", startsWith="TABLE"}physical table${else}not table${endif}.
 This is
-${if:item="type", equals="albumId"}
+${if:item="type", equals="TABLE"}
 pysical table
 ${elif:item="type", equals="VIEW"}
 virtual view
@@ -470,9 +476,16 @@ is user supplied variable in [Generator Main Window](#generator-main-window).
 |`.prefix`|&#x25EF;|Remove suffix including last `_` in value(ex. `SAMPLE_ALBUM_T` -> `SAMPLE_ALBUM`)|
 |`.camel`|&#x2715;|Change value to camel case(ex. `SAMPLE_ALBUM` -> `sampleAlbum`)|
 |`.pascal`|&#x2715;|Change value to pascal case(ex. `SAMPLE_ALBUM` -> `SampleAlbum`)|
+|`.snake`|&#x2715;|Change value to snake case(ex. `SAMPLE_ALBUM` -> `sample_album`)|
+|`.screaming`|&#x2715;|Change value to screaming snake case(ex. `sample_album` -> `SAMPLE_ALBUM`)|
+|`.skewer`|&#x2715;|Change value to skewer case(ex. `sample_album` -> `sample-album`)|
+|`.kebab`|&#x2715;|Alias of `.skewer`|
 |`.lower`|&#x2715;|Change value to lower case(ex. `SAMPLE_ALBUM` -> `sample_album`)|
 |`.upper`|&#x2715;|Change value to upper case(ex. `sample_album` -> `SAMPLE_ALBUM`)|
-|`.replace('X','Y')`|&#x2715;|Replace `X` string to 'Y' string(ex. `sample_album` `name.replace('album', 'music')` -> `sample_music`)|
+|`.replace('X','Y')`|&#x25EF;|Replace `X` string to 'Y' string(ex. `sample_album` `name.replace('album', 'music')` -> `sample_music`)|
+
+> Note! multiple decorators are processed in pipelined manner,
+> in the other words, former decorator result will be the input of latter decorator.
 
 `extra decorators` can be a combination of -
 
@@ -508,9 +521,9 @@ Databse table object member fields:
 |`table`|String|Alias of `name`|
 |`type`|String|JDBC compliant table type(`TABLE`, `VIEW`)|
 |`remark`|String|Table comments|
-|`columns`|Collection|All columns in current table|
-|`keys`|Collection|Primary keys of current table|
-|`notKeys`|Collection|All columns of current table except primary keys.|
+|`columns`|Collection of column object|All columns in current table|
+|`keys`|Collection of column object|Primary key columns of current table|
+|`notKeys`|Collection of column object|All columns of current table except primary keys.|
 
 Database column object member fields:
 
@@ -543,7 +556,8 @@ There are several utility statements for convenience like,
 |`author`|`${author[:<extra decorator>]}`|User supplied `Author Name` field in [Generator Main Window](#generator-main-window).|
 |`date`|`${date[:format=<date format>]}`|Current date with `date format` which compliant with [SimpleDateFormat](https://docs.oracle.com/en%2Fjava%2Fjavase%2F11%2Fdocs%2Fapi%2F%2F/java.base/java/text/SimpleDateFormat.html).|
 |`user`|`${user[:<extra decorator>]}`|OS login user ID.|
-|Text|`${"any string can include '${' or '}'"}`|Any text can escape `${` or `}`|
+|`super`|`${super:key=<table member field>[<decorators>][, <extra decorator>]}`|Only available inside of `for` statement, you can access table object using this statement|
+|Text|`${"any string can include '${' or '}'"}`|Statement for escaping `${` or `}`|
 
 
 ## Custom Queries

@@ -24,10 +24,22 @@
 
 package comart.utils;
 
+import com.google.gson.Gson;
+import java.awt.desktop.AboutHandler;
+import java.awt.desktop.PreferencesHandler;
+import java.awt.desktop.PrintFilesHandler;
+import java.awt.desktop.QuitHandler;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class PlatformUtils {
     private static OSType detectedOS = null;
@@ -82,6 +94,32 @@ public class PlatformUtils {
         }
 
     }
+    
+    private static String getJava() {
+        ProcessHandle processHandle = ProcessHandle.current();
+        return processHandle.info().command().get();
+    }
+    
+    private static String _version = null;
+    
+    public synchronized static String getVersion() {
+        if (_version == null) {
+            Properties prop = new Properties();
+            try (InputStreamReader isr = new InputStreamReader(PlatformUtils.class.getResourceAsStream("/version.properties"))) {
+                prop.load(isr);
+                _version = prop.getProperty("version");
+            } catch (Exception e) {
+                logger.log(Level.SEVERE, null, e);
+            }
+        }
+        return _version;
+    }
+
+    public static void openDoc(String item) {
+        String version = getVersion();
+        String docUrl = "https://github.com/xcomart/jdbgen/blob/v"+version+"/docs/README.md#"+item;
+        openURL(docUrl);
+    }
 
     public static boolean isWindows() {
         return getOSType() == OSType.Windows;
@@ -102,6 +140,84 @@ public class PlatformUtils {
         Other;
 
         private OSType() {
+        }
+    }
+    
+    private static void registerMacHandlers(AboutHandler about,
+            PreferencesHandler prefs, PrintFilesHandler print, QuitHandler shut) {
+        // we can't use classes directly in rt.jar in compile time,
+        // that make sense cause if run compiled jar another platform will be failed.
+        // so use class using reflection at runtime.
+        try {
+            Class appClass = Class.forName("com.apple.eawt.Application");
+            Object app = appClass.getDeclaredConstructor().newInstance();
+
+            if (about != null) {
+                try {
+                    Method m = appClass.getDeclaredMethod("setAboutHandler", AboutHandler.class);
+                    m.invoke(app, about);
+                } catch(Exception e) {
+                    logger.log(Level.SEVERE, "", e);
+                }
+            }
+
+            if (prefs != null) {
+                try {
+                    Method m = appClass.getDeclaredMethod("setPreferencesHandler", PreferencesHandler.class);
+                    m.invoke(app, prefs);
+                } catch(Exception e) {
+                    logger.log(Level.SEVERE, "", e);
+                }
+            }
+
+            if (print != null) {
+                try {
+                    Method m = appClass.getDeclaredMethod("setPrintFileHandler", PrintFilesHandler.class);
+                    m.invoke(app, print);
+                } catch(Exception e) {
+                    logger.log(Level.SEVERE, "", e);
+                }
+            }
+
+            if (shut != null) {
+                try {
+                    Method m = appClass.getDeclaredMethod("setQuitHandler", QuitHandler.class);
+                    m.invoke(app, shut);
+                } catch(Exception e) {
+                    logger.log(Level.SEVERE, "", e);
+                }
+            }
+        } catch(Exception e) {
+            logger.log(Level.SEVERE, "", e);
+        }
+    }
+    
+    public static void registerHandlers(AboutHandler about,
+            PreferencesHandler prefs, PrintFilesHandler print, QuitHandler shut) {
+        if (isMac()) {
+            registerMacHandlers(about, prefs, print, shut);
+        }
+    }
+    
+    public static void updateCheck() {
+        String curVersion = "v"+getVersion();
+        String url = "https://api.github.com/repos/xcomart/jdbgen/releases/latest";
+        Request req = new Request.Builder().url(url).build();
+        try (Response response = HttpUtils.getClient().newCall(req).execute()) {
+            Gson gson = new Gson();
+            HashMap map = gson.fromJson(response.body().charStream(), HashMap.class);
+            String tagName = String.valueOf(map.get("tag_name"));
+            if (tagName != null && curVersion.compareTo(tagName) < 0) {
+                // updates available
+                if (UIUtils.confirm(null, "Update Available", "New version "+tagName+
+                        " is available.\nDo you want to update now?")) {
+                    // TODO: do update automatically
+                    openURL("https://github.com/xcomart/jdbgen/releases/latest");
+                    System.exit(0);
+                }
+            }
+        } catch(Exception e) {
+            logger.log(Level.SEVERE, null, e);
         }
     }
 }

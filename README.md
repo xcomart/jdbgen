@@ -1,5 +1,7 @@
 # jdbgen
-Create sources easily from database information.
+
+jdbgen is a tool for generating text(source) files from database table
+informations, using in-house template engine.
 
 ## Introduction
 

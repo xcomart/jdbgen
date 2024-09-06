@@ -182,6 +182,7 @@ public class TemplateManagerTest {
         Map<String, Object> mapper = new HashMap<>();
         StringBuilder forTarget = new StringBuilder();
         StringBuilder forInstrTarget = new StringBuilder();
+        StringBuilder superTarget = new StringBuilder();
         List<Object> collection = new ArrayList<>();
         for (int i=0; i<5; i++) {
             String name = "sample"+i;
@@ -190,6 +191,7 @@ public class TemplateManagerTest {
             if (forInstrTarget.length() > 0)
                 forInstrTarget.append(",");
             forInstrTarget.append(name);
+            superTarget.append("VALUE");
         }
         mapper.put("collection", collection);
         mapper.put("single", "SINGLE_VALUE");
@@ -217,6 +219,12 @@ public class TemplateManagerTest {
         result = tm.applyMapper(mapper);
         if (!StrUtils.replace(forTarget.toString(), "sample2", "").equals(result))
             fail("${for:key=collection, skipList='sample2'}${item:key=name}${endfor} mapper result fail.");
+
+        // for super statement test
+        tm = new TemplateManager("${for:key=collection}${super:key=single.suffix}${endfor}", custVars);
+        result = tm.applyMapper(mapper);
+        if (!superTarget.toString().equals(result))
+            fail("${for:key=collection}${super:key=single.suffix}${endfor} mapper result fail.");
         
         
         
@@ -326,6 +334,18 @@ public class TemplateManagerTest {
         result = tm.applyMapper(mapper);
         if (!"".equals(result))
             fail("${if:key=single.lower, matches='[a-z]+_[a-z]+'}True${endif} mapper result fail.");
+        
+
+        // if multi condition statement test
+        tm = new TemplateManager("${if:key=single, startsWith='SINGLE', endsWith='VALUE'}True${endif}", custVars);
+        result = tm.applyMapper(mapper);
+        if (!"True".equals(result))
+            fail("${if:key=single, startsWith='SINGLE', endsWith='VALUE'}True${endif} mapper result fail.");
+        
+        tm = new TemplateManager("${if:key=single, startsWith='SINGLE', endsWith='DUMMY'}True${endif}", custVars);
+        result = tm.applyMapper(mapper);
+        if (!"".equals(result))
+            fail("${if:key=single, startsWith='SINGLE', endsWith='DUMMY'}True${endif} mapper result fail.");
     }
 
     @Test

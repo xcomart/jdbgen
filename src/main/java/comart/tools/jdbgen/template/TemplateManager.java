@@ -30,8 +30,11 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,6 +57,10 @@ public class TemplateManager {
     
     private interface ItemProcHandler {
         String process(String item, List<Object> params);
+    }
+    
+    private interface IfCondHandler {
+        boolean check(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception;
     }
     
     private static enum TemplateType {
@@ -292,12 +299,15 @@ public class TemplateManager {
     }
     
     private static void checkIfConditions(Map<String, Object> pairs, String extra, ParseContext ctx) throws ParseException {
-        String[] conds = new String[] {"value", "equals", "notequals", "contains", "notcontains", "startswith", "endswith", "matches"};
-        for (String cond: conds) {
-            if (pairs.containsKey(cond))
-                return;
+        Set<String> available = new HashSet<String>() {{
+            add("key");
+            add("item");
+        }};
+        available.addAll(ifconds.keySet());
+        for (String key: pairs.keySet()) {
+            if (!available.contains(key))
+                throw new ParseException("Unknown if condition: "+extra+", before: "+ctx.near(), ctx.line);
         }
-        throw new ParseException("Unknown if condition: "+extra+", before: "+ctx.near(), ctx.line);
     }
     
     private static TemplateItem parseIf(String extra, ParseContext ctx) throws ParseException {
@@ -388,6 +398,7 @@ public class TemplateManager {
         return new TemplateItem(TemplateType.AUTHOR, parseNVPairs(ctx, extra));
     }
     
+    @SuppressWarnings("unused")
     private static String procPrefix(String item, List<Object> params) {
         int idx = item.lastIndexOf("_");
         if (idx > -1) {
@@ -397,6 +408,7 @@ public class TemplateManager {
         }
     }
     
+    @SuppressWarnings("unused")
     private static String procSuffix(String item, List<Object> params) {
         int idx = item.indexOf("_");
         if (idx > -1) {
@@ -406,6 +418,7 @@ public class TemplateManager {
         }
     }
     
+    @SuppressWarnings("unused")
     private static String procCamel(String item, List<Object> params) {
         return StrUtils.toCamelCase(item);
     }
@@ -418,10 +431,12 @@ public class TemplateManager {
         return res;
     }
     
+    @SuppressWarnings("unused")
     private static String procLower(String item, List<Object> params) {
         return item.toLowerCase();
     }
     
+    @SuppressWarnings("unused")
     private static String procUpper(String item, List<Object> params) {
         return item.toUpperCase();
     }
@@ -435,6 +450,7 @@ public class TemplateManager {
     
     private static final Map<String, TemplateHandler> handlers = new HashMap<>();
     private static final Map<String, ItemProcHandler> procs = new HashMap<>();
+    private static final Map<String, IfCondHandler> ifconds = new HashMap<>();
     static {
         handlers.put("item"  , TemplateManager::parseItem  );
         handlers.put("super" , TemplateManager::parseSuper );
@@ -451,6 +467,18 @@ public class TemplateManager {
         procs.put("lower"  , TemplateManager::procLower  );
         procs.put("upper"  , TemplateManager::procUpper  );
         procs.put("replace", TemplateManager::procReplace);
+        
+        ifconds.put("equals", TemplateManager::condEquals);
+        ifconds.put("value", TemplateManager::condEquals);
+        ifconds.put("notequals", TemplateManager::condNotEquals);
+        ifconds.put("contains", TemplateManager::condContains);
+        ifconds.put("notcontains", TemplateManager::condNotContains);
+        ifconds.put("startswith", TemplateManager::condStartsWith);
+        ifconds.put("notstartswith", TemplateManager::condNotStartsWith);
+        ifconds.put("endswith", TemplateManager::condEndsWith);
+        ifconds.put("notendswith", TemplateManager::condNotEndsWith);
+        ifconds.put("matches", TemplateManager::condMatches);
+        ifconds.put("notmatches", TemplateManager::condNotMatches);
     }
     
     private final List<TemplateItem> items;
@@ -564,15 +592,14 @@ public class TemplateManager {
         return res;
     }
     
-    private Object getItemProcessed(String mkey, Object mapper) throws Exception {
+    private static Object getItemProcessed(String mkey, Object mapper, Map<String, String> customs) throws Exception {
         List<ItemKey> keys = parseKeys(mkey);
         String key = StrUtils.trim(keys.get(0).key);
         Object val = ObjUtils.getValue(mapper, key);
         if (val == null)
             val = ObjUtils.getValue(customs, key);
         if (val == null) {
-            logger.warning("cannot find '"+key+"' information from database/custom variables");
-            //throw new RuntimeException("cannot find '"+key+"' information from database/custom variables");
+            logger.log(Level.WARNING, "cannot find '{0}' information from database/custom variables", key);
             val = "";
         }
         for (int i=1; i<keys.size(); i++) {
@@ -588,7 +615,7 @@ public class TemplateManager {
     private void appendItemBase(StringBuilder sb, TemplateItem template, Object mapper) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         String mkey = getKey(map);
-        Object val = getItemProcessed(mkey, mapper);
+        Object val = getItemProcessed(mkey, mapper, customs);
         appendBase(sb, map, val);
     }
     
@@ -602,64 +629,87 @@ public class TemplateManager {
         appendItemBase(sb, template, supr);
     }
     
+    private static boolean condEquals(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        String oval = String.valueOf(getItemProcessed(key, mapper, customs));
+        return condVal.equalsIgnoreCase(oval);
+    }
+    
+    private static boolean condNotEquals(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        return !condEquals(key, condVal, mapper, customs);
+    }
+    
+    private static boolean condContains(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        Object objValue = getItemProcessed(key, mapper, customs);
+        boolean contains = false;
+        if (objValue instanceof List) {
+            List<Object> collection = (List<Object>)objValue;
+            for(Object o: collection) {
+                if (String.valueOf(ObjUtils.getValue(o, "name")).equalsIgnoreCase(condVal)) {
+                    contains = true;
+                    break;
+                }
+            }
+        } else if (objValue instanceof CharSequence) {
+            String strValue = String.valueOf(objValue);
+            String []names = StrUtils.split(condVal, ",", true);
+            for (String item:names) {
+                if (strValue.equalsIgnoreCase(item)) {
+                    contains = true;
+                    break;
+                }
+            }
+        } else {
+            throw new RuntimeException("contains/notcontains in if statement item must be a collection object or contain/notcontain value must be a ',' separated string.");
+        }
+        return contains;
+    }
+    
+    private static boolean condNotContains(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        return !condContains(key, condVal, mapper, customs);
+    }
+    
+    private static boolean condStartsWith(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        String oval = String.valueOf(getItemProcessed(key, mapper, customs));
+        return oval.toLowerCase().startsWith(condVal.toLowerCase());
+    }
+    
+    private static boolean condNotStartsWith(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        return !condStartsWith(key, condVal, mapper, customs);
+    }
+    
+    private static boolean condEndsWith(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        String oval = String.valueOf(getItemProcessed(key, mapper, customs));
+        return oval.toLowerCase().endsWith(condVal.toLowerCase());
+    }
+    
+    private static boolean condNotEndsWith(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        return !condEndsWith(key, condVal, mapper, customs);
+    }
+    
+    private static boolean condMatches(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        String oval = String.valueOf(getItemProcessed(key, mapper, customs));
+        return Pattern.matches(condVal, oval);
+    }
+    
+    private static boolean condNotMatches(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception {
+        return !condMatches(key, condVal, mapper, customs);
+    }
+    
     private void appendIf(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         List<TemplateItem> ttpls = (List<TemplateItem>)map.get("true");
         Object ftpls = map.get("false");
         String mkey = getKey(map);
-        boolean condMet = false;
-        if (map.containsKey("value"))
-            map.put("equals", map.get("value"));
-
-        if (map.containsKey("equals")) {
-            String cval = (String)map.get("equals");
-            String oval = String.valueOf(getItemProcessed(mkey, mapper));
-            condMet = cval.equalsIgnoreCase(oval);
-        } else if (map.containsKey("notequals")) {
-            String cval = (String)map.get("notequals");
-            String oval = String.valueOf(getItemProcessed(mkey, mapper));
-            condMet = !cval.equalsIgnoreCase(oval);
-        } else if (map.containsKey("contains") || map.containsKey("notcontains")) {
-            String cons = (String)map.get("contains");
-            String ncons = (String)map.get("notcontains");
-            String iname = cons == null? ncons:cons;
-            Object objValue = getItemProcessed(mkey, mapper);
-            boolean contains = false;
-            if (objValue instanceof List) {
-                List<Object> collection = (List<Object>)objValue;
-                for(Object o: collection) {
-                    if (String.valueOf(ObjUtils.getValue(o, "name")).equalsIgnoreCase(iname)) {
-                        contains = true;
-                        break;
-                    }
+        boolean condMet = true;
+        
+        for (String key:map.keySet()) {
+            if (ifconds.containsKey(key)) {
+                String condVal = String.valueOf(map.get(key));
+                if (!ifconds.get(key).check(mkey, condVal, mapper, customs)) {
+                    condMet = false;
+                    break;
                 }
-            } else if (objValue instanceof CharSequence) {
-                String strValue = String.valueOf(objValue);
-                String []items = StrUtils.split(iname, ",", true);
-                for (String item:items) {
-                    if (strValue.equalsIgnoreCase(item)) {
-                        contains = true;
-                        break;
-                    }
-                }
-            } else {
-                throw new RuntimeException("contains/notcontains in if statement item must be a collection object or contain/notcontain value must be a ',' separated string.");
             }
-            condMet = cons == null? !contains:contains;
-        } else if (map.containsKey("startswith")) {
-            String stwith = (String)map.get("startswith");
-            String oval = String.valueOf(getItemProcessed(mkey, mapper));
-            condMet = oval.toLowerCase().startsWith(stwith.toLowerCase());
-        } else if (map.containsKey("endswith")) {
-            String edwith = (String)map.get("endswith");
-            String oval = String.valueOf(getItemProcessed(mkey, mapper));
-            condMet = oval.toLowerCase().endsWith(edwith.toLowerCase());
-        } else if (map.containsKey("matches")) {
-            String regex = (String)map.get("matches");
-            String oval = String.valueOf(getItemProcessed(mkey, mapper));
-            condMet = Pattern.matches(regex, oval);
-        } else {
-            throw new ParseException("Invalid if statement in template.", 0);
         }
 
         if (condMet) {
@@ -673,6 +723,7 @@ public class TemplateManager {
         }
     }
     
+    @SuppressWarnings("unused")
     private void appendFor(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
         String mkey = getKey(map);

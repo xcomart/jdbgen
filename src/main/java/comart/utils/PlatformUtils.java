@@ -29,10 +29,14 @@ import java.awt.desktop.AboutHandler;
 import java.awt.desktop.PreferencesHandler;
 import java.awt.desktop.PrintFilesHandler;
 import java.awt.desktop.QuitHandler;
-import java.io.IOException;
+import java.awt.Desktop;
+import java.awt.Image;
+import java.awt.Taskbar;
+import java.awt.Toolkit;
+import java.io.File;
 import java.io.InputStreamReader;
-import java.lang.reflect.Method;
-import java.nio.charset.Charset;
+import java.net.URI;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Properties;
@@ -68,28 +72,11 @@ public class PlatformUtils {
     }
 
     public static void openURL(String url) {
-        Runtime rt = Runtime.getRuntime();
-
+        Desktop desk = Desktop.getDesktop();
+        
         try {
-            String[] cmd = null;
-            if (isWindows()) {
-                cmd = new String[]{"rundll32", "url.dll,FileProtocolHandler", url};
-            } else if (isMac()) {
-                cmd = new String[]{"open", url};
-            } else if (isUnix()) {
-                cmd = new String[]{"xdg-open", url};
-            } else {
-                try {
-                    throw new IllegalStateException();
-                } catch (IllegalStateException var4) {
-                    logger.log(Level.SEVERE, (String)null, var4);
-                }
-            }
-
-            if (cmd != null) {
-                rt.exec(cmd).waitFor();
-            }
-        } catch (InterruptedException | IOException e) {
+            desk.browse(new URL(url).toURI());
+        } catch (Exception e) {
             logger.log(Level.SEVERE, (String)null, e);
         }
 
@@ -143,59 +130,39 @@ public class PlatformUtils {
         }
     }
     
-    private static void registerMacHandlers(AboutHandler about,
+    public static void registerHandlers(AboutHandler about,
             PreferencesHandler prefs, PrintFilesHandler print, QuitHandler shut) {
-        // we can't use classes directly in rt.jar in compile time,
-        // that make sense cause if run compiled jar another platform will be failed.
-        // so use class using reflection at runtime.
         try {
-            Class appClass = Class.forName("com.apple.eawt.Application");
-            Object app = appClass.getDeclaredConstructor().newInstance();
+            Desktop desk = Desktop.getDesktop();
 
             if (about != null) {
-                try {
-                    Method m = appClass.getDeclaredMethod("setAboutHandler", AboutHandler.class);
-                    m.invoke(app, about);
-                } catch(Exception e) {
-                    logger.log(Level.SEVERE, "", e);
-                }
+                desk.setAboutHandler(about);
             }
 
             if (prefs != null) {
-                try {
-                    Method m = appClass.getDeclaredMethod("setPreferencesHandler", PreferencesHandler.class);
-                    m.invoke(app, prefs);
-                } catch(Exception e) {
-                    logger.log(Level.SEVERE, "", e);
-                }
+                desk.setPreferencesHandler(prefs);
             }
 
             if (print != null) {
-                try {
-                    Method m = appClass.getDeclaredMethod("setPrintFileHandler", PrintFilesHandler.class);
-                    m.invoke(app, print);
-                } catch(Exception e) {
-                    logger.log(Level.SEVERE, "", e);
-                }
+                desk.setPrintFileHandler(print);
             }
 
             if (shut != null) {
-                try {
-                    Method m = appClass.getDeclaredMethod("setQuitHandler", QuitHandler.class);
-                    m.invoke(app, shut);
-                } catch(Exception e) {
-                    logger.log(Level.SEVERE, "", e);
-                }
+                desk.setQuitHandler(shut);
             }
         } catch(Exception e) {
             logger.log(Level.SEVERE, "", e);
         }
     }
     
-    public static void registerHandlers(AboutHandler about,
-            PreferencesHandler prefs, PrintFilesHandler print, QuitHandler shut) {
-        if (isMac()) {
-            registerMacHandlers(about, prefs, print, shut);
+    public static void setDockIcon() {
+        try {
+            final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
+            final URL imageResource = new File("resource/icon.png").toURI().toURL();
+            final Image image = defaultToolkit.getImage(imageResource);
+            final Taskbar taskbar = Taskbar.getTaskbar();
+            taskbar.setIconImage(image);
+        } catch(Exception ignored) {
         }
     }
     

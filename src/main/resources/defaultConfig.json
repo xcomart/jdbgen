@@ -114,5 +114,6 @@
         "version": "/solrsearch/select?q=g:${g}+AND+a:${a}+p:jar&core=gav&rows=${rows}&start=${start}&wt=json",
         "download": "/remotecontent?filepath=${fpath}"
     },
-    "presets":[]
+    "presets":[],
+    "abbrs":[]
 }

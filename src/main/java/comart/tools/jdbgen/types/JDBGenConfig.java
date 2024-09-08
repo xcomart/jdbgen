@@ -55,13 +55,12 @@ import lombok.Data;
 public class JDBGenConfig {
     private static final Logger logger = Logger.getLogger(JDBGenConfig.class.getName());
     private static final String CONF_PATH = "config.json";
-    public static byte[] KEY = null;
-    public static byte[] IV = null;
     private static JDBGenConfig INSTANCE = null;
     private boolean isDarkUI = false;
     private List<JDBConnection> connections;
     private List<JDBDriver> drivers;
     private List<JDBPreset> presets;
+    private List<JDBAbbr> abbrs = new ArrayList<>();
     private MavenConfig maven;
 
     public static synchronized JDBGenConfig getInstance() {

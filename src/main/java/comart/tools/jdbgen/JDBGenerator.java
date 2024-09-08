@@ -36,6 +36,7 @@ import javax.swing.UIManager;
  */
 public class JDBGenerator {
     public static void main(final String[] args) {
+        PlatformUtils.setDockIcon();
         UIUtils.setFlatLightLaf();
         PlatformUtils.updateCheck();
         if (JDBGenConfig.getInstance().isDarkUI()) {

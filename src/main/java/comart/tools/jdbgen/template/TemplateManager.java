@@ -23,6 +23,7 @@
  */
 package comart.tools.jdbgen.template;
 
+import comart.tools.jdbgen.types.JDBAbbr;
 import comart.utils.ObjUtils;
 import comart.utils.StrUtils;
 import java.text.ParseException;
@@ -459,6 +460,28 @@ public class TemplateManager {
         return StrUtils.replace(item, find, repl);
     }
     
+    @SuppressWarnings("unused")
+    private static String procAbbr(String item, List<Object> params) {
+        // add last underbar for convenience
+        item = item + "_";
+        StringBuilder res = new StringBuilder();
+        StringBuilder buf = new StringBuilder();
+        for (char c: item.toCharArray()) {
+            if (c == '_' || c == '-') {
+                String word = buf.toString();
+                if (JDBAbbr.abbrMap.containsKey(word))
+                    word = JDBAbbr.abbrMap.get(word);
+                res.append(word);
+                res.append(c);
+                buf = new StringBuilder();
+            } else {
+                buf.append(c);
+            }
+        }
+        // remove last underbar
+        res.deleteCharAt(res.length()-1);
+        return res.toString();
+    }
     
     private static final Map<String, TemplateHandler> handlers = new HashMap<>();
     private static final Map<String, ItemProcHandler> procs = new HashMap<>();
@@ -483,6 +506,7 @@ public class TemplateManager {
         procs.put("lower"    , TemplateManager::procLower    );
         procs.put("upper"    , TemplateManager::procUpper    );
         procs.put("replace"  , TemplateManager::procReplace  );
+        procs.put("abbr"     , TemplateManager::procAbbr     );
         
         ifconds.put("equals", TemplateManager::condEquals);
         ifconds.put("value", TemplateManager::condEquals);
@@ -622,7 +646,7 @@ public class TemplateManager {
             ItemKey ikey = keys.get(i);
             String proc = StrUtils.trim(ikey.key).toLowerCase();
             if (!procs.containsKey(proc))
-                throw new RuntimeException("cannot find '"+proc+"' in string processors, valid values are: [prefix, suffix, camel, pascal, lower, upper]");
+                throw new RuntimeException("cannot find '"+proc+"' in string processors, valid values are: "+procs.keySet());
             val = procs.get(proc).process(val.toString(), ikey.params);
         }
         return val;

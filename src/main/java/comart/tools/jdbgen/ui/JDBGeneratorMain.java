@@ -24,6 +24,7 @@
 package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.template.TemplateManager;
+import comart.tools.jdbgen.types.JDBAbbr;
 import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
@@ -39,6 +40,8 @@ import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.desktop.AboutEvent;
 import java.awt.desktop.AboutHandler;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -74,6 +77,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private JDBConnection currConn = null;
     private DBMeta dbmeta = null;
     private List<DBTable> tables;
+    private boolean autoReset = true;
+    
     /**
      * Creates new form JDBGeneratorMain
      */
@@ -98,8 +103,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         clearContents();
         
         tabVars.getModel().addTableModelListener((evt) -> {
-            UIUtils.tableSetLastEmpty(tabVars.getModel());
+            if (autoReset) {
+                UIUtils.tableSetLastEmpty(tabVars.getModel());
+            }
         });
+        UIUtils.setCommitOnLostFocus(tabVars);
         
         PlatformUtils.registerHandlers(e -> showAbout(), null, null, null);
         
@@ -150,6 +158,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         UIUtils.applyIcon(btnDelVar, FontAwesome.MINUS);
         UIUtils.addIcon(btnGenerate, FontAwesome.COGS);
         UIUtils.addIcon(btnClose, FontAwesome.TIMES);
+        UIUtils.addIcon(btnMapper, FontAwesome.BOOK);
         UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
     }    
     
@@ -193,8 +202,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
             txtAuthor.setText(conn.getAuthor());
             txtOutputDir.setText(conn.getOutputDir());
-            conn.getCustomVars().forEach((k, v) -> cstModel.addRow(new String[]{k, v}));
+            autoReset = false;
+            conn.getCustomVars().forEach((k, v) -> {if (!StrUtils.isEmpty(k)) cstModel.addRow(new String[]{k, v});});
             cstModel.addRow(new String[]{"", ""});
+            autoReset = true;
         }
     }
     
@@ -267,6 +278,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         btnManageConn = new javax.swing.JButton();
         lblConnectionInfo = new javax.swing.JLabel();
         btnAck = new javax.swing.JButton();
+        btnMapper = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("JDBGen Main");
@@ -547,6 +559,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         });
 
+        btnMapper.setText("Abbreviation Mapper");
+        btnMapper.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnMapperActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -570,6 +589,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lblConnectionInfo)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnMapper)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnAck)))
                 .addContainerGap())
         );
@@ -582,7 +603,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     .addComponent(jLabel2)
                     .addComponent(btnManageConn)
                     .addComponent(lblConnectionInfo)
-                    .addComponent(btnAck))
+                    .addComponent(btnAck)
+                    .addComponent(btnMapper))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -686,6 +708,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             @Override
             protected Boolean doInBackground() throws Exception {
                 try {
+                    JDBAbbr.buildMap();
                     Map<String, String> custVars = UIUtils.applyTableToMap(tabVars.getModel());
                     custVars.put("author", txtAuthor.getText());
                     int tidxs[] = lstTables.getSelectedIndices();
@@ -782,6 +805,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_lstTablesMouseMoved
 
+    private void btnMapperActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMapperActionPerformed
+        JDBAbbreviationMapper.getInstance(this).setVisible(true);
+    }//GEN-LAST:event_btnMapperActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -802,6 +829,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private javax.swing.JButton btnDelVar;
     private javax.swing.JButton btnGenerate;
     private javax.swing.JButton btnManageConn;
+    private javax.swing.JButton btnMapper;
     private javax.swing.JComboBox<String> cboConnection;
     private javax.swing.JCheckBox chkDarkUI;
     private javax.swing.JCheckBox chkShowView;

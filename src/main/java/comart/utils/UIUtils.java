@@ -108,6 +108,8 @@ public class UIUtils {
     @SuppressWarnings("UseSpecificCatch")
     public static void setLAF(String className) {
         boolean hasSet = false;
+        
+        cachedIcon.clear();
 
         try {
             UIManager.setLookAndFeel(className);
@@ -191,6 +193,10 @@ public class UIUtils {
     public static void addIcon(JComponent button, IconCode code) {
         addIconPrivate(button, code);
         items.add(new Pair(button, code));
+    }
+    
+    public static void setCommitOnLostFocus(JTable table) {
+        table.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
     }
     
     @SuppressWarnings({"null", "UseSpecificCatch"})
@@ -439,19 +445,27 @@ public class UIUtils {
         }
         return props;
     }
-    
     public static void tableSetLastEmpty(TableModel model) {
+        tableSetLastEmpty(model, 0);
+    }
+    
+    public static void tableSetLastEmpty(TableModel model, int stCol) {
         boolean lastEmpty = false;
         for (int i=0; i<model.getRowCount(); i++) {
-            String k = (String)model.getValueAt(i, 0);
-            String v = (String)model.getValueAt(i, 1);
+            String k = (String)model.getValueAt(i, stCol);
+            String v = (String)model.getValueAt(i, stCol+1);
             if (!StrUtils.isEmpty(k) && !StrUtils.isEmpty(v))
                 lastEmpty = false;
             else
                 lastEmpty = true;
         }
-        if (!lastEmpty)
-            ((DefaultTableModel)model).addRow(new String[]{"", ""});
+        if (!lastEmpty) {
+            if (stCol > 0) {
+                ((DefaultTableModel)model).addRow(new Object[]{Boolean.FALSE, "", ""});
+            } else {
+                ((DefaultTableModel)model).addRow(new String[]{"", ""});
+            }
+        }
     }
     
     public static boolean checkNotEmpty(Component parent, JComponent target) {

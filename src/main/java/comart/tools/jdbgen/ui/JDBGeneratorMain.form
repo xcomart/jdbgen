@@ -44,6 +44,8 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="lblConnectionInfo" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
+                      <Component id="btnMapper" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="btnAck" min="-2" max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -61,6 +63,7 @@
                   <Component id="btnManageConn" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="lblConnectionInfo" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnAck" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="btnMapper" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
               <Component id="jPanel1" max="32767" attributes="0"/>
@@ -472,6 +475,14 @@
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAckActionPerformed"/>
+      </Events>
+    </Component>
+    <Component class="javax.swing.JButton" name="btnMapper">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Abbreviation Mapper"/>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnMapperActionPerformed"/>
       </Events>
     </Component>
   </SubComponents>

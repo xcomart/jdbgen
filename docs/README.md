@@ -154,6 +154,14 @@ Generating text files using table information and templates.
 |Generate|Start generate process, [Progress Window](#progress-window) will be shown.|
 |Close|Close program|
 
+### Abbreviation Mapping Window
+
+![Abbreviation Mapping Window](images/abbreviation.png "Abbreviation Mapping Window")
+
+Manage abbreviation mapping rules.
+This abbreviation mapping will be applied in [`.abbr` decorator of `item` statement](#item-statement).
+
+
 ### Progress Window
 
 ![Progress window](images/progress.png "Progress Window")
@@ -472,6 +480,7 @@ is user supplied variable in [Generator Main Window](#generator-main-window).
 
 |Decorator|Repeatable|Description|
 |:---:|:---:|:---|
+|`.abbr`|&#x2715;|Apply abbreviation mapping to this item(see [Abbreviation Mapping Window](#abbreviation-mapping-window). Abbreviations will be replaced to replacement word according to mapping rules.|
 |`.suffix`|&#x25EF;|Remove prefix including first `_` in value(ex. `T_SAMPLE_ALBUM` -> `SAMPLE_ALBUM`)|
 |`.prefix`|&#x25EF;|Remove suffix including last `_` in value(ex. `SAMPLE_ALBUM_T` -> `SAMPLE_ALBUM`)|
 |`.camel`|&#x2715;|Change value to camel case(ex. `SAMPLE_ALBUM` -> `sampleAlbum`)|

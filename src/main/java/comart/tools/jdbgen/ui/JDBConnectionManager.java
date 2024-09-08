@@ -126,30 +126,38 @@ public class JDBConnectionManager extends JDialog {
         UIUtils.iconHelpAction(btnIconHelp);
         UIUtils.templateHelpAction(btnTemplateHelp);
         
-        if (!connections.isEmpty()) {
-            lstConnections.setSelectedIndex(0);
-        }
-        
-        tabProps.getModel().addTableModelListener((evt) -> {
+        propsModel.addTableModelListener((evt) -> {
             if (autoReset) {
                 int idx = lstConnections.getSelectedIndex();
                 if (idx > -1) {
                     JDBConnection target = connections.get(idx);
                     target.setConnectionProps(applyToPropsMap());
                 }
+                autoReset = false;
                 UIUtils.tableSetLastEmpty(propsModel);
+                autoReset = true;
             }
         });
-        tabVars.getModel().addTableModelListener((evt) -> {
+        varsModel.addTableModelListener((evt) -> {
             if (autoReset) {
                 int idx = lstConnections.getSelectedIndex();
                 if (idx > -1) {
                     JDBConnection target = connections.get(idx);
                     target.setCustomVars(applyToVarsMap());
                 }
+                autoReset = false;
                 UIUtils.tableSetLastEmpty(varsModel);
+                autoReset = true;
             }
         });
+        
+        if (!connections.isEmpty()) {
+            lstConnections.setSelectedIndex(0);
+        }
+
+        UIUtils.setCommitOnLostFocus(tabProps);
+        UIUtils.setCommitOnLostFocus(tabVars);
+
         this.pack();
     }
     
@@ -202,8 +210,6 @@ public class JDBConnectionManager extends JDialog {
                 toFront();
             }
         });
-        UIUtils.applyTableEdit(tabProps);
-        UIUtils.applyTableEdit(tabVars);
     }
     
     private void refreshDrivers() {
@@ -944,6 +950,12 @@ public class JDBConnectionManager extends JDialog {
                     .build();
             if (ObjectUtils.isNotEmpty(conn.getConnectionProps()))
                 newOne.setConnectionProps(new LinkedHashMap(conn.getConnectionProps()));
+            
+            if (ObjectUtils.isNotEmpty(conn.getCustomVars()))
+                newOne.setCustomVars(new LinkedHashMap(conn.getCustomVars()));
+            
+            if (ObjectUtils.isNotEmpty(conn.getTemplates()))
+                newOne.setTemplates(new ArrayList(conn.getTemplates()));
 
             connections.add(newOne);
             connMap.put(newOne.getName(), newOne);
@@ -991,10 +1003,12 @@ public class JDBConnectionManager extends JDialog {
             removeTemplates();
             removeVars();
             
+            propsModel.setRowCount(0);
             conn.getConnectionProps().forEach((k, v) -> {if (!"".equals(k)) propsModel.addRow(new String[]{k, v});});
             // add last empty row
             propsModel.addRow(new String[]{"", ""});
-            
+
+            varsModel.setRowCount(0);
             conn.getTemplates().forEach(t -> tplModel.addRow(
                     new String[]{
                         t.getName(),

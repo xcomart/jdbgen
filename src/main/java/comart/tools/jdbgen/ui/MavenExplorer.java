@@ -144,7 +144,9 @@ public class MavenExplorer extends JDialog {
     
     public void setQuery(String query) {
         txtSearch.setText(query);
-        EventQueue.invokeLater(() -> btnSearchActionPerformed(null));
+        EventQueue.invokeLater(() -> {
+            btnSearchActionPerformed(null);
+        });
     }
 
     private void eventSetup() {
@@ -475,7 +477,7 @@ public class MavenExplorer extends JDialog {
     }//GEN-LAST:event_btnMore1ActionPerformed
 
     private void searchMaven() {
-        EventQueue.invokeLater(() -> {
+        UIUtils.loading(this, () -> {
             try {
                 if (StrUtils.isEmpty(searchText))
                     return;
@@ -483,8 +485,10 @@ public class MavenExplorer extends JDialog {
                 searchTotal = sr.getResponse().getNumFound();
                 List<SearchResponseItem> items = Arrays.asList(sr.getResponse().getDocs());
                 searchItems.addAll(items);
-                items.forEach(i -> searchModel.addElement(i.getTitle()));
-                btnMore.setEnabled(searchTotal > searchItems.size());
+                EventQueue.invokeLater(() -> {
+                    items.forEach(i -> searchModel.addElement(i.getTitle()));
+                    btnMore.setEnabled(searchTotal > searchItems.size());
+                });
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, null, ex);
                 UIUtils.error(this, ex.getLocalizedMessage());
@@ -497,14 +501,16 @@ public class MavenExplorer extends JDialog {
         if (idx < 0)
             return;
         SearchResponseItem sitem = searchItems.get(idx);
-        EventQueue.invokeLater(() -> {
+        UIUtils.loading(this, () -> {
             try {
                 SearchResult sr = MavenREST.version(sitem, versionPageNo);
                 versionTotal = sr.getResponse().getNumFound();
                 List<SearchResponseItem> items = Arrays.asList(sr.getResponse().getDocs());
                 versionItems.addAll(items);
-                items.forEach(i -> versionModel.addElement(i.getTitle()));
-                btnMore1.setEnabled(versionTotal > versionItems.size());
+                EventQueue.invokeLater(() -> {
+                    items.forEach(i -> versionModel.addElement(i.getTitle()));
+                    btnMore1.setEnabled(versionTotal > versionItems.size());
+                });
             } catch (Exception ex) {
                 logger.log(Level.SEVERE, null, ex);
                 UIUtils.error(this, ex.getLocalizedMessage());

@@ -1055,6 +1055,13 @@ public class StrUtils
         return false;
     }
     
+    public static boolean isUpper(CharSequence str) {
+        return str.chars()
+                .filter(c -> c >= 'a' && c <= 'z')
+                .findFirst()
+                .orElse(-1) == -1;
+    }
+    
     public static String toCamelCase(String s) {
         if (s.contains("_") || s.contains("-")) {
             StringBuilder sb = new StringBuilder();
@@ -1070,6 +1077,8 @@ public class StrUtils
                     sb.append(s.substring(i, i+1).toLowerCase());
             }
             return sb.toString();
+        } else if (isUpper(s)) {
+            return s.toLowerCase();
         } else {
             return s.substring(0, 1).toLowerCase() + s.substring(1);
         }
@@ -1088,6 +1097,8 @@ public class StrUtils
         if (s.contains("_") || s.contains("-")) {
             return replace(s, "-", "_").toLowerCase();
         } else {
+            if (isUpper(s))
+                s = s.toLowerCase();
             StringBuilder sb = new StringBuilder();
             for (int i=0; i<s.length(); i++) {
                 char c = s.charAt(i);

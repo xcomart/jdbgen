@@ -82,6 +82,17 @@ public class PlatformUtils {
 
     }
     
+    public static void openFile(String path) {
+        Desktop desk = Desktop.getDesktop();
+        
+        try {
+            desk.open(new File(path));
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, (String)null, e);
+        }
+
+    }
+    
     private static String getJava() {
         ProcessHandle processHandle = ProcessHandle.current();
         return processHandle.info().command().get();

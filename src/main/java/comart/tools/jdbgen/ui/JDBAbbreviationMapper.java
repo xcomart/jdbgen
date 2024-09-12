@@ -29,6 +29,7 @@ import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.Frame;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
@@ -92,11 +93,31 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         mdl.addRow(new Object[]{Boolean.FALSE, "", ""});
         
         tblMapping.getModel().addTableModelListener((evt) -> {
-            conf.setAbbrs(applyTableToList(mdl));
-            UIUtils.tableSetLastEmpty(tblMapping.getModel(), 1);
+            if (checkDuplication(mdl)) {
+                conf.setAbbrs(applyTableToList(mdl));
+                UIUtils.tableSetLastEmpty(tblMapping.getModel(), 1);
+            }
         });
         UIUtils.setCommitOnLostFocus(tblMapping);
         
+    }
+    
+    private boolean checkDuplication(DefaultTableModel model) {
+        HashMap<String,String> map = new HashMap<>();
+        for (int i=0; i<model.getRowCount(); i++) {
+            Boolean check = (Boolean)model.getValueAt(i, 0);
+            String k = (String)model.getValueAt(i, 1);
+            String v = (String)model.getValueAt(i, 2);
+            if (check && !StrUtils.isEmpty(k) && !StrUtils.isEmpty(v)) {
+                if (map.containsKey(k)) {
+                    UIUtils.error(this, "'"+k+"' duplicated.");
+                    return false;
+                } else {
+                    map.put(k, v);
+                }
+            }
+        }
+        return true;
     }
     
     private void applyIcons() {

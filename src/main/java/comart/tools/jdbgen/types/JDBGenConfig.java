@@ -62,36 +62,43 @@ public class JDBGenConfig {
     private List<JDBPreset> presets;
     private List<JDBAbbr> abbrs = new ArrayList<>();
     private MavenConfig maven;
+    private boolean applyAbbr = false;
 
-    public static synchronized JDBGenConfig getInstance() {
+    public static JDBGenConfig getInstance() {
+        return getInstance(false);
+    }
+    
+    public static synchronized JDBGenConfig getInstance(boolean useDefault) {
         if (INSTANCE == null) {
             logger.info("config path: "+CONF_PATH);
             File f = new File(CONF_PATH);
             Gson gson = new Gson();
-            for (int cnt=0; cnt < 3; cnt++) {
-                String master = UIUtils.password("Enter master password", !(f.exists() && f.isFile()));
-                if (master == null)
-                    System.exit(1);
-                StrUtils.setMaster(master);
-                if (f.exists() && f.isFile()) {
-                    try {
-                        INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f, StandardCharsets.UTF_8), JDBGenConfig.class);
-                        break;
-                    } catch (Exception e) {
-                        if (cnt < 2) {
-                            UIUtils.error(null, "Password Incorrect!");
-                        } else {
-                            boolean isOk = UIUtils.confirm(null, "Configuration Error",
-                                    "Loading configuration failed - Password may not correct : " +
-                                    e.getLocalizedMessage() +
-                                    "\nDo you want to load default configuration?");
-                            if (!isOk) {
-                                System.exit(1);
+            if (!useDefault) {
+                for (int cnt=0; cnt < 3; cnt++) {
+                    String master = UIUtils.password("Enter master password", !(f.exists() && f.isFile()));
+                    if (master == null)
+                        System.exit(1);
+                    StrUtils.setMaster(master);
+                    if (f.exists() && f.isFile()) {
+                        try {
+                            INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f, StandardCharsets.UTF_8), JDBGenConfig.class);
+                            break;
+                        } catch (Exception e) {
+                            if (cnt < 2) {
+                                UIUtils.error(null, "Password Incorrect!");
+                            } else {
+                                boolean isOk = UIUtils.confirm(null, "Configuration Error",
+                                        "Loading configuration failed - Password may not correct : " +
+                                        e.getLocalizedMessage() +
+                                        "\nDo you want to load default configuration?");
+                                if (!isOk) {
+                                    System.exit(1);
+                                }
                             }
                         }
+                    } else {
+                        break;
                     }
-                } else {
-                    break;
                 }
             }
 
@@ -118,7 +125,8 @@ public class JDBGenConfig {
                     ));
                     jcon.setTemplates(templates);
                     INSTANCE.connections = new ArrayList<>(Arrays.asList(jcon));
-                    saveInstance(null);
+                    if (!useDefault)
+                        saveInstance(null);
                 } catch (Exception e) {
                     UIUtils.error(null, "Cannot load default configuration: " + e.getLocalizedMessage());
                     logger.log(Level.SEVERE, "cannot recover previous error.", e);

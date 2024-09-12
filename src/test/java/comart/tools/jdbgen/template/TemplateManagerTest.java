@@ -23,6 +23,8 @@
  */
 package comart.tools.jdbgen.template;
 
+import comart.tools.jdbgen.types.JDBAbbr;
+import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.db.DBColumn;
 import comart.tools.jdbgen.types.db.DBTable;
 import comart.utils.ObjUtils;
@@ -60,6 +62,13 @@ public class TemplateManagerTest {
     
     public TemplateManagerTest() {
         mapObj = new SampleObject("abc_def_ghi_jkl");
+        
+        JDBGenConfig conf = JDBGenConfig.getInstance(true);
+        
+        ArrayList<JDBAbbr> abbrs = new ArrayList<>();
+        abbrs.add(new JDBAbbr(true, "def", "default"));
+        conf.setAbbrs(abbrs);
+        JDBAbbr.buildMap();
     }
     
     @BeforeAll
@@ -79,73 +88,87 @@ public class TemplateManagerTest {
         TemplateManager tm = new TemplateManager("a${name}b", custVars);
         String result = tm.applyMapper(mapObj);
         if (!"aabc_def_ghi_jklb".equals(result))
-            fail("${name} mapper result fail.");
+            fail("${name} mapper result fail."+result+" must be aabc_def_ghi_jklb");
         
         // function suffix test
         tm = new TemplateManager("${name.suffix}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"def_ghi_jkl".equals(result))
-            fail("${name.suffix} mapper result fail.");
+            fail("${name.suffix} mapper result fail."+result+" must be def_ghi_jkl");
         
         // function prefix test
         tm = new TemplateManager("${name.prefix}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"abc_def_ghi".equals(result))
-            fail("${name.prefix} mapper result fail.");
+            fail("${name.prefix} mapper result fail."+result+" must be abc_def_ghi");
         
         // function lower test
         tm = new TemplateManager("${name.lower}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"abc_def_ghi_jkl".equals(result))
-            fail("${name.lower} mapper result fail.");
+            fail("${name.lower} mapper result fail."+result+" must be abc_def_ghi_jkl");
         
         // function upper test
         tm = new TemplateManager("${name.upper}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"ABC_DEF_GHI_JKL".equals(result))
-            fail("${name.upper} mapper result fail.");
+            fail("${name.upper} mapper result fail."+result+" must be ABC_DEF_GHI_JKL");
         
         // function pascal test
         tm = new TemplateManager("${name.pascal}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"AbcDefGhiJkl".equals(result))
-            fail("${name.pascal} mapper result fail.");
+            fail("${name.pascal} mapper result fail."+result+" must be AbcDefGhiJkl");
         
         // function camel test
         tm = new TemplateManager("${name.camel}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"abcDefGhiJkl".equals(result))
-            fail("${name.camel} mapper result fail.");
+            fail("${name.camel} mapper result fail."+result+" must be abcDefGhiJkl");
         
         // function snake test
         tm = new TemplateManager("${name.snake}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"abc_def_ghi_jkl".equals(result))
-            fail("${name.snake} mapper result fail.");
+            fail("${name.snake} mapper result fail."+result+" must be abc_def_ghi_jkl");
         
         // function skewer test
         tm = new TemplateManager("${name.skewer}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"abc-def-ghi-jkl".equals(result))
-            fail("${name.skewer} mapper result fail.");
+            fail("${name.skewer} mapper result fail."+result+" must be abc-def-ghi-jkl");
         
         // function replace test
         tm = new TemplateManager("${name.replace('ghi','mno')}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"abc_def_mno_jkl".equals(result))
-            fail("${name.replace('ghi','mno')} mapper result fail.");
+            fail("${name.replace('ghi','mno')} mapper result fail."+result+" must be abc_def_mno_jkl");
+        
+        // function abbr test
+        tm = new TemplateManager("${name.abbr}", custVars);
+        result = tm.applyMapper(mapObj);
+        if (!"abc_default_ghi_jkl".equals(result))
+            fail("${name.abbr} mapper result fail."+result+" must be abc_default_ghi_jkl");
+        
+        // default abbr set test
+        JDBGenConfig.getInstance().setApplyAbbr(true);
+        tm = new TemplateManager("${name}", custVars);
+        result = tm.applyMapper(mapObj);
+        if (!"abc_default_ghi_jkl".equals(result))
+            fail("${name} with abbr default mapper result fail."+result+" must be abc_default_ghi_jkl");
+        JDBGenConfig.getInstance().setApplyAbbr(false);
         
         // function combination test
         tm = new TemplateManager("${name.suffix.camel}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"defGhiJkl".equals(result))
-            fail("${name.suffix.camel} mapper result fail.");
+            fail("${name.suffix.camel} mapper result fail."+result+" must be defGhiJkl");
         
         // function camel test with item tag
         tm = new TemplateManager("${item:key=name.camel}", custVars);
         result = tm.applyMapper(mapObj);
         if (!"abcDefGhiJkl".equals(result))
-            fail("${item:key=name.camel} mapper result fail.");
+            fail("${item:key=name.camel} mapper result fail."+result+" must be abcDefGhiJkl");
     }
 
     /**

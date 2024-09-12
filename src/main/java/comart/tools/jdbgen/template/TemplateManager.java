@@ -24,6 +24,7 @@
 package comart.tools.jdbgen.template;
 
 import comart.tools.jdbgen.types.JDBAbbr;
+import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.utils.ObjUtils;
 import comart.utils.StrUtils;
 import java.text.ParseException;
@@ -591,6 +592,10 @@ public class TemplateManager {
     private static class ItemKey {
         String key = null;
         List<Object> params = new ArrayList<>();
+        public ItemKey() {}
+        public ItemKey(String key) {
+            this.key = key;
+        }
     }
     
     private static List<ItemKey> parseKeys(String mkey) {
@@ -601,6 +606,7 @@ public class TemplateManager {
         List<ItemKey> res = new ArrayList<>();
         StringBuilder sb = new StringBuilder();
         ItemKey curr = new ItemKey();
+        boolean isParam = false;
         int openchar = -1;
         while (i < len) {
             char c = mkey.charAt(i);
@@ -623,11 +629,24 @@ public class TemplateManager {
             } else if (c == '(') {
                 curr.key = sb.toString();
                 sb = new StringBuilder();
-            } else if (!StrUtils.isSpace(c, " \r\n,)")) {
+                isParam = true;
+            } else if (isParam) {
+                if (c == ')' || c == ',') {
+                    isParam = c == ')';
+                    sb = new StringBuilder();
+                } else if (!StrUtils.isSpace(c)) {
+                    sb.append(c);
+                }
+            } else if (!StrUtils.isSpace(c)) {
                 sb.append(c);
             }
             i++;
         }
+        
+        if (JDBGenConfig.getInstance().isApplyAbbr() &&
+                !res.isEmpty() &&
+                "name".equals(res.get(0).key.toLowerCase()))
+            res.add(1, new ItemKey("abbr"));
         
         return res;
     }

@@ -271,6 +271,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         tabVars = new javax.swing.JTable();
         jLabel6 = new javax.swing.JLabel();
         btnDelVar = new javax.swing.JButton();
+        chkApplyAbbr = new javax.swing.JCheckBox();
+        jLabel15 = new javax.swing.JLabel();
         chkDarkUI = new javax.swing.JCheckBox();
         btnGenerate = new javax.swing.JButton();
         cboConnection = new javax.swing.JComboBox<>();
@@ -439,6 +441,16 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
         btnDelVar.setText("-");
 
+        chkApplyAbbr.setText("Apply abbreviation rule to all name fields.");
+        chkApplyAbbr.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                chkApplyAbbrActionPerformed(evt);
+            }
+        });
+
+        jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel15.setText("Abbreviation:");
+
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
         jPanel4Layout.setHorizontalGroup(
@@ -452,25 +464,28 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel14, javax.swing.GroupLayout.PREFERRED_SIZE, 107, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtAuthor))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel16)
-                            .addComponent(btnDelVar))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel11)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtOutputDir, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(txtOutputDir)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseOutput))))
+                        .addComponent(btnBrowseOutput))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
+                                .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                .addComponent(jLabel16)
+                                .addComponent(btnDelVar)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                            .addComponent(chkApplyAbbr, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtAuthor)))))
         );
 
-        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel11, jLabel14, jLabel16});
+        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel11, jLabel14});
 
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -491,12 +506,17 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     .addComponent(txtAuthor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel14))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(chkApplyAbbr)
+                    .addComponent(jLabel15))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel16)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnDelVar))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
         );
 
         jPanel4Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {btnBrowseOutput, btnDelVar, txtOutputDir});
@@ -750,7 +770,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     }
                     setProgress(100);
                     publish("all process complete!");
-                    UIUtils.info(parent, "Process complete!");
+                    if (UIUtils.confirm(parent, "Process Complete", "Process complete successfully!\nDo you want open output directory?")) {
+                        PlatformUtils.openFile(currConn.getOutputDir());
+                    }
                     return true;
                 } catch(Exception e) {
                     e.printStackTrace();
@@ -809,6 +831,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         JDBAbbreviationMapper.getInstance(this).setVisible(true);
     }//GEN-LAST:event_btnMapperActionPerformed
 
+    private void chkApplyAbbrActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkApplyAbbrActionPerformed
+        conf.setApplyAbbr(chkApplyAbbr.isSelected());
+        JDBGenConfig.saveInstance(this);
+    }//GEN-LAST:event_chkApplyAbbrActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -831,11 +858,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private javax.swing.JButton btnManageConn;
     private javax.swing.JButton btnMapper;
     private javax.swing.JComboBox<String> cboConnection;
+    private javax.swing.JCheckBox chkApplyAbbr;
     private javax.swing.JCheckBox chkDarkUI;
     private javax.swing.JCheckBox chkShowView;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel14;
+    private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel4;

@@ -49,6 +49,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -66,6 +67,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -74,8 +76,10 @@ import javax.swing.JPasswordField;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JWindow;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIDefaults;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -381,6 +385,32 @@ public class UIUtils {
 
     public static String password(String message, boolean isFirst) {
         return PasswordPanel.getPassword(message, isFirst);
+    }
+    
+    public static void loading(Window parent, Runnable worker) {
+        try {
+            JComponent gpanel = new JLabel(new ImageIcon("resource/loading.gif"));
+            Method m = parent.getClass().getMethod("setGlassPane", Component.class);
+            m.invoke(parent, gpanel);
+//            parent.setGlassPane(gpanel);
+            SwingWorker<Boolean,String> sworker = new SwingWorker<>() {
+                @Override
+                protected Boolean doInBackground() throws Exception {
+                    worker.run();
+                    return true;
+                }
+
+                @Override
+                protected void done() {
+                    gpanel.setVisible(false);
+                }
+            };            
+            gpanel.setVisible(true);
+            sworker.execute();
+        } catch (Exception ex) {
+            Logger.getLogger(UIUtils.class.getName()).log(Level.SEVERE, null, ex);
+            EventQueue.invokeLater(worker);
+        }
     }
     
     public static String openFileDlg(Component parent) {

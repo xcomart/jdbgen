@@ -7,36 +7,36 @@
 
 	<!-- ${remarks} search list -->
     <select id="search" resultType="record" parameterType="params">
-        SELECT  ${for:item=columns, inStr="\n,", indent=-1}${name} AS "${name.camel}"${endfor}
-          FROM ${name} A
+        SELECT  ${for:item=columns, inStr="\n,", indent=-1}${column} AS "${name.camel}"${endfor}
+          FROM ${table} A
          WHERE (0=0)
                ${for:item=columns,inStr="\n" 
-               }<if test="${name.camel} == null or ${name.camel} == '')">AND ${name} = #{${name.camel}} </if>${endfor}
+               }<if test="${name.camel} == null or ${name.camel} == '')">AND ${column} = #{${name.camel}} </if>${endfor}
          ORDER 
             BY UPDT_DT DESC
     </select>
 	<!-- ${remarks} search list count -->
     <select id="searchCount" resultType="int" parameterType="params">
         SELECT COUNT(1) 
-          FROM ${name} A
+          FROM ${table} A
          WHERE (0=0)
                ${for:item=columns,inStr="\n"
-               }<if test="${name.camel} == null or ${name.camel} == ''">AND ${name} = #{${name.camel}}</if>${endfor}
+               }<if test="${name.camel} == null or ${name.camel} == ''">AND ${column} = #{${name.camel}}</if>${endfor}
     </select>
 
 	<!-- ${remarks} select one -->
     <select id="select" resultType="record" parameterType="params">
-        SELECT  ${for:item=columns,inStr="\n,",indent=-1}${name} AS "${name.camel}"${endfor}
-          FROM ${name} A
-         WHERE ${for:item=keys,inStr="\nAND ",indent=-4}${name} = #{${name.camel}}${endfor}
+        SELECT  ${for:item=columns,inStr="\n,",indent=-1}${column} AS "${name.camel}"${endfor}
+          FROM ${table} A
+         WHERE ${for:item=keys,inStr="\nAND ",indent=-4}${column} = #{${name.camel}}${endfor}
     </select>
 
 	<!-- ${remarks} insert -->
     <insert id="insert" parameterType="params">
         INSERT 
-          INTO ${name} 
+          INTO ${table} 
              (
-               ${for:item=columns,inStr="\n,",indent=-1}${name}${endfor}  
+               ${for:item=columns,inStr="\n,",indent=-1}${column}${endfor}  
              )
         VALUES
              (
@@ -53,16 +53,16 @@
 
 	<!-- ${remarks} update -->
     <update id="update" parameterType="params">
-        UPDATE ${name} 
-           SET  ${for:item=notKeys,inStr="\n,",indent=-1}${name} = #{${name.camel}}${endfor}  
-         WHERE ${for:item=keys,inStr="\nAND ",indent=-4}${name} = #{${name.camel}}${endfor}
+        UPDATE ${table} 
+           SET  ${for:item=notKeys,inStr="\n,",indent=-1}${column} = #{${name.camel}}${endfor}  
+         WHERE ${for:item=keys,inStr="\nAND ",indent=-4}${column} = #{${name.camel}}${endfor}
     </update>
 
 	<!-- ${remarks} delete -->
     <delete id="delete" parameterType="params">
         DELETE 
-          FROM ${name} 
-         WHERE ${for:item=keys,inStr="\nAND ",indent=-4}${name} = #{${name.camel}}${endfor}
+          FROM ${table} 
+         WHERE ${for:item=keys,inStr="\nAND ",indent=-4}${column} = #{${name.camel}}${endfor}
     </delete> 
 
 </mapper>

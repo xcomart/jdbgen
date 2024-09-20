@@ -5,7 +5,7 @@
     <artifactId>jdbgen</artifactId>
     <name>jdbgen</name>
     <packaging>jar</packaging>
-    <version>0.2.2</version>
+    <version>0.2.3</version>
     <build>
         <sourceDirectory>${basedir}/src/main/java</sourceDirectory>
         <outputDirectory>${basedir}/target/classes</outputDirectory>
@@ -138,6 +138,7 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <release>11</release>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>            

@@ -25,13 +25,18 @@ package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.JDBAbbr;
 import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.types.db.DBTable;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.Frame;
+import java.awt.Point;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
@@ -76,8 +81,9 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         
         TableColumnModel colModel = tblMapping.getColumnModel();
         colModel.getColumn(0).setPreferredWidth(50);
-        colModel.getColumn(1).setPreferredWidth(130);
-        colModel.getColumn(2).setPreferredWidth(130);
+        colModel.getColumn(1).setPreferredWidth(50);
+        colModel.getColumn(2).setPreferredWidth(110);
+        colModel.getColumn(3).setPreferredWidth(110);
         
         applyIcons();
         
@@ -90,12 +96,12 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         mdl.setRowCount(0);
         
         conf.getAbbrs().forEach(a -> mdl.addRow(a.getRowArray()));
-        mdl.addRow(new Object[]{Boolean.FALSE, "", ""});
+        mdl.addRow(new Object[]{Boolean.FALSE, Boolean.FALSE, "", ""});
         
         tblMapping.getModel().addTableModelListener((evt) -> {
             if (checkDuplication(mdl)) {
                 conf.setAbbrs(applyTableToList(mdl));
-                UIUtils.tableSetLastEmpty(tblMapping.getModel(), 1);
+                UIUtils.tableSetLastEmpty(tblMapping.getModel(), 2);
             }
         });
         UIUtils.setCommitOnLostFocus(tblMapping);
@@ -106,8 +112,8 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         HashMap<String,String> map = new HashMap<>();
         for (int i=0; i<model.getRowCount(); i++) {
             Boolean check = (Boolean)model.getValueAt(i, 0);
-            String k = (String)model.getValueAt(i, 1);
-            String v = (String)model.getValueAt(i, 2);
+            String k = (String)model.getValueAt(i, 2);
+            String v = (String)model.getValueAt(i, 3);
             if (check && !StrUtils.isEmpty(k) && !StrUtils.isEmpty(v)) {
                 if (map.containsKey(k)) {
                     UIUtils.error(this, "'"+k+"' duplicated.");
@@ -129,10 +135,11 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         List<JDBAbbr> abbrs = new ArrayList<>();
         for (int i=0; i<model.getRowCount(); i++) {
             Boolean check = (Boolean)model.getValueAt(i, 0);
-            String k = (String)model.getValueAt(i, 1);
-            String v = (String)model.getValueAt(i, 2);
+            Boolean tname = (Boolean)model.getValueAt(i, 1);
+            String k = (String)model.getValueAt(i, 2);
+            String v = (String)model.getValueAt(i, 3);
             if (!StrUtils.isEmpty(k) && !StrUtils.isEmpty(v))
-                abbrs.add(new JDBAbbr(check, k, v));
+                abbrs.add(new JDBAbbr(check, tname, k, v));
         }
         return abbrs;
     }
@@ -159,14 +166,14 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
 
         tblMapping.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null}
+                {null, null, null, null}
             },
             new String [] {
-                "Apply", "Abbreviation", "Replace To"
+                "Apply", "Total Name", "Abbreviation", "Replace To"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
+                java.lang.Boolean.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -174,6 +181,11 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
             }
         });
         tblMapping.setToolTipText("Abbreviation Mapping Rules applied to object(table, column) name.");
+        tblMapping.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tblMappingMouseClicked(evt);
+            }
+        });
         jScrollPane1.setViewportView(tblMapping);
 
         btnOk.setText("Ok");
@@ -241,6 +253,29 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
             }
         }
     }//GEN-LAST:event_btnDelActionPerformed
+
+    private void showPopupTrigger(java.awt.event.MouseEvent evt) {
+        if (evt.getButton() == MouseEvent.BUTTON3) {
+            Point p = evt.getPoint();
+            int row = tblMapping.rowAtPoint(p);
+            int col = tblMapping.columnAtPoint(p);
+            Boolean tmap = (Boolean)mdl.getValueAt(row, 1);
+            if (col == 2 && tmap != null && tmap) {
+                JPopupMenu menu = new JPopupMenu();
+                List<DBTable> tables = JDBGeneratorMain.INSTANCE.getTables();
+                for (DBTable t: tables) {
+                    JMenuItem item = new JMenuItem(t.getName());
+                    item.addActionListener(e -> mdl.setValueAt(t.getName(), row, col));
+                    menu.add(item);
+                }
+                menu.show(evt.getComponent(), evt.getX(), evt.getY());
+            }
+        }
+    }
+    
+    private void tblMappingMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMappingMouseClicked
+        showPopupTrigger(evt);
+    }//GEN-LAST:event_tblMappingMouseClicked
 
     /**
      * @param args the command line arguments

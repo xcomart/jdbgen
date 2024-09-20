@@ -36,6 +36,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -463,25 +464,29 @@ public class TemplateManager {
     
     @SuppressWarnings("unused")
     private static String procAbbr(String item, List<Object> params) {
-        // add last underbar for convenience
-        item = item + "_";
-        StringBuilder res = new StringBuilder();
-        StringBuilder buf = new StringBuilder();
-        for (char c: item.toCharArray()) {
-            if (c == '_' || c == '-') {
-                String word = buf.toString();
-                if (JDBAbbr.abbrMap.containsKey(word))
-                    word = JDBAbbr.abbrMap.get(word);
-                res.append(word);
-                res.append(c);
-                buf = new StringBuilder();
-            } else {
-                buf.append(c);
+        if (JDBAbbr.abbrNameMap.containsKey(item.toLowerCase())) {
+            return JDBAbbr.abbrNameMap.get(item.toLowerCase());
+        } else {
+            // add last underbar for convenience
+            item = item + "_";
+            StringBuilder res = new StringBuilder();
+            StringBuilder buf = new StringBuilder();
+            for (char c: item.toCharArray()) {
+                if (c == '_' || c == '-') {
+                    String word = buf.toString();
+                    if (JDBAbbr.abbrMap.containsKey(word))
+                        word = JDBAbbr.abbrMap.get(word);
+                    res.append(word);
+                    res.append(c);
+                    buf = new StringBuilder();
+                } else {
+                    buf.append(c);
+                }
             }
+            // remove last underbar
+            res.deleteCharAt(res.length()-1);
+            return res.toString();
         }
-        // remove last underbar
-        res.deleteCharAt(res.length()-1);
-        return res.toString();
     }
     
     private static final Map<String, TemplateHandler> handlers = new HashMap<>();

@@ -75,7 +75,9 @@ public class JDBGenConfig {
             Gson gson = new Gson();
             if (!useDefault) {
                 for (int cnt=0; cnt < 3; cnt++) {
-                    String master = UIUtils.password("Enter master password", !(f.exists() && f.isFile()));
+                    boolean isNew = !(f.exists() && f.isFile());
+                    String message = isNew ? "Enter new master password": "Enter master password";
+                    String master = UIUtils.password(message, isNew);
                     if (master == null)
                         System.exit(1);
                     StrUtils.setMaster(master);
@@ -94,6 +96,10 @@ public class JDBGenConfig {
                                 if (!isOk) {
                                     System.exit(1);
                                 }
+                                master = UIUtils.password("Enter new master password", true);
+                                if (master == null)
+                                    System.exit(1);
+                                StrUtils.setMaster(master);
                             }
                         }
                     } else {

@@ -55,6 +55,7 @@ public class TemplateManagerTest {
     }
     
     private final SampleObject mapObj;
+    private final SampleObject mapObj2;
     
     private final Map<String,String> custVars = new HashMap<String, String>() {{
         put("author", "John Doe");
@@ -62,11 +63,13 @@ public class TemplateManagerTest {
     
     public TemplateManagerTest() {
         mapObj = new SampleObject("abc_def_ghi_jkl");
+        mapObj2 = new SampleObject("mno_pqr_stu_vwx");
         
         JDBGenConfig conf = JDBGenConfig.getInstance(true);
         
         ArrayList<JDBAbbr> abbrs = new ArrayList<>();
-        abbrs.add(new JDBAbbr(true, "def", "default"));
+        abbrs.add(new JDBAbbr(true, false, "def", "default"));
+        abbrs.add(new JDBAbbr(true, true, "mno_pqr_stu_vwx", "mnopqr"));
         conf.setAbbrs(abbrs);
         JDBAbbr.buildMap();
     }
@@ -149,6 +152,12 @@ public class TemplateManagerTest {
         result = tm.applyMapper(mapObj);
         if (!"abc_default_ghi_jkl".equals(result))
             fail("${name.abbr} mapper result fail."+result+" must be abc_default_ghi_jkl");
+
+        // function abbr name replace test
+        tm = new TemplateManager("${name.abbr}", custVars);
+        result = tm.applyMapper(mapObj2);
+        if (!"mnopqr".equals(result))
+            fail("${name.abbr} mapper result fail."+result+" must be mnopqr");
         
         // default abbr set test
         JDBGenConfig.getInstance().setApplyAbbr(true);
@@ -156,6 +165,12 @@ public class TemplateManagerTest {
         result = tm.applyMapper(mapObj);
         if (!"abc_default_ghi_jkl".equals(result))
             fail("${name} with abbr default mapper result fail."+result+" must be abc_default_ghi_jkl");
+
+        // function abbr name replace test
+        tm = new TemplateManager("${name}", custVars);
+        result = tm.applyMapper(mapObj2);
+        if (!"mnopqr".equals(result))
+            fail("${name.abbr} mapper result fail."+result+" must be mnopqr");
         JDBGenConfig.getInstance().setApplyAbbr(false);
         
         // function combination test

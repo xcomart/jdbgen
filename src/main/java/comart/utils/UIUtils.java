@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -490,11 +491,12 @@ public class UIUtils {
                 lastEmpty = true;
         }
         if (!lastEmpty) {
-            if (stCol > 0) {
-                ((DefaultTableModel)model).addRow(new Object[]{Boolean.FALSE, "", ""});
-            } else {
-                ((DefaultTableModel)model).addRow(new String[]{"", ""});
-            }
+            ArrayList<Object> arr = new ArrayList<>();
+            arr.add(""); arr.add("");
+            for (int i=0; i<stCol; i++)
+                arr.add(0, Boolean.FALSE);
+            
+            ((DefaultTableModel)model).addRow(arr.toArray());
         }
     }
     

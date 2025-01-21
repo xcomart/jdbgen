@@ -38,11 +38,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class JDBAbbr {
     Boolean check;
+    Boolean totalName;
     String abbr;
     String replaceTo;
     
     public Object[] getRowArray() {
-        return new Object[]{ check, abbr, replaceTo };
+        return new Object[]{ check, totalName, abbr, replaceTo };
     }
     
     @Override
@@ -51,11 +52,19 @@ public class JDBAbbr {
     }
     
     public static Map<String, String> abbrMap = null;
+    public static Map<String, String> abbrNameMap = null;
     public static void buildMap() {
         abbrMap = new HashMap<>();
+        abbrNameMap = new HashMap<>();
         JDBGenConfig.getInstance().getAbbrs().forEach(a -> {
-            if (a.check)
-                abbrMap.put(a.abbr, a.replaceTo);
+            if (a.check) {
+                if (a.totalName == null) a.totalName = false;
+                if (a.totalName) {
+                    abbrNameMap.put(a.abbr.toLowerCase(), a.replaceTo);
+                } else {
+                    abbrMap.put(a.abbr.toLowerCase(), a.replaceTo);
+                }
+            }
         });
     }
 }

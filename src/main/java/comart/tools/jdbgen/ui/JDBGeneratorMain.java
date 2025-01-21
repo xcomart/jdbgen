@@ -79,6 +79,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private List<DBTable> tables;
     private boolean autoReset = true;
     
+    public static JDBGeneratorMain INSTANCE = null;
+    
+    public List<DBTable> getTables() {
+        return tables;
+    }
+    
     /**
      * Creates new form JDBGeneratorMain
      */
@@ -112,6 +118,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         PlatformUtils.registerHandlers(e -> showAbout(), null, null, null);
         
         this.pack();
+        INSTANCE = this;
     }
     
     private void showAbout() {

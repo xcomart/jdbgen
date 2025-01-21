@@ -12,6 +12,7 @@ works.
 This tool makes easy to create model like objects, DML SQLs and many other
 applicable text files.
 
+![Generator main window](docs/images/generator_main.png "Generator Main Window")
 
 Here is a sample which shows how does it works.
 

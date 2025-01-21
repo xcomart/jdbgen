@@ -723,7 +723,7 @@ public class TemplateManager {
                 }
             }
         } else {
-            throw new RuntimeException("contains/notcontains in if statement item must be a collection object or contain/notcontain value must be a ',' separated string.");
+            throw new RuntimeException("contains/notcontains in if statement item must be a collection object or a ',' separated string.");
         }
         return contains;
     }

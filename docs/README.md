@@ -149,6 +149,7 @@ Generating text files using table information and templates.
 |Templates|Select template to be generated, click `Select` table header to select/deselect all template|
 |Output Directory|Output location of generated text/source files|
 |Author Name|Author text(`${author}` in template) which used in template.<br/>(ex. John Doe &lt;john.doe@abc.com&gt;)|
+|Abbreviation|Check if you want apply abbreviation replace to all items which has `.abbr` or not|
 |Custom Variables|User defined `item type` variables which used in templates.|
 |Dark UI|Change UI theme to dark/light.|
 |Generate|Start generate process, [Progress Window](#progress-window) will be shown.|
@@ -160,6 +161,8 @@ Generating text files using table information and templates.
 
 Manage abbreviation mapping rules.
 This abbreviation mapping will be applied in [`.abbr` decorator of `item` statement](#item-statement).
+
+If you check total name it will check and replace name itself not each words.
 
 
 ### Progress Window

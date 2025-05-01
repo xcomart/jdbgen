@@ -76,20 +76,32 @@ public class DBMeta implements AutoCloseable {
                 ArrayList<DBSchema> res = new ArrayList<>();
                 tree = new LinkedHashMap<>();
                 DatabaseMetaData dbm = getMetaData();
-                try (ResultSet rs = dbm.getSchemas()) {
+                try (ResultSet rs = dbm.getCatalogs()) {
                     while (rs.next()) {
-                        DBSchema scheme = new DBSchema(rs);
-                        res.add(scheme);
-                        String catalog = scheme.getCatalog();
+                        String catalog = rs.getString(1);
                         if (catalog == null)
                             catalog = "Default Catalog";
-                        List<DBSchema> catList = tree.get(catalog);
-                        if (catList == null) {
-                            catList = new ArrayList<>();
-                            tree.put(catalog, catList);
-                        }
-                        catList.add(scheme);
+                        System.out.println("catalog: " + catalog);
+                        tree.put(catalog, new ArrayList<>());
                     }
+                }
+                for (Map.Entry<String, List<DBSchema>> ent:tree.entrySet()) {
+                    String cat = ent.getKey();
+                    if ("Default Catalog".equals(cat))
+                        cat = null;
+                    try (ResultSet rs = dbm.getSchemas(cat, null)) {
+                        while (rs.next()) {
+                            DBSchema scheme = new DBSchema(rs);
+                            System.out.println("schema: " + scheme);
+                            ent.getValue().add(scheme);
+                        }
+                    }
+                    if (ent.getValue().isEmpty()) {
+                        DBSchema scheme = new DBSchema();
+                        scheme.setCatalog(ent.getKey());
+                        ent.getValue().add(scheme);
+                    }
+                    res.addAll(ent.getValue());
                 }
                 if (res.isEmpty()) {
                     DBSchema scheme = new DBSchema();

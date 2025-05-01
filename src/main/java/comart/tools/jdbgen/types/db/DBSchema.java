@@ -29,8 +29,8 @@ public class DBSchema extends DBMetaModel {
     private List<DBTable> tables = null;
     
     public DBSchema(ResultSet rs) throws SQLException {
-        schema = rs.getString("TABLE_SCHEM");
+        schema = rs.getString(1);
         name = schema;
-        catalog = rs.getString("TABLE_CATALOG");
+        catalog = rs.getString(2);
     }
 }

@@ -19,11 +19,20 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: maven
+    - name: Extract Maven project version
+      run: echo ::set-output name=version::$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+      id: project
+
+    - name: Show extracted Maven project version
+      run: echo ${{ steps.project.outputs.version }}
+
+    - name: Get the output version
+      run: echo "The found version ${{ steps.version-extractor.outputs.version }}"
     - name: Build with Maven
       run: mvn clean package
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: jdbgen-*zip
+        name: jdbgen-${{ steps.version-extractor.outputs.version }}.zip
         path: target/*.zip

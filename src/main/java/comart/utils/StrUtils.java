@@ -907,7 +907,7 @@ public class StrUtils
 
         try {
             while ((currIdx = source.indexOf(delimSt, stIdx)) > -1) {
-                sb.append(source.substring(stIdx, currIdx));
+                sb.append(source, stIdx, currIdx);
                 currIdx += stLen;
                 int lstIdx = source.indexOf(delimEd, currIdx);
                 if (lstIdx > -1) {

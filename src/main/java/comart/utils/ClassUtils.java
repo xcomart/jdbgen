@@ -35,11 +35,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ClassUtils {
-    private static final Logger logger = Logger.getLogger(ClassUtils.class.getName());
 
     public ClassUtils() {
     }
@@ -61,7 +60,7 @@ public class ClassUtils {
                         String classname = jarEntry.getName();
                         classname = classname.substring(0, classname.length() - 6);
                         classname = classname.replaceAll("/", "\\.");
-                        logger.severe(classname);
+                        log.trace(classname);
                         if (!classname.contains("$")) {
                             try {
                                 final Class<?> myLoadedClass = Class.forName(classname, false, ucl);
@@ -69,7 +68,7 @@ public class ClassUtils {
                                     classesTobeReturned.add(classname);
                                 }
                             } catch (Throwable ignored) {
-                                logger.severe(classname + " -> " + ignored.getLocalizedMessage());
+                                log.trace("{} -> {}", classname, ignored.getLocalizedMessage());
                             }
                         }
                     }
@@ -84,7 +83,7 @@ public class ClassUtils {
         try {
             return getClasses(new File(jarFile), Driver.class);
         } catch (Exception e) {
-            logger.log(Level.SEVERE, (String)null, e);
+            log.error(e.getLocalizedMessage(), e);
             return null;
         }
     }

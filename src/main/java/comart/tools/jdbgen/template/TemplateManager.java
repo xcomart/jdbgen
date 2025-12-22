@@ -36,18 +36,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 public class TemplateManager {
-    private final static Logger logger = Logger.getLogger(TemplateManager.class.getName());
     private static final String USER_ID = ObjUtils.getLoginUserId();
     
     private interface TemplateHandler {
@@ -66,8 +63,8 @@ public class TemplateManager {
         boolean check(String key, String condVal, Object mapper, Map<String, String> customs) throws Exception;
     }
     
-    private static enum TemplateType {
-        TEXT, ITEM, SUPER, FOR, IF, USER, DATE, AUTHOR;
+    private enum TemplateType {
+        TEXT, ITEM, SUPER, FOR, IF, USER, DATE, AUTHOR
     }
     
     private static class TemplateItem {
@@ -253,7 +250,7 @@ public class TemplateManager {
             throw new ParseException("Name value pair not matched: "+
                     data+". invalid syntax before: "+ctx.near(), idx);
         value = StrUtils.trim(sb.toString());
-        if (value.length() > 0) {
+        if (!value.isEmpty()) {
             if (StrUtils.isEmpty(name)) {
                 throw new ParseException("Name value pair not matched: "+
                         data+". invalid syntax before: "+ctx.near(), idx);
@@ -559,7 +556,7 @@ public class TemplateManager {
         String spadsz = (String)map.get("padsize");
         int padsz = spadsz == null? 0:Integer.parseInt(spadsz);
         String spaddr = (String)map.get("paddir");
-        boolean padLeft = spaddr == null? false:"left".equalsIgnoreCase(spaddr);
+        boolean padLeft = "left".equalsIgnoreCase(spaddr);
         String quote = (String)map.get("quote");
         String qpre = (String)map.get("prepend");
         String qpos = (String)map.get("postpend");
@@ -612,17 +609,22 @@ public class TemplateManager {
         StringBuilder sb = new StringBuilder();
         ItemKey curr = new ItemKey();
         boolean isParam = false;
+        boolean isOpen = false;
         int openchar = -1;
         while (i < len) {
             char c = mkey.charAt(i);
-            if (openchar > -1 && c == openchar) {
-                curr.params.add(sb.toString());
-                sb = new StringBuilder();
-                openchar = -1;
-            } else if (openchar > -1) {
-                sb.append(c);
-            } else if (openchar < 0 && StrUtils.contains(new char[]{'\'','"'}, c)) {
+            if (isOpen) {
+                if (c == openchar) {
+                    curr.params.add(sb.toString());
+                    sb = new StringBuilder();
+                    openchar = -1;
+                    isOpen = false;
+                } else {
+                    sb.append(c);
+                }
+            } else if (StrUtils.contains(new char[]{'\'','"'}, c)) {
                 openchar = c;
+                isOpen = true;
                 sb = new StringBuilder();
             } else if (c == '.') {
                 if (curr.key == null) {
@@ -650,7 +652,7 @@ public class TemplateManager {
         
         if (JDBGenConfig.getInstance().isApplyAbbr() &&
                 !res.isEmpty() &&
-                "name".equals(res.get(0).key.toLowerCase()))
+                "name".equalsIgnoreCase(res.get(0).key))
             res.add(1, new ItemKey("abbr"));
         
         return res;
@@ -663,7 +665,7 @@ public class TemplateManager {
         if (val == null)
             val = ObjUtils.getValue(customs, key);
         if (val == null) {
-            logger.log(Level.WARNING, "cannot find '{0}' information from database/custom variables", key);
+            log.warn("cannot find '{}' information from database/custom variables", key);
             val = "";
         }
         for (int i=1; i<keys.size(); i++) {
@@ -817,7 +819,7 @@ public class TemplateManager {
                     int idx = instr.indexOf("\n");
                     if (idx > -1) {
                         if (idx > 0)
-                            sb.append(instr.substring(0, idx));
+                            sb.append(instr, 0, idx);
                         sb.append(lineEnd).append(prepend);
                         if (instr.length()-1 > idx)
                             sb.append(instr.substring(idx+1));

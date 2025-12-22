@@ -73,10 +73,8 @@ public class SearchResponseItem implements HasTitle {
     }
     
     public String getFilePath() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(g.replace('.', '/')).append('/');
-        sb.append(a).append('/').append(v).append('/');
-        sb.append(a).append('-').append(v).append(".jar");
-        return sb.toString();
+        return g.replace('.', '/') + '/' +
+                a + '/' + v + '/' +
+                a + '-' + v + ".jar";
     }
 }

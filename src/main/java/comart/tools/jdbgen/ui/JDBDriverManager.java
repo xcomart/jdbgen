@@ -37,7 +37,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -49,7 +48,7 @@ import javax.swing.border.Border;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
-import org.apache.commons.lang3.ArrayUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -57,9 +56,9 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author comart
  */
+@Slf4j
 public class JDBDriverManager extends JDialog {
 
-    private static final Logger logger = Logger.getLogger(JDBDriverManager.class.getName());
     private final List<JDBDriver> drivers;
     private final DefaultListModel<String> listModel;
     private final DefaultTableModel tableModel;

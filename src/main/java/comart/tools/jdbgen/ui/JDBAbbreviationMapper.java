@@ -34,22 +34,21 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 public class JDBAbbreviationMapper extends javax.swing.JDialog {
-    private static final Logger logger = Logger.getLogger(JDBAbbreviationMapper.class.getName());
 
 
     private static JDBAbbreviationMapper INSTANCE = null;

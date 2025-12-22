@@ -31,29 +31,25 @@ import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.Container;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 @Data
 public class JDBGenConfig {
-    private static final Logger logger = Logger.getLogger(JDBGenConfig.class.getName());
     private static final String CONF_PATH = "config.json";
     private static JDBGenConfig INSTANCE = null;
     private boolean isDarkUI = false;
@@ -70,7 +66,7 @@ public class JDBGenConfig {
     
     public static synchronized JDBGenConfig getInstance(boolean useDefault) {
         if (INSTANCE == null) {
-            logger.info("config path: "+CONF_PATH);
+            log.info("config path: {}", CONF_PATH);
             File f = new File(CONF_PATH);
             Gson gson = new Gson();
             if (!useDefault) {
@@ -109,7 +105,7 @@ public class JDBGenConfig {
             }
 
             if (INSTANCE == null) {
-                logger.info("config file not found, creating default one.");
+                log.info("config file not found, creating default one.");
 
                 try (InputStreamReader ir = new InputStreamReader(
                         JDBGenConfig.class.getResourceAsStream("/defaultConfig.json"), StandardCharsets.UTF_8)) {
@@ -135,7 +131,7 @@ public class JDBGenConfig {
                         saveInstance(null);
                 } catch (Exception e) {
                     UIUtils.error(null, "Cannot load default configuration: " + e.getLocalizedMessage());
-                    logger.log(Level.SEVERE, "cannot recover previous error.", e);
+                    log.error("cannot recover previous error.", e);
                     System.exit(1);
                 }
             }

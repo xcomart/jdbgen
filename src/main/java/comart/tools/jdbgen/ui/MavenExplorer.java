@@ -41,13 +41,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import jiconfont.icons.font_awesome.FontAwesome;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -58,8 +58,8 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author comart
  */
+@Slf4j
 public class MavenExplorer extends JDialog {
-    private static final Logger logger = Logger.getLogger(MavenExplorer.class.getName());
 
     private static MavenExplorer INSTANCE = null;
     public static synchronized MavenExplorer getInstance() {
@@ -445,7 +445,7 @@ public class MavenExplorer extends JDialog {
                         return true;
                     }
                 } catch(Exception e) {
-                    logger.log(Level.SEVERE, null, e);
+                    log.error(e.getLocalizedMessage(), e);
                     UIUtils.error(parent, e.getLocalizedMessage());
                 }
                 return false;
@@ -490,7 +490,7 @@ public class MavenExplorer extends JDialog {
                     btnMore.setEnabled(searchTotal > searchItems.size());
                 });
             } catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
+                log.error(ex.getLocalizedMessage(), ex);
                 UIUtils.error(this, ex.getLocalizedMessage());
             }
         });
@@ -512,7 +512,7 @@ public class MavenExplorer extends JDialog {
                     btnMore1.setEnabled(versionTotal > versionItems.size());
                 });
             } catch (Exception ex) {
-                logger.log(Level.SEVERE, null, ex);
+                log.error(ex.getLocalizedMessage(), ex);
                 UIUtils.error(this, ex.getLocalizedMessage());
             }
         });

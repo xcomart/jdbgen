@@ -42,8 +42,8 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="btnManageConn" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Component id="lblConnectionInfo" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="32767" attributes="0"/>
+                      <Component id="lblConnectionInfo" max="32767" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
                       <Component id="btnMapper" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
                       <Component id="btnAck" min="-2" max="-2" attributes="0"/>
@@ -490,6 +490,9 @@
     </Component>
     <Component class="javax.swing.JLabel" name="lblConnectionInfo">
       <Properties>
+        <Property name="labelFor" type="java.awt.Component" editor="org.netbeans.modules.form.ComponentChooserEditor">
+          <ComponentRef name="cboConnection"/>
+        </Property>
         <Property name="text" type="java.lang.String" value="Connection Information Placeholder"/>
       </Properties>
     </Component>

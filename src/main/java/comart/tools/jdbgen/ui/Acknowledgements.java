@@ -10,15 +10,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 public class Acknowledgements extends javax.swing.JDialog {
-    private static final Logger logger = Logger.getLogger(Acknowledgements.class.getName());
 
     private static Acknowledgements INSTANCE = null;
     public static synchronized Acknowledgements getInstance(Frame parent) {
@@ -55,7 +55,7 @@ public class Acknowledgements extends javax.swing.JDialog {
                 sb.append((char)c);
             }
         } catch (Exception e) {
-            logger.log(Level.SEVERE, "cannot read acknowledges.", e);
+            log.error("cannot read acknowledges.", e);
         }
         txtContents.setText(sb.toString());
         this.pack();

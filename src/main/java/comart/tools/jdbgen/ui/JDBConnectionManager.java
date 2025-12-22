@@ -27,42 +27,33 @@ import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBTemplate;
-import comart.tools.jdbgen.types.TemplateType;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
-import java.awt.Point;
 import java.awt.TextField;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.event.TableModelEvent;
-import javax.swing.event.TableModelListener;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 public class JDBConnectionManager extends JDialog {
-    private static final Logger logger = Logger.getLogger(JDBConnectionManager.class.getName());
     
     private static JDBConnectionManager INSTANCE = null;
 
@@ -1105,6 +1096,7 @@ public class JDBConnectionManager extends JDialog {
             target.setConnectionUrl(txtConnUrl.getText());
             target.setIcon(txtIcon.getText());
             target.setKeepAliveQuery(txtKeepAliveQuery.getText());
+            target.setKeepAliveSec(txtKeepAliveSec.getText());
             target.setName(txtName.getText());
             target.setOutputDir(txtOutputDir.getText());
             target.setUserPassword(new String(txtPassword.getPassword()));

@@ -36,41 +36,45 @@ import comart.utils.ObjUtils;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
-import java.awt.EventQueue;
-import java.awt.Point;
-import java.awt.desktop.AboutEvent;
-import java.awt.desktop.AboutHandler;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
+
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.DefaultListModel;
-import javax.swing.JLabel;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
+import javax.swing.plaf.basic.BasicLabelUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import jiconfont.icons.font_awesome.FontAwesome;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 public class JDBGeneratorMain extends javax.swing.JFrame {
-    private final static Logger logger = Logger.getLogger(JDBGeneratorMain.class.getName());
+
+    private static class MyLabelUI extends BasicLabelUI {
+        @Override
+        protected String layoutCL(
+                JLabel label, FontMetrics fontMetrics, String text, Icon icon,
+                Rectangle viewR, Rectangle iconR, Rectangle textR) {
+            
+            super.layoutCL(
+                    label, fontMetrics, text.substring(0, 20), icon, viewR, iconR, textR);
+            return text;
+        }
+    }
 
     private final JDBGenConfig conf;
     private final Map<String, JDBConnection> connMap = new HashMap<>();
@@ -95,6 +99,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         UIUtils.setApplicationIcon(this);
 
+        lblConnectionInfo.setUI(new MyLabelUI());
+        lblConnectionInfo.setAutoscrolls(true);
+
         EventQueue.invokeLater(() -> {
             JDBConnectionManager cm = JDBConnectionManager.getInstance();
             cm.setLocationRelativeTo(this);
@@ -116,8 +123,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         UIUtils.setCommitOnLostFocus(tabVars);
         
         PlatformUtils.registerHandlers(e -> showAbout(), null, null, null);
-        
+        log.info("before pack");
         this.pack();
+        log.info("after pack");
         INSTANCE = this;
     }
     
@@ -576,6 +584,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         });
 
+        lblConnectionInfo.setLabelFor(cboConnection);
         lblConnectionInfo.setText("Connection Information Placeholder");
 
         btnAck.setText("A");
@@ -614,8 +623,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnManageConn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblConnectionInfo)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(lblConnectionInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnMapper)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(btnAck)))
@@ -678,7 +687,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         dbmeta = new DBMeta(jdr, jcc);
                         showInit();
                     } catch (Exception ex) {
-                        logger.log(Level.SEVERE, null, ex);
+                        log.error(ex.getLocalizedMessage(), ex);
                     }
                 }
             }
@@ -717,7 +726,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                                 .filter(t -> s.equals(t.getName()))
                                 .findFirst().orElse(null)));
                 } catch (Exception ex) {
-                    logger.log(Level.SEVERE, "cannot get tables", ex);
+                    log.error("cannot get tables", ex);
                     UIUtils.error(this, "Cannot get tables: "+ ex.getLocalizedMessage());
                 }
             }
@@ -782,7 +791,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     }
                     return true;
                 } catch(Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getLocalizedMessage(), e);
                     publish("process failed! : " + e.getLocalizedMessage());
                     UIUtils.info(parent, "Process failed!");
                     return false;
@@ -809,7 +818,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     tview.setLocationRelativeTo(this);
                     tview.setVisible(true);
                 } catch(Throwable t) {
-                    logger.log(Level.SEVERE, "cannot get columns", t);
+                    log.error("cannot get columns", t);
                     UIUtils.error(this, "Cannot get columns: "+ t.getLocalizedMessage());
                 }
             }

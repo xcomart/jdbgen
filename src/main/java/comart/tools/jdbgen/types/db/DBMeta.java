@@ -23,17 +23,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 public class DBMeta implements AutoCloseable {
-    private static final Logger logger = Logger.getLogger(DBMeta.class.getName());
     private final Connection conn;
     
-    private JDBDriver driver = null;
+    private final JDBDriver driver;
     private DatabaseMetaData dbmeta = null;
     private ArrayList<DBSchema> schemas = null;
     private LinkedHashMap<String, List<DBSchema>> tree = null;
@@ -43,7 +43,7 @@ public class DBMeta implements AutoCloseable {
                 new URL[] {new File(driver.getJdbcJar()).toURI().toURL()},
                 this.getClass().getClassLoader()
         );
-        Class driverClass = Class.forName(driver.getDriverClass(), true, child);
+        Class<?> driverClass = Class.forName(driver.getDriverClass(), true, child);
         Driver sqldriver = (Driver)driverClass.getDeclaredConstructor().newInstance();
 
         Properties props = new Properties();

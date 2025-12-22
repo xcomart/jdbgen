@@ -32,7 +32,7 @@ import comart.tools.jdbgen.types.maven.SearchResult;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.HashMap;
-import java.util.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -40,13 +40,14 @@ import okhttp3.Response;
  *
  * @author comart
  */
+@Slf4j
 public class MavenREST {
     private static final int PAGE_SIZE=20;
-    private static final Logger logger = Logger.getLogger(MavenREST.class.getSimpleName());
     
     @SuppressWarnings("null")
     private static <T> T restCall(String urlTemplate, Object param, Class<T> clazz) throws ParseException, IOException {
         String url = StrUtils.replaceWith(urlTemplate, param, "${", "}");
+        log.info("requesting to {}", url);
         Request req = new Request.Builder().url(url).build();
         try (Response response = HttpUtils.getClient().newCall(req).execute()) {
             Gson gson = new Gson();

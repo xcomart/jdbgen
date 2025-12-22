@@ -34,13 +34,10 @@ import java.awt.Component;
 import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.FlowLayout;
-import java.awt.Frame;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -49,12 +46,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -68,7 +63,6 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -77,7 +71,6 @@ import javax.swing.JPasswordField;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JWindow;
 import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
@@ -89,13 +82,14 @@ import javax.swing.table.TableModel;
 import jiconfont.IconCode;
 import jiconfont.icons.font_awesome.FontAwesome;
 import jiconfont.swing.IconFontSwing;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.lang3.ObjectUtils;
 
+@Slf4j
 public class UIUtils {
-    private static final Logger logger = Logger.getLogger(UIUtils.class.getName());
     private static int fontSize = 14;
     private static Color color = null;
     private static final Set<Pair<JComponent, IconCode>> items = new HashSet();
@@ -120,14 +114,14 @@ public class UIUtils {
             UIManager.setLookAndFeel(className);
             hasSet = true;
         } catch (Exception e) {
-            logger.log(Level.SEVERE, (String)null, e);
+            log.error(e.getLocalizedMessage(), e);
         }
 
         if (!hasSet) {
             try {
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
             } catch (Exception e) {
-                logger.log(Level.SEVERE, (String)null, e);
+                log.error(e.getLocalizedMessage(), e);
             }
         }
         
@@ -241,10 +235,10 @@ public class UIUtils {
                 }
             } catch (Exception e) {
                 if (!"/icons/generic.png".equals(npath)) {
-                    logger.info("Icon not found. Falling back to use default icon.");
+                    log.info("Icon not found. Falling back to use default icon.");
                     res = getIcon("stock:generic.png");
                 } else {
-                    logger.log(Level.SEVERE, "cannot read default icon. installation may corrupted.", e);
+                    log.error("cannot read default icon. installation may corrupted.", e);
                 }
             }
 
@@ -313,19 +307,19 @@ public class UIUtils {
     public static void error(Component parent, String message) {
         JOptionPane.showMessageDialog(
                 parent, message, "Error", JOptionPane.ERROR_MESSAGE);
-        logger.warning(message);
+        log.warn(message);
     }
     
     public static void info(Component parent, String message) {
         JOptionPane.showMessageDialog(
                 parent, message, "Information", JOptionPane.INFORMATION_MESSAGE);
-        logger.info(message);
+        log.info(message);
     }
     
     public static boolean confirm(Component parent, String title, String message) {
         boolean res = JOptionPane.showConfirmDialog(
                 parent, message, title, JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION;
-        logger.log(Level.INFO, "{0}: {1}", new Object[]{message, res});
+        log.info("{}: {}", message, res);
         return res;
     }
     
@@ -554,7 +548,7 @@ public class UIUtils {
         try {
             wnd.setIconImage(ImageIO.read(new File("resource/icon.png")));
         } catch (IOException ex) {
-            logger.log(Level.SEVERE, null, ex);
+            log.error(ex.getLocalizedMessage(), ex);
         }
     }
 }

@@ -35,19 +35,17 @@ import java.awt.Taskbar;
 import java.awt.Toolkit;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import okhttp3.Response;
 
+@Slf4j
 public class PlatformUtils {
     private static OSType detectedOS = null;
-    private static final Logger logger = Logger.getLogger(PlatformUtils.class.getName());
 
     public PlatformUtils() {
     }
@@ -77,7 +75,7 @@ public class PlatformUtils {
         try {
             desk.browse(new URL(url).toURI());
         } catch (Exception e) {
-            logger.log(Level.SEVERE, (String)null, e);
+            log.error(e.getLocalizedMessage(), e);
         }
 
     }
@@ -88,7 +86,7 @@ public class PlatformUtils {
         try {
             desk.open(new File(path));
         } catch (Exception e) {
-            logger.log(Level.SEVERE, (String)null, e);
+            log.error(e.getLocalizedMessage(), e);
         }
 
     }
@@ -107,7 +105,7 @@ public class PlatformUtils {
                 prop.load(isr);
                 _version = prop.getProperty("version");
             } catch (Exception e) {
-                logger.log(Level.SEVERE, null, e);
+                log.error(e.getLocalizedMessage(), e);
             }
         }
         return _version;
@@ -162,7 +160,7 @@ public class PlatformUtils {
                 desk.setQuitHandler(shut);
             }
         } catch(Exception e) {
-            logger.log(Level.SEVERE, "", e);
+            log.error(e.getLocalizedMessage(), e);
         }
     }
     
@@ -195,7 +193,7 @@ public class PlatformUtils {
                 }
             }
         } catch(Exception e) {
-            logger.log(Level.SEVERE, null, e);
+            log.error(e.getLocalizedMessage(), e);
         }
     }
 }

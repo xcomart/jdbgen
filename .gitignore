@@ -31,3 +31,5 @@ config*.json
 /nbproject/
 *.trace.db
 /jdbgen-*/
+
+.gradle/

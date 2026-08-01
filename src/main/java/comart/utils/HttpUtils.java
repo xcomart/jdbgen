@@ -23,6 +23,7 @@
  */
 package comart.utils;
 
+import java.time.Duration;
 import okhttp3.OkHttpClient;
 
 /**
@@ -30,7 +31,12 @@ import okhttp3.OkHttpClient;
  * @author comart
  */
 public class HttpUtils {
-    private static final OkHttpClient client = new OkHttpClient();
+    private static final Duration TIMEOUT = Duration.ofMinutes(1);
+    private static final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(TIMEOUT)
+            .readTimeout(TIMEOUT)
+            .writeTimeout(TIMEOUT)
+            .build();
     
     public static OkHttpClient getClient() {
         return client;

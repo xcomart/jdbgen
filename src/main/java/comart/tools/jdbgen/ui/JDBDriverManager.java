@@ -162,27 +162,8 @@ public class JDBDriverManager extends JDialog {
                 toFront();
             }
         });
-        DefaultTableModel tmodel = (DefaultTableModel)tabProps.getModel();
-        tmodel.addTableModelListener((e) -> {
-            int ridx = tmodel.getRowCount() - 1;
-            boolean needToAdd = ridx < 0;
-
-            if (!needToAdd) {
-                for(int i = 0; i < tmodel.getColumnCount(); ++i) {
-                    if (ObjectUtils.isNotEmpty(tmodel.getValueAt(ridx, i))) {
-                        needToAdd = true;
-                        break;
-                    }
-                }
-            }
-
-            if (needToAdd) {
-                EventQueue.invokeLater(() -> {
-                    tmodel.addRow(new String[tmodel.getColumnCount()]);
-                });
-            }
-
-        });
+        // NOTE: keeping one trailing empty row is handled by the (autoreset
+        // guarded) table model listener registered in the constructor.
     }
     
     private void resetControls() {
@@ -708,11 +689,11 @@ public class JDBDriverManager extends JDialog {
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         int idx = lstDrivers.getSelectedIndex();
         boolean isNameExists;
-        JDBDriver target;
+        JDBDriver target = null;
         if (idx == -1) {
             isNameExists = NamingUtils.nameExists(drivers, txtDriverName.getText());
         } else {
-            target = (JDBDriver)drivers.get(idx);
+            target = drivers.get(idx);
             isNameExists = !target.getName().equals(txtDriverName.getText()) &&
                     NamingUtils.nameExists(drivers, txtDriverName.getText());
         }
@@ -742,13 +723,9 @@ public class JDBDriverManager extends JDialog {
             UIUtils.error(this, "Column list query required.");
             txtColumns.requestFocusInWindow();
         } else {
-            if (idx == -1) {
+            boolean isNew = target == null;
+            if (isNew)
                 target = new JDBDriver();
-                drivers.add(target);
-                listModel.addElement(target.getName());
-            } else {
-                target = (JDBDriver)drivers.get(idx);
-            }
 
             target.setDriverClass(txtDriverClass.getText());
             target.setIcon(txtIcon.getText());
@@ -757,8 +734,9 @@ public class JDBDriverManager extends JDialog {
             target.setUrlTemplate(txtUrlTemplate.getText());
             target.setNoAuth(chkNoAuth.isSelected());
 
-            if (tableModel.getRowCount() > 1)
-                target.setProps(applyToPropsMap());
+            // empty rows are filtered out by applyToPropsMap, so this also
+            // reflects the removal of the very last property.
+            target.setProps(applyToPropsMap());
 
             target.setUseTableComments(chkTableComments.isSelected());
             target.setTableCommentsSql(txtTableComments.getText());
@@ -768,11 +746,19 @@ public class JDBDriverManager extends JDialog {
             target.setTablesSql(txtTables.getText());
             target.setUseColumns(chkColumns.isSelected());
             target.setColumnsSql(txtColumns.getText());
-            
+
+            if (isNew) {
+                drivers.add(target);
+                listModel.addElement(target.getName());
+            } else {
+                // name may have been changed, keep the list model in sync
+                listModel.set(idx, target.getName());
+            }
+
             JDBGenConfig.saveInstance(this);
             changed = true;
+            setVisible(false);
         }
-        setVisible(false);
     }//GEN-LAST:event_btnSaveActionPerformed
 
     private void updateDriver(Consumer<JDBDriver> cons) {
@@ -799,10 +785,12 @@ public class JDBDriverManager extends JDialog {
             tableModel.removeRow(i);
         }
 
-        driver.getProps().forEach((k, v) -> {
-            if (!"".equals(k))
-                tableModel.addRow(new String[]{k, v});
-        });
+        if (driver.getProps() != null) {
+            driver.getProps().forEach((k, v) -> {
+                if (!"".equals(k))
+                    tableModel.addRow(new String[]{k, v});
+            });
+        }
 
         chkTableComments.setSelected(driver.isUseTableComments());
         txtTableComments.setEnabled(chkTableComments.isSelected());
@@ -824,7 +812,9 @@ public class JDBDriverManager extends JDialog {
         btnDelDriver.setEnabled(!isStockItem);
         txtIcon.setEditable(!isStockItem);
         autoreset = true;
-
+        // rows were filled while autoreset was off, so make sure there is a
+        // trailing empty row to type a new property into.
+        UIUtils.tableSetLastEmpty(tableModel);
     }//GEN-LAST:event_lstDriversValueChanged
 
     private void btnNewDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewDriverActionPerformed

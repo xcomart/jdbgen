@@ -34,7 +34,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JDBTemplate {
+public class JDBTemplate implements Cloneable {
     private String name;
     private String templateFile;
     private String outTemplate;

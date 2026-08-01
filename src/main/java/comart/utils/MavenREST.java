@@ -35,6 +35,7 @@ import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  *
@@ -44,14 +45,19 @@ import okhttp3.Response;
 public class MavenREST {
     private static final int PAGE_SIZE=20;
     
-    @SuppressWarnings("null")
     private static <T> T restCall(String urlTemplate, Object param, Class<T> clazz) throws ParseException, IOException {
         String url = StrUtils.replaceWith(urlTemplate, param, "${", "}");
         log.info("requesting to {}", url);
         Request req = new Request.Builder().url(url).build();
         try (Response response = HttpUtils.getClient().newCall(req).execute()) {
+            if (!response.isSuccessful())
+                throw new IOException("request to " + url + " failed: HTTP " +
+                        response.code() + " " + response.message());
+            ResponseBody body = response.body();
+            if (body == null)
+                throw new IOException("request to " + url + " returned an empty body.");
             Gson gson = new Gson();
-            return gson.fromJson(response.body().charStream(), clazz);
+            return gson.fromJson(body.charStream(), clazz);
         }
     }
     

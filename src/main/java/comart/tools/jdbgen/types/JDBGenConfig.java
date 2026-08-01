@@ -36,9 +36,14 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -78,8 +83,8 @@ public class JDBGenConfig {
                         System.exit(1);
                     StrUtils.setMaster(master);
                     if (f.exists() && f.isFile()) {
-                        try {
-                            INSTANCE = (JDBGenConfig)gson.fromJson(new FileReader(f, StandardCharsets.UTF_8), JDBGenConfig.class);
+                        try (FileReader fr = new FileReader(f, StandardCharsets.UTF_8)) {
+                            INSTANCE = (JDBGenConfig)gson.fromJson(fr, JDBGenConfig.class);
                             break;
                         } catch (Exception e) {
                             if (cnt < 2) {
@@ -105,7 +110,9 @@ public class JDBGenConfig {
             }
 
             if (INSTANCE == null) {
-                log.info("config file not found, creating default one.");
+                log.info("config file not found or not loadable, creating default one.");
+                // never overwrite an unreadable configuration without a copy of it
+                backupExistingConfig(f);
 
                 try (InputStreamReader ir = new InputStreamReader(
                         JDBGenConfig.class.getResourceAsStream("/defaultConfig.json"), StandardCharsets.UTF_8)) {
@@ -135,9 +142,59 @@ public class JDBGenConfig {
                     System.exit(1);
                 }
             }
+            normalize(INSTANCE);
+
+            // passwords stored by an older release use a weaker scheme; rewrite
+            // the whole configuration so that they are upgraded in place.
+            if (!useDefault && StrUtils.hasLegacyEncryption()) {
+                log.info("configuration contains passwords in the superseded encryption format, re-encrypting.");
+                if (saveInstance(null))
+                    StrUtils.clearLegacyEncryption();
+            }
         }
 
         return INSTANCE;
+    }
+
+    /**
+     * move an existing, unloadable configuration file aside so that writing a
+     * fresh default configuration cannot destroy the user's data.
+     */
+    private static void backupExistingConfig(File f) {
+        if (!(f.exists() && f.isFile()))
+            return;
+        Path backup = Paths.get(CONF_PATH + "." +
+                StrUtils.dateFormat("yyyyMMdd_HHmmss") + ".bak");
+        try {
+            Files.move(f.toPath(), backup, StandardCopyOption.REPLACE_EXISTING);
+            log.warn("existing configuration could not be loaded, backed up to '{}'", backup);
+        } catch (IOException e) {
+            log.error("cannot back up existing configuration '" + CONF_PATH + "'", e);
+        }
+    }
+
+    /**
+     * fill in collections omitted from the configuration file, so that callers
+     * never have to null-check them.
+     */
+    private static void normalize(JDBGenConfig conf) {
+        if (conf == null)
+            return;
+        if (conf.connections == null) conf.connections = new ArrayList<>();
+        if (conf.drivers == null) conf.drivers = new ArrayList<>();
+        if (conf.presets == null) conf.presets = new ArrayList<>();
+        if (conf.abbrs == null) conf.abbrs = new ArrayList<>();
+        conf.connections.forEach(c -> {
+            if (c.getTemplates() == null) c.setTemplates(new ArrayList<>());
+            if (c.getCustomVars() == null) c.setCustomVars(new LinkedHashMap<>());
+            if (c.getConnectionProps() == null) c.setConnectionProps(new LinkedHashMap<>());
+        });
+        conf.drivers.forEach(d -> {
+            if (d.getProps() == null) d.setProps(new LinkedHashMap<>());
+        });
+        conf.presets.forEach(p -> {
+            if (p.getTemplates() == null) p.setTemplates(new ArrayList<>());
+        });
     }
 
     public static synchronized boolean saveInstance(Container parent) {

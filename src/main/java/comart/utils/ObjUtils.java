@@ -23,16 +23,13 @@
  */
 package comart.utils;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
 
 /**
  *
@@ -44,27 +41,24 @@ public class ObjUtils {
         if (obj instanceof Map) {
             return ((Map)obj).get(property);
         } else if (obj != null) {
-            Class c = obj.getClass();
+            Class<?> c = obj.getClass();
             try {
                 Field f = c.getField(property);
                 return f.get(obj);
             } catch(Throwable fieldNotVisible) {
-                String getter = "get"+property.substring(0, 1).toUpperCase()+property.substring(1);
-                @SuppressWarnings("null")
+                String capitalized = property.substring(0, 1).toUpperCase()+property.substring(1);
+                // candidate accessor names, tried in order on each class of the hierarchy
+                String[] candidates = new String[]{
+                    "get"+capitalized, property, "is"+capitalized
+                };
                 Method m = null;
                 while (c != null && m == null) {
-                    try {
-                        m = c.getMethod(getter, new Class[]{});
-                    } catch (Exception ignored) {}
-                    try {
-                        if (m == null)
-                            m = c.getMethod(property, new Class[]{});
-                    } catch (Exception ignored) {}
-                    try {
-                        getter = "is"+getter.substring(3);
-                        if (m == null)
-                            m = c.getMethod(getter, new Class[]{});
-                    } catch (Exception ignored) {}
+                    for (String candidate: candidates) {
+                        try {
+                            m = c.getMethod(candidate, new Class[]{});
+                            break;
+                        } catch (Exception ignored) {}
+                    }
                     if (m == null)
                         c = c.getSuperclass();
                 }
@@ -94,19 +88,43 @@ public class ObjUtils {
         return res == null ? defVal: res;
     }
     
+    /**
+     * boxed type to its primitive counterpart. Reflection lookups by
+     * <code>val.getClass()</code> yield the boxed type, while generated setters
+     * (Lombok included) usually declare the primitive one.
+     */
+    private static final Map<Class<?>, Class<?>> PRIMITIVES = new HashMap<Class<?>, Class<?>>() {{
+        put(Integer.class  , int.class    );
+        put(Long.class     , long.class   );
+        put(Short.class    , short.class  );
+        put(Byte.class     , byte.class   );
+        put(Character.class, char.class   );
+        put(Boolean.class  , boolean.class);
+        put(Float.class    , float.class  );
+        put(Double.class   , double.class );
+    }};
+
     @SuppressWarnings("UseSpecificCatch")
     public static void setValue(Object obj, String property, Object val) throws Exception {
         String setter = "set"+property.substring(0, 1).toUpperCase()+property.substring(1);
-        Class c = obj.getClass();
+        Class<?> c = obj.getClass();
+        // try the declared type first, then its primitive counterpart
+        Class<?>[] argTypes = val == null ? new Class<?>[]{}
+                : PRIMITIVES.containsKey(val.getClass())
+                    ? new Class<?>[]{val.getClass(), PRIMITIVES.get(val.getClass())}
+                    : new Class<?>[]{val.getClass()};
+        String[] candidates = new String[]{ setter, property };
         Method m = null;
         while (c != null && m == null) {
-            try {
-                m = c.getMethod(setter, new Class[]{val.getClass()});
-            } catch (Exception ignored) {}
-            try {
-                if (m == null)
-                    m = c.getMethod(property, new Class[]{val.getClass()});
-            } catch (Exception ignored) {}
+            OUTER:
+            for (Class<?> argType: argTypes) {
+                for (String candidate: candidates) {
+                    try {
+                        m = c.getMethod(candidate, new Class<?>[]{argType});
+                        break OUTER;
+                    } catch (Exception ignored) {}
+                }
+            }
             if (m == null)
                 c = c.getSuperclass();
         }
@@ -115,34 +133,11 @@ public class ObjUtils {
     }
     
     public static String getFileContents(String file) throws Exception {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        
-        BufferedInputStream bis = null;
-        try {
-            byte[] buffer = new byte[1024];
-            int rsize;
-            bis = new BufferedInputStream(new FileInputStream(file));
-            while ((rsize = bis.read(buffer)) >= 0) {
-                if (rsize > 0)
-                    baos.write(buffer, 0, rsize);
-            }
-        } finally {
-            if (bis != null) bis.close();
-        }
-        return new String(baos.toByteArray(), "utf-8");
+        return FileUtils.readFileToString(new File(file), StandardCharsets.UTF_8);
     }
-    
+
     public static void writeFile(String fname, String content) throws Exception {
-        BufferedOutputStream bos = null;
-        try {
-            File f = new File(fname);
-            if (f.getParentFile() != null)
-                f.getParentFile().mkdirs();
-            bos = new BufferedOutputStream(new FileOutputStream(f));
-            bos.write(content.getBytes("utf-8"));
-        } finally {
-            if (bos != null) bos.close();
-        }
+        FileUtils.writeStringToFile(new File(fname), content, StandardCharsets.UTF_8);
     }
     
     public static String getLoginUserId() {

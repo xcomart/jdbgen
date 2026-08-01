@@ -244,11 +244,18 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
 
     private void btnDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelActionPerformed
         int idx = tblMapping.getSelectedRow();
-        if (idx > -1) {
-            JDBAbbr abbr = conf.getAbbrs().get(idx);
-            if (UIUtils.confirm(this, "Confirm", "Do you want to delete "+abbr+"?")) {
+        if (idx > -1 && idx < mdl.getRowCount()) {
+            // the model always keeps a trailing empty row and empty rows are
+            // filtered out on save, so model row index cannot be used to index
+            // the config list. Remove the model row and rebuild the list.
+            String k = (String)mdl.getValueAt(idx, 2);
+            String v = (String)mdl.getValueAt(idx, 3);
+            String desc = StrUtils.isEmpty(k) && StrUtils.isEmpty(v) ?
+                    "this row" : "'"+k+"' -> '"+v+"'";
+            if (UIUtils.confirm(this, "Confirm", "Do you want to delete "+desc+"?")) {
                 mdl.removeRow(idx);
-                conf.getAbbrs().remove(idx);
+                conf.setAbbrs(applyTableToList(mdl));
+                UIUtils.tableSetLastEmpty(mdl, 2);
             }
         }
     }//GEN-LAST:event_btnDelActionPerformed
@@ -258,10 +265,15 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
             Point p = evt.getPoint();
             int row = tblMapping.rowAtPoint(p);
             int col = tblMapping.columnAtPoint(p);
+            if (row < 0 || col < 0)
+                return;
             Boolean tmap = (Boolean)mdl.getValueAt(row, 1);
             if (col == 2 && tmap != null && tmap) {
+                List<DBTable> tables = JDBGeneratorMain.INSTANCE == null ?
+                        null : JDBGeneratorMain.INSTANCE.getTables();
+                if (tables == null || tables.isEmpty())
+                    return;
                 JPopupMenu menu = new JPopupMenu();
-                List<DBTable> tables = JDBGeneratorMain.INSTANCE.getTables();
                 for (DBTable t: tables) {
                     JMenuItem item = new JMenuItem(t.getName());
                     item.addActionListener(e -> mdl.setValueAt(t.getName(), row, col));

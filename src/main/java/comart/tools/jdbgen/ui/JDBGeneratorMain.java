@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicLabelUI;
@@ -70,8 +71,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 JLabel label, FontMetrics fontMetrics, String text, Icon icon,
                 Rectangle viewR, Rectangle iconR, Rectangle textR) {
             
+            String clipped = text == null ?
+                    "" : text.substring(0, Math.min(20, text.length()));
             super.layoutCL(
-                    label, fontMetrics, text.substring(0, 20), icon, viewR, iconR, textR);
+                    label, fontMetrics, clipped, icon, viewR, iconR, textR);
             return text;
         }
     }
@@ -82,6 +85,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private DBMeta dbmeta = null;
     private List<DBTable> tables;
     private boolean autoReset = true;
+    /** true while a connection is being opened on a background thread */
+    private boolean connecting = false;
     
     public static JDBGeneratorMain INSTANCE = null;
     
@@ -136,7 +141,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private void clearContents() {
         ((DefaultTableModel)this.tabTemplates.getModel()).setRowCount(0);
         ((DefaultTableModel)this.tabVars.getModel()).setRowCount(0);
-        ((DefaultTableModel)this.tabTemplates.getModel()).setRowCount(0);
         this.lstTables.removeAll();
         this.txtAuthor.setText("");
         this.txtOutputDir.setText("");
@@ -224,11 +228,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }
     
-    private void showInit() throws SQLException {
-        treSchemas.removeAll();
-        lstTables.setModel(new DefaultListModel());
-        lstTables.removeAll();
-        Map<String, List<DBSchema>> tree = dbmeta.getSchemaTree();
+    /**
+     * Build the catalog/schema node hierarchy. This queries the database, so it
+     * must NOT be called on the EDT. The returned nodes are not attached to any
+     * component yet, so building them off the EDT is safe.
+     */
+    private static DefaultMutableTreeNode buildSchemaRoot(DBMeta meta) throws SQLException {
+        Map<String, List<DBSchema>> tree = meta.getSchemaTree();
         DefaultMutableTreeNode root = null;
         if (tree.size() > 1) {
             root = new DefaultMutableTreeNode("Database");
@@ -247,9 +253,106 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 }
             }
         }
-        DefaultTreeModel model = new DefaultTreeModel(root);
-        treSchemas.setModel(model);
+        return root;
+    }
+
+    /**
+     * Attach the schema hierarchy built by {@link #buildSchemaRoot(DBMeta)}.
+     * EDT only.
+     */
+    private void showSchemaRoot(DefaultMutableTreeNode root) {
+        treSchemas.setModel(new DefaultTreeModel(root));
         treSchemas.setCellRenderer(new SchemaCellRenderer());
+    }
+
+    /**
+     * Drop everything that belongs to the previous connection. EDT only.
+     */
+    private void clearConnectionView() {
+        tables = null;
+        treSchemas.setModel(new DefaultTreeModel(null));
+        lstTables.setModel(new DefaultListModel<>());
+        lstTables.setToolTipText(null);
+    }
+
+    /**
+     * Toggle the controls that must not be touched while a connection is being
+     * opened on a background thread.
+     */
+    private void setConnecting(boolean flag) {
+        connecting = flag;
+        cboConnection.setEnabled(!flag);
+        btnManageConn.setEnabled(!flag);
+        btnGenerate.setEnabled(!flag);
+        setCursor(Cursor.getPredefinedCursor(
+                flag ? Cursor.WAIT_CURSOR : Cursor.DEFAULT_CURSOR));
+    }
+
+    /**
+     * Open the connection and read the schema tree on a background thread, then
+     * apply the result to the UI on the EDT. Opening a JDBC connection can take
+     * seconds, so it must never run on the EDT.
+     */
+    private void connectAsync(final JDBDriver jdr, final JDBConnection jcc) {
+        // EDT: tear down the previous connection first, so a failure while
+        // creating the new one cannot leave a closed connection behind.
+        if (dbmeta != null) {
+            try { dbmeta.close(); } catch (Exception ignored) {}
+            dbmeta = null;
+        }
+        clearConnectionView();
+        lblConnectionInfo.setText(jcc.getConnectionUrl());
+        setConnecting(true);
+
+        new SwingWorker<Object[], Void>() {
+            @Override
+            protected Object[] doInBackground() throws Exception {
+                DBMeta meta = new DBMeta(jdr, jcc);
+                try {
+                    // force the (lazy) metadata lookup here, on this thread
+                    return new Object[]{ meta, buildSchemaRoot(meta) };
+                } catch (Exception e) {
+                    try { meta.close(); } catch (Exception ignored) {}
+                    throw e;
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Object[] res = get();
+                    dbmeta = (DBMeta)res[0];
+                    showSchemaRoot((DefaultMutableTreeNode)res[1]);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    connectFailed(jcc, ie);
+                } catch (ExecutionException ee) {
+                    connectFailed(jcc, ee.getCause() == null ? ee : ee.getCause());
+                } catch (Exception ex) {
+                    connectFailed(jcc, ex);
+                } finally {
+                    setConnecting(false);
+                }
+            }
+        }.execute();
+    }
+
+    /**
+     * Restore a consistent "not connected" state after a failed connection.
+     * EDT only.
+     */
+    private void connectFailed(JDBConnection jcc, Throwable cause) {
+        log.error(cause.getLocalizedMessage(), cause);
+        dbmeta = null;
+        clearConnectionView();
+        lblConnectionInfo.setText("");
+        // clear the selection so re-picking the same entry fires the event again
+        boolean back = suppressCboConnEvent;
+        suppressCboConnEvent = true;
+        cboConnection.setSelectedIndex(-1);
+        suppressCboConnEvent = back;
+        UIUtils.error(this, "Cannot connect to '" + jcc.getName()
+                + "': " + cause.getLocalizedMessage());
     }
 
     /**
@@ -667,32 +770,27 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }//GEN-LAST:event_chkDarkUIActionPerformed
 
     private void cboConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboConnectionActionPerformed
-        if (!suppressCboConnEvent) {
-            int idx = cboConnection.getSelectedIndex();
-            if (idx > -1) {
-                JDBConnection jcc = conf.getConnections().get(cboConnection.getSelectedIndex());
-                JDBDriver jdr = null;
-                for (JDBDriver drv:conf.getDrivers()) {
-                    if (drv.getName().equals(jcc.getDriverType())) {
-                        jdr = drv;
-                        break;
-                    }
-                }
-                if (jdr != null) {
-                    try {
-                        if (dbmeta != null)
-                            try { dbmeta.close(); } catch(SQLException ignored) {}
-                        lblConnectionInfo.setText(jcc.getConnectionUrl());
-                        // get schemas & tables
-                        dbmeta = new DBMeta(jdr, jcc);
-                        showInit();
-                    } catch (Exception ex) {
-                        log.error(ex.getLocalizedMessage(), ex);
-                    }
-                }
+        // ignore while a connection is already being opened - the combo is
+        // disabled meanwhile, this is just a second line of defense.
+        if (suppressCboConnEvent || connecting)
+            return;
+        int idx = cboConnection.getSelectedIndex();
+        if (idx < 0 || idx >= conf.getConnections().size())
+            return;
+        JDBConnection jcc = conf.getConnections().get(idx);
+        JDBDriver jdr = null;
+        for (JDBDriver drv:conf.getDrivers()) {
+            if (drv.getName().equals(jcc.getDriverType())) {
+                jdr = drv;
+                break;
             }
-
         }
+        if (jdr == null) {
+            UIUtils.error(this, "Driver '" + jcc.getDriverType()
+                    + "' of connection '" + jcc.getName() + "' not found.");
+            return;
+        }
+        connectAsync(jdr, jcc);
     }//GEN-LAST:event_cboConnectionActionPerformed
 
     private void btnManageConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageConnActionPerformed
@@ -710,6 +808,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }//GEN-LAST:event_treSchemasValueChanged
 
     private void chkShowViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkShowViewActionPerformed
+        // dbmeta is null while a connection is being opened (or after a failure)
+        if (dbmeta == null)
+            return;
         DefaultMutableTreeNode node = (DefaultMutableTreeNode) treSchemas.getLastSelectedPathComponent();
         lstTables.removeAll();
         if (node != null) {
@@ -735,82 +836,136 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
     @SuppressWarnings("UseSpecificCatch")
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
-        try { dbmeta.close(); } catch(Exception ignored) {}
+        if (dbmeta != null)
+            try { dbmeta.close(); } catch(Exception ignored) {}
         System.exit(0);
     }//GEN-LAST:event_btnCloseActionPerformed
 
-    private ProcessProgress.Worker getProgressWorker() {
+    /**
+     * Immutable snapshot of everything the generation worker needs. Taken on the
+     * EDT so that the worker never has to read a Swing component.
+     */
+    private static final class GenerateRequest {
+        final DBMeta meta;
+        final Map<String, String> customVars;
+        final List<DBTable> tables;
+        final List<JDBTemplate> templates;
+        final String outputDir;
+
+        GenerateRequest(DBMeta meta, Map<String, String> customVars,
+                List<DBTable> tables, List<JDBTemplate> templates, String outputDir) {
+            this.meta = meta;
+            this.customVars = customVars;
+            this.tables = tables;
+            this.templates = templates;
+            this.outputDir = outputDir;
+        }
+    }
+
+    private ProcessProgress.Worker getProgressWorker(final GenerateRequest req) {
         return new ProcessProgress.Worker() {
             @Override
             protected Boolean doInBackground() throws Exception {
+                // NOTE: this method must not touch any Swing component - every
+                // value it needs was snapshotted into 'req' on the EDT.
                 try {
                     JDBAbbr.buildMap();
-                    Map<String, String> custVars = UIUtils.applyTableToMap(tabVars.getModel());
-                    custVars.put("author", txtAuthor.getText());
-                    int tidxs[] = lstTables.getSelectedIndices();
-                    List<DBTable> tbls = new ArrayList<>();
-                    for (int idx: tidxs) {
-                        DBTable t = tables.get(idx);
-                        dbmeta.getTableColumns(t);
-                        tbls.add(t);
-                    }
-                    List<JDBTemplate> tpls = new ArrayList<>();
-                    DefaultTableModel tplModel = (DefaultTableModel)tabTemplates.getModel();
-                    for (int i=0; i<tabTemplates.getRowCount(); i++) {
-                        Object val = tplModel.getValueAt(i, 0);
-                        if (val != null && (boolean)val) {
-                            tpls.add(new JDBTemplate(
-                                    tplModel.getValueAt(i, 1).toString(),
-                                    tplModel.getValueAt(i, 2).toString(),
-                                    tplModel.getValueAt(i, 3).toString()
-                            ));
-                        }
-                    }
-                    int totalProcs = tidxs.length * tpls.size();
+                    publish("reading table columns...");
+                    for (DBTable t: req.tables)
+                        req.meta.getTableColumns(t);
+                    int totalProcs = req.tables.size() * req.templates.size();
                     int progress = 0;
-                    for (JDBTemplate tpl:tpls) {
+                    for (JDBTemplate tpl:req.templates) {
                         publish(tpl.getName() + " template processing...");
                         String tplStr = ObjUtils.getFileContents(tpl.getTemplateFile());
-                        TemplateManager tplCont = new TemplateManager(tplStr, custVars);
-                        TemplateManager tplOut = new TemplateManager(tpl.getOutTemplate(), custVars);
-                        for (DBTable t:tbls) {
+                        TemplateManager tplCont = new TemplateManager(tplStr, req.customVars);
+                        TemplateManager tplOut = new TemplateManager(tpl.getOutTemplate(), req.customVars);
+                        for (DBTable t:req.tables) {
                             progress++;
-                            setProgress(progress * 100 / totalProcs);
+                            if (totalProcs > 0)
+                                setProgress(Math.min(100, progress * 100 / totalProcs));
                             publish(tpl.getName() + " applyng to " + t.getTable() + "...");
                             String result = tplCont.applyMapper(t);
                             String outFname = tplOut.applyMapper(t);
-                            if (!StrUtils.isEmpty(txtOutputDir.getText()))
-                                outFname = txtOutputDir.getText() + "/" + outFname;
+                            if (!StrUtils.isEmpty(req.outputDir))
+                                outFname = req.outputDir + "/" + outFname;
                             ObjUtils.writeFile(outFname, result);
                         }
                     }
                     setProgress(100);
                     publish("all process complete!");
-                    if (UIUtils.confirm(parent, "Process Complete", "Process complete successfully!\nDo you want open output directory?")) {
-                        PlatformUtils.openFile(currConn.getOutputDir());
-                    }
                     return true;
                 } catch(Exception e) {
                     log.error(e.getLocalizedMessage(), e);
                     publish("process failed! : " + e.getLocalizedMessage());
-                    UIUtils.info(parent, "Process failed!");
                     return false;
                 }
             }
         };
     }
-    
+
     private void btnGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateActionPerformed
-        // TODO: run with background thread
-        ProcessProgress pp = new ProcessProgress(this, true, getProgressWorker());
+        if (dbmeta == null) {
+            UIUtils.error(this, "Please connect to a database first.");
+            return;
+        }
+        // snapshot every UI value here, on the EDT - the worker below runs on a
+        // background thread and must not read Swing components.
+        int tidxs[] = lstTables.getSelectedIndices();
+        List<DBTable> selTables = new ArrayList<>();
+        if (tables != null) {
+            for (int idx: tidxs) {
+                if (idx > -1 && idx < tables.size())
+                    selTables.add(tables.get(idx));
+            }
+        }
+        if (selTables.isEmpty()) {
+            UIUtils.error(this, "Please select at least one table to generate.");
+            return;
+        }
+        DefaultTableModel tplModel = (DefaultTableModel)tabTemplates.getModel();
+        List<JDBTemplate> tpls = new ArrayList<>();
+        for (int i=0; i<tplModel.getRowCount(); i++) {
+            Object val = tplModel.getValueAt(i, 0);
+            if (val != null && (boolean)val) {
+                tpls.add(new JDBTemplate(
+                        String.valueOf(tplModel.getValueAt(i, 1)),
+                        String.valueOf(tplModel.getValueAt(i, 2)),
+                        String.valueOf(tplModel.getValueAt(i, 3))
+                ));
+            }
+        }
+        if (tpls.isEmpty()) {
+            UIUtils.error(this, "Please select at least one template to generate.");
+            return;
+        }
+        Map<String, String> custVars = UIUtils.applyTableToMap(tabVars.getModel());
+        custVars.put("author", txtAuthor.getText());
+        String outputDir = txtOutputDir.getText();
+
+        GenerateRequest req = new GenerateRequest(
+                dbmeta, custVars, selTables, tpls, outputDir);
+        ProcessProgress pp = new ProcessProgress(this, true, getProgressWorker(req));
         pp.start();
+        // modal - returns once the worker's done() hides the dialog
         pp.setVisible(true);
+        if (pp.result) {
+            if (UIUtils.confirm(this, "Process Complete",
+                    "Process complete successfully!\nDo you want open output directory?")) {
+                // must match the directory actually written to above
+                PlatformUtils.openFile(StrUtils.isEmpty(outputDir) ? "." : outputDir);
+            }
+        } else {
+            UIUtils.info(this, "Process failed!");
+        }
     }//GEN-LAST:event_btnGenerateActionPerformed
 
     private void lstTablesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseClicked
         if (evt.getClickCount() == 2) {
+            if (dbmeta == null || tables == null)
+                return;
             int idx = lstTables.getSelectedIndex();
-            if (idx > -1) {
+            if (idx > -1 && idx < tables.size()) {
                 DBTable table = tables.get(idx);
                 try {
                     dbmeta.getTableColumns(table);
@@ -834,8 +989,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }//GEN-LAST:event_tabTemplatesMouseMoved
 
     private void lstTablesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseMoved
-        int idx = lstTables.locationToIndex(evt.getPoint());
-        if (idx > -1) {
+        int idx = tables == null ? -1 : lstTables.locationToIndex(evt.getPoint());
+        if (idx > -1 && idx < tables.size()) {
             DBTable table = tables.get(idx);
             lstTables.setToolTipText(table.getName());
         } else {

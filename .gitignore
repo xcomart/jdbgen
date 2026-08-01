@@ -28,6 +28,7 @@ hs_err_pid*
 build/
 .idea
 config*.json
+config*.json.*.bak
 /temp/
 /drivers/
 /output/

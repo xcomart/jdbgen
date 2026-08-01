@@ -49,8 +49,8 @@ public class ClassUtils {
         if (f.exists()) {
             final ClassLoader classLoader = ClassUtils.class.getClassLoader();
             final URL url = f.toURI().toURL();
-            URLClassLoader ucl = new URLClassLoader(new URL[] { url }, classLoader);
-            try (JarInputStream jarFile = new JarInputStream(new FileInputStream(f))) {
+            try (URLClassLoader ucl = new URLClassLoader(new URL[] { url }, classLoader);
+                    JarInputStream jarFile = new JarInputStream(new FileInputStream(f))) {
                 JarEntry jarEntry;
                 while (true) {
                     jarEntry = jarFile.getNextJarEntry();
@@ -59,7 +59,7 @@ public class ClassUtils {
                     if (jarEntry.getName().endsWith(".class")) {
                         String classname = jarEntry.getName();
                         classname = classname.substring(0, classname.length() - 6);
-                        classname = classname.replaceAll("/", "\\.");
+                        classname = classname.replace('/', '.');
                         log.trace(classname);
                         if (!classname.contains("$")) {
                             try {
@@ -86,9 +86,5 @@ public class ClassUtils {
             log.error(e.getLocalizedMessage(), e);
             return null;
         }
-    }
-    
-    public static void main(String[] args) {
-        System.out.println(getDrivers("drivers/ojdbc8-19.7.0.0.jar"));
     }
 }

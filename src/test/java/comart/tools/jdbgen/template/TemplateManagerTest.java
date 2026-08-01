@@ -31,6 +31,7 @@ import comart.utils.ObjUtils;
 import comart.utils.StrUtils;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -425,5 +426,148 @@ public class TemplateManagerTest {
         if (!test.equals(result))
             fail("${'"+test+"'} mapper result fail.");
     }
-    
+
+    /**
+     * ${date} without an explicit format used to hand a null format to
+     * SimpleDateFormat and blow up with a NullPointerException.
+     */
+    @Test
+    public void testDateDefaultFormat() throws Exception {
+        TemplateManager tm = new TemplateManager("${date}", custVars);
+        assertEquals(StrUtils.dateFormat("yyyy-MM-dd"), tm.applyMapper(mapObj));
+
+        tm = new TemplateManager("${date:}", custVars);
+        assertEquals(StrUtils.dateFormat("yyyy-MM-dd"), tm.applyMapper(mapObj));
+
+        // an explicit format still wins
+        tm = new TemplateManager("${date:yyyy}", custVars);
+        assertEquals(StrUtils.dateFormat("yyyy"), tm.applyMapper(mapObj));
+    }
+
+    /**
+     * Escape characters inside a ${'...'} literal must not survive into the
+     * output.
+     */
+    @Test
+    public void testLiteralEscapesAreConsumed() throws Exception {
+        // template text: ${'It\'s a test'}
+        TemplateManager tm = new TemplateManager("${'It\\'s a test'}", custVars);
+        assertEquals("It's a test", tm.applyMapper(mapObj));
+
+        // template text: ${'a\\b'}
+        tm = new TemplateManager("${'a\\\\b'}", custVars);
+        assertEquals("a\\b", tm.applyMapper(mapObj));
+
+        // template text: ${"say \"hi\""}
+        tm = new TemplateManager("${\"say \\\"hi\\\"\"}", custVars);
+        assertEquals("say \"hi\"", tm.applyMapper(mapObj));
+    }
+
+    /**
+     * replace() arguments must be collected whether or not they are quoted.
+     */
+    @Test
+    public void testReplaceProcessorArguments() throws Exception {
+        // quoted arguments (pre-existing behaviour, must not regress)
+        TemplateManager tm = new TemplateManager("${name.replace('_','-')}", custVars);
+        assertEquals("abc-def-ghi-jkl", tm.applyMapper(mapObj));
+
+        // unquoted arguments used to be dropped, leaving procReplace with an
+        // empty parameter list and an IndexOutOfBoundsException
+        tm = new TemplateManager("${name.replace(_, -)}", custVars);
+        assertEquals("abc-def-ghi-jkl", tm.applyMapper(mapObj));
+
+        // mixed quoting
+        tm = new TemplateManager("${name.replace(ghi, 'xyz')}", custVars);
+        assertEquals("abc_def_xyz_jkl", tm.applyMapper(mapObj));
+
+        tm = new TemplateManager("${name.replace('ghi', xyz)}", custVars);
+        assertEquals("abc_def_xyz_jkl", tm.applyMapper(mapObj));
+
+        // too few arguments must fail with a clear message, not an IOOBE
+        TemplateManager bad = new TemplateManager("${name.replace(ghi)}", custVars);
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> bad.applyMapper(mapObj));
+        assertTrue(ex.getMessage().contains("replace"),
+                "unexpected message: " + ex.getMessage());
+    }
+
+    /**
+     * ${item:...} without a key/item attribute must report the missing
+     * attribute instead of throwing a NullPointerException from parseKeys.
+     */
+    @Test
+    public void testMissingKeyIsReported() throws Exception {
+        TemplateManager tm = new TemplateManager("${item:padSize=10}", custVars);
+        ParseException ex = assertThrows(ParseException.class,
+                () -> tm.applyMapper(mapObj));
+        assertTrue(ex.getMessage().toLowerCase().contains("key"),
+                "unexpected message: " + ex.getMessage());
+    }
+
+    /**
+     * ${for} must number its items - this only works when ObjUtils.setValue
+     * maps the boxed Integer onto the primitive setNo(int).
+     */
+    @Test
+    public void testForLoopAssignsItemNumbers() throws Exception {
+        Map<String, Object> mapper = new HashMap<>();
+        List<Object> nums = new ArrayList<>();
+        for (int i = 0; i < 3; i++)
+            nums.add(new NumberedObject("sample" + i));
+        mapper.put("nums", nums);
+
+        TemplateManager tm = new TemplateManager(
+                "${for:key=nums}${item:key=no}${endfor}", custVars);
+        assertEquals("123", tm.applyMapper(mapper));
+
+        tm = new TemplateManager(
+                "${for:key=nums, instr=','}${item:key=no}:${item:key=name}${endfor}", custVars);
+        assertEquals("1:sample0,2:sample1,3:sample2", tm.applyMapper(mapper));
+    }
+
+    /**
+     * A template whose very first character is a line break still has to be
+     * detected as a '\n' template.
+     */
+    @Test
+    public void testLineEndDetectedOnLeadingNewline() throws Exception {
+        Map<String, Object> mapper = new HashMap<>();
+        List<Object> collection = new ArrayList<>();
+        for (int i = 0; i < 3; i++)
+            collection.add(new SampleObject("sample" + i));
+        mapper.put("collection", collection);
+
+        TemplateManager tm = new TemplateManager(
+                "\n${for:key=collection, instr='\n'}${item:key=name}${endfor}", custVars);
+        String result = tm.applyMapper(mapper);
+        assertEquals("\nsample0\nsample1\nsample2", result);
+    }
+
+    /**
+     * A multi line 'instr' separator must be re-indented on every fragment and
+     * must not duplicate carriage returns.
+     */
+    @Test
+    public void testMultiLineInstrIsIndentedPerFragment() throws Exception {
+        Map<String, Object> mapper = new HashMap<>();
+        List<Object> collection = new ArrayList<>();
+        for (int i = 0; i < 3; i++)
+            collection.add(new SampleObject("sample" + i));
+        mapper.put("collection", collection);
+
+        TemplateManager tm = new TemplateManager(
+                "${for:key=collection, instr=',\n+\n', indent=2}${item:key=name}${endfor}",
+                custVars);
+        String result = tm.applyMapper(mapper);
+        assertEquals("sample0,\n  +\n  sample1,\n  +\n  sample2", result);
+        assertFalse(result.contains("\r"), "carriage returns must not be injected");
+    }
+
+    public static class NumberedObject extends comart.tools.jdbgen.types.db.DBMetaModel {
+        public String name;
+        public NumberedObject(String name) {
+            this.name = name;
+        }
+    }
 }

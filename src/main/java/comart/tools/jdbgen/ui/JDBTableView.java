@@ -176,9 +176,12 @@ public class JDBTableView extends javax.swing.JDialog {
     }//GEN-LAST:event_btnCloseActionPerformed
 
     private void tabColumnsMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabColumnsMouseMoved
-        // TODO add your handling code here:
         Point p = evt.getPoint();
         int row = tabColumns.rowAtPoint(p);
+        if (row < 0 || row >= table.getColumns().size()) {
+            tabColumns.setToolTipText(null);
+            return;
+        }
         tabColumns.setToolTipText(table.getColumns().get(row).getRemarks());
     }//GEN-LAST:event_tabColumnsMouseMoved
 

@@ -41,8 +41,10 @@ public class JDBPreset extends JDBListBase {
     public Object clone() throws CloneNotSupportedException {
         JDBPreset res = (JDBPreset)super.clone();
         res.templates = new ArrayList<>();
-        for(JDBTemplate t:templates)
-            res.templates.add((JDBTemplate)t.clone());
+        if (templates != null) {
+            for(JDBTemplate t:templates)
+                res.templates.add((JDBTemplate)t.clone());
+        }
         return res;
     }
 }

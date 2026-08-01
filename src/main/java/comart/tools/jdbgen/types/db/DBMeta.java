@@ -9,6 +9,7 @@ import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.utils.StrUtils;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.Connection;
@@ -32,33 +33,60 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DBMeta implements AutoCloseable {
     private final Connection conn;
-    
+    private final URLClassLoader child;
+
     private final JDBDriver driver;
     private DatabaseMetaData dbmeta = null;
     private ArrayList<DBSchema> schemas = null;
     private LinkedHashMap<String, List<DBSchema>> tree = null;
-    
+
     public DBMeta(JDBDriver driver, JDBConnection jconn) throws Exception {
-        URLClassLoader child = new URLClassLoader(
+        this.child = new URLClassLoader(
                 new URL[] {new File(driver.getJdbcJar()).toURI().toURL()},
                 this.getClass().getClassLoader()
         );
-        Class<?> driverClass = Class.forName(driver.getDriverClass(), true, child);
-        Driver sqldriver = (Driver)driverClass.getDeclaredConstructor().newInstance();
+        try {
+            Class<?> driverClass = Class.forName(driver.getDriverClass(), true, child);
+            Driver sqldriver = (Driver)driverClass.getDeclaredConstructor().newInstance();
 
-        Properties props = new Properties();
-        props.setProperty("user", jconn.getUserName());
-        props.setProperty("password", jconn.getUserPassword());
-        props.putAll(jconn.getConnectionProps());
+            Properties props = new Properties();
+            props.setProperty("user", jconn.getUserName());
+            props.setProperty("password", jconn.getUserPassword());
+            if (jconn.getConnectionProps() != null)
+                props.putAll(jconn.getConnectionProps());
 
-        this.conn = sqldriver.connect(jconn.getConnectionUrl(), props);
+            Connection c = sqldriver.connect(jconn.getConnectionUrl(), props);
+            if (c == null) {
+                // per the JDBC spec, Driver.connect returns null when the driver
+                // does not understand the given URL
+                throw new SQLException("Driver '" + driver.getDriverClass() +
+                        "' does not accept the connection URL: " +
+                        jconn.getConnectionUrl());
+            }
+            this.conn = c;
+        } catch (Exception e) {
+            closeChild();
+            throw e;
+        }
         this.driver = driver;
     }
-    
+
+    private void closeChild() {
+        try {
+            child.close();
+        } catch (IOException e) {
+            log.warn("cannot close jdbc driver class loader", e);
+        }
+    }
+
     @Override
     public void close() throws SQLException {
-        if (conn != null) {
-            conn.close();
+        try {
+            if (conn != null) {
+                conn.close();
+            }
+        } finally {
+            closeChild();
         }
     }
     
@@ -81,7 +109,7 @@ public class DBMeta implements AutoCloseable {
                         String catalog = rs.getString(1);
                         if (catalog == null)
                             catalog = "Default Catalog";
-                        System.out.println("catalog: " + catalog);
+                        log.debug("catalog: {}", catalog);
                         tree.put(catalog, new ArrayList<>());
                     }
                 }
@@ -92,7 +120,7 @@ public class DBMeta implements AutoCloseable {
                     try (ResultSet rs = dbm.getSchemas(cat, null)) {
                         while (rs.next()) {
                             DBSchema scheme = new DBSchema(rs);
-                            System.out.println("schema: " + scheme);
+                            log.debug("schema: {}", scheme);
                             ent.getValue().add(scheme);
                         }
                     }
@@ -193,16 +221,17 @@ public class DBMeta implements AutoCloseable {
                     try (Statement stmt = conn.createStatement();
                         ResultSet rs = stmt.executeQuery(sql))
                     {
-                        DBColumn column = new DBColumn(rs);
-                        columns.add(column);
-                        column.setNo(columns.size());
-                        colmap.put(column.getName(), column);
-                        if (StrUtils.toInt(rs.getString("IS_KEY")) == 0) {
-                            notKeys.add(column);
-                        } else {
-                            keyFields.add(column);
+                        while (rs.next()) {
+                            DBColumn column = new DBColumn(rs);
+                            columns.add(column);
+                            column.setNo(columns.size());
+                            colmap.put(column.getName(), column);
+                            if (StrUtils.toInt(rs.getString("IS_KEY")) != 0) {
+                                column.setKey(true);
+                                keyFields.add(column);
+                            }
                         }
-                    }                    
+                    }
                 } else {
                     try (ResultSet rs = dbm.getColumns(
                             table.getCatalog(), table.getSchema(), table.getTable(), null)) {
@@ -219,8 +248,14 @@ public class DBMeta implements AutoCloseable {
                         while (rs.next()) {
                             String key = rs.getString("COLUMN_NAME");
                             DBColumn column = colmap.get(key);
-                            column.setKey(true);
-                            keyFields.add(column);
+                            if (column != null) {
+                                column.setKey(true);
+                                keyFields.add(column);
+                            } else {
+                                log.warn("primary key column '{}' of table '{}' not found "+
+                                        "in column list - the driver may report it with "+
+                                        "different letter case.", key, table.getTable());
+                            }
                         }
                     }
                 }

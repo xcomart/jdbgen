@@ -41,11 +41,13 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  *
  * @author comart
  */
+@Slf4j
 public class JDBPresets extends JDialog {
 
     private final DefaultTableModel templateModel;
@@ -475,18 +477,22 @@ public class JDBPresets extends JDialog {
                 presetMap.put(npreset.getName(), npreset);
                 presetModel.addElement(npreset.getName());
                 lstPresets.setSelectedIndex(presets.size()-1);
-            } catch(Exception ignored) {}
+            } catch(Exception e) {
+                log.error("cannot clone preset: " + e.getLocalizedMessage(), e);
+                UIUtils.error(this, "Cannot clone preset: " + e.getLocalizedMessage());
+            }
         }
     }//GEN-LAST:event_btnCloneActionPerformed
 
     private void btnDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelActionPerformed
         int idx = lstPresets.getSelectedIndex();
         if (idx > -1) {
+            JDBPreset target = presets.get(idx);
             boolean isDel = UIUtils.confirm(this, "Delete Preset",
                     "Do you want to delete '"+
-                            txtPresetName.getText()+"' preset?");
+                            target.getName()+"' preset?");
             if (isDel) {
-                presetMap.remove(txtPresetName.getText());
+                presetMap.remove(target.getName());
                 presets.remove(idx);
                 presetModel.remove(idx);
                 txtPresetName.setText("");
@@ -607,6 +613,9 @@ public class JDBPresets extends JDialog {
                 presets.add(target);
                 presetModel.addElement(target.getName());
                 lstPresets.setSelectedIndex(presets.size() - 1);
+            } else {
+                // name may have been changed, keep the list model in sync
+                presetModel.set(idx, target.getName());
             }
             JDBGenConfig.saveInstance(this);
             return true;

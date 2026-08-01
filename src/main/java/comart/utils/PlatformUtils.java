@@ -34,8 +34,10 @@ import java.awt.Image;
 import java.awt.Taskbar;
 import java.awt.Toolkit;
 import java.io.File;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Properties;
@@ -91,21 +93,25 @@ public class PlatformUtils {
 
     }
     
-    private static String getJava() {
-        ProcessHandle processHandle = ProcessHandle.current();
-        return processHandle.info().command().get();
-    }
-    
+    private static final String UNKNOWN_VERSION = "unknown";
     private static String _version = null;
-    
+
     public synchronized static String getVersion() {
         if (_version == null) {
             Properties prop = new Properties();
-            try (InputStreamReader isr = new InputStreamReader(PlatformUtils.class.getResourceAsStream("/version.properties"))) {
-                prop.load(isr);
-                _version = prop.getProperty("version");
-            } catch (Exception e) {
-                log.error(e.getLocalizedMessage(), e);
+            InputStream is = PlatformUtils.class.getResourceAsStream("/version.properties");
+            if (is == null) {
+                log.error("'/version.properties' not found in classpath. "
+                        + "installation may be corrupted.");
+                _version = UNKNOWN_VERSION;
+            } else {
+                try (InputStreamReader isr = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+                    prop.load(isr);
+                    _version = prop.getProperty("version", UNKNOWN_VERSION);
+                } catch (Exception e) {
+                    log.error(e.getLocalizedMessage(), e);
+                    _version = UNKNOWN_VERSION;
+                }
             }
         }
         return _version;
@@ -175,15 +181,52 @@ public class PlatformUtils {
         }
     }
     
+    /**
+     * compare two dotted version strings numerically. A leading 'v' is ignored,
+     * and any non numeric segment is treated as 0. Missing trailing segments are
+     * treated as 0 too, so "1.2" equals "1.2.0".
+     *
+     * @return negative if <code>a</code> precedes <code>b</code>, 0 if they are
+     *         equal, positive otherwise.
+     */
+    static int compareVersions(String a, String b) {
+        String[] av = stripVersionPrefix(a).split("\\.");
+        String[] bv = stripVersionPrefix(b).split("\\.");
+        int len = Math.max(av.length, bv.length);
+        for (int i=0; i<len; i++) {
+            int an = i < av.length ? StrUtils.toInt(av[i]) : 0;
+            int bn = i < bv.length ? StrUtils.toInt(bv[i]) : 0;
+            if (an != bn)
+                return an < bn ? -1 : 1;
+        }
+        return 0;
+    }
+
+    private static String stripVersionPrefix(String v) {
+        String res = v == null ? "" : v.trim();
+        if (res.length() > 0 && (res.charAt(0) == 'v' || res.charAt(0) == 'V'))
+            res = res.substring(1);
+        return res;
+    }
+
     public static void updateCheck() {
-        String curVersion = "v"+getVersion();
+        String curVersion = getVersion();
+        if (UNKNOWN_VERSION.equals(curVersion)) {
+            log.warn("current version is unknown, skipping update check.");
+            return;
+        }
         String url = "https://api.github.com/repos/xcomart/jdbgen/releases/latest";
         Request req = new Request.Builder().url(url).build();
         try (Response response = HttpUtils.getClient().newCall(req).execute()) {
             Gson gson = new Gson();
             HashMap map = gson.fromJson(response.body().charStream(), HashMap.class);
-            String tagName = String.valueOf(map.get("tag_name"));
-            if (tagName != null && curVersion.compareTo(tagName) < 0) {
+            Object tag = map == null ? null : map.get("tag_name");
+            if (tag == null) {
+                log.warn("no 'tag_name' in the latest release response, skipping update check.");
+                return;
+            }
+            String tagName = tag.toString();
+            if (compareVersions(curVersion, tagName) < 0) {
                 // updates available
                 if (UIUtils.confirm(null, "Update Available", "New version "+tagName+
                         " is available.\nDo you want to update now?")) {

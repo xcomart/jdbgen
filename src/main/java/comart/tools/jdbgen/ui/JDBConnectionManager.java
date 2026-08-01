@@ -30,7 +30,6 @@ import comart.tools.jdbgen.types.JDBTemplate;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
-import java.awt.TextField;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -207,8 +206,13 @@ public class JDBConnectionManager extends JDialog {
         String dname = (String)cboDriver.getSelectedItem();
         int idx = -1;
         cboDriver.removeAllItems();
-        for (int i=0; i<conf.getDrivers().size(); i++) {
-            JDBDriver d = conf.getDrivers().get(i);
+        // the driver list may have been added to/renamed/removed meanwhile,
+        // so rebuild the lookup map together with the combo box.
+        driverMap.clear();
+        drivers = conf.getDrivers();
+        for (int i=0; i<drivers.size(); i++) {
+            JDBDriver d = drivers.get(i);
+            driverMap.put(d.getName(), d);
             cboDriver.addItem(d.getName());
             if (dname != null && dname.equals(d.getName()))
                 idx = i;
@@ -247,11 +251,6 @@ public class JDBConnectionManager extends JDialog {
         removeProps();
         removeTemplates();
         removeVars();
-    }
-    
-    private void setIfEmpty(TextField field, String text) {
-        if (StrUtils.isEmpty(field.getText()))
-            field.setText(text);
     }
 
     /**
@@ -985,11 +984,6 @@ public class JDBConnectionManager extends JDialog {
             txtKeepAliveSec.setText(conn.getKeepAliveSec());
             chkKeepAliveActionPerformed(null);
             cboDriver.getModel().setSelectedItem(conn.getDriverType());
-//            for (int i=0; i<cboDriver.getItemCount(); i++)
-//                if (conn.getDriverType().equals(cboDriver.getItemAt(i))) {
-//                    cboDriver.setSelectedIndex(i);
-//                    break;
-//                }
             removeProps();
             removeTemplates();
             removeVars();
@@ -1035,8 +1029,8 @@ public class JDBConnectionManager extends JDialog {
         return UIUtils.applyTableToMap(varsModel);
     }
     
-    private List<JDBTemplate> applyToTplList(List<JDBTemplate> tpls) {
-        tpls = new ArrayList<>();
+    private List<JDBTemplate> applyToTplList() {
+        List<JDBTemplate> tpls = new ArrayList<>();
         for (int i=0; i<tplModel.getRowCount(); i++) {
             String name = (String)tplModel.getValueAt(i, 0);
             String tplf = (String)tplModel.getValueAt(i, 1);
@@ -1071,6 +1065,10 @@ public class JDBConnectionManager extends JDialog {
         } else if (StrUtils.isEmpty(txtConnUrl.getText())) {
             UIUtils.error(this, "Connection url required.");
             txtConnUrl.requestFocusInWindow();
+        } else if (driver == null) {
+            // no driver selected: every branch below dereferences it
+            UIUtils.error(this, "Driver required.");
+            cboDriver.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtUser.getText()) && !driver.isNoAuth()) {
             UIUtils.error(this, "Database user name required.");
             txtUser.requestFocusInWindow();
@@ -1105,7 +1103,7 @@ public class JDBConnectionManager extends JDialog {
             target.setDriverType((String)cboDriver.getSelectedItem());
             target.setConnectionProps(applyToPropsMap());
             target.setCustomVars(applyToVarsMap());
-            target.setTemplates(applyToTplList(target.getTemplates()));
+            target.setTemplates(applyToTplList());
 
             connMap.put(target.getName(), target);
             
@@ -1113,8 +1111,11 @@ public class JDBConnectionManager extends JDialog {
                 connections.add(target);
                 listModel.addElement(target.getName());
                 lstConnections.setSelectedIndex(connections.size() - 1);
+            } else {
+                // name may have been changed, keep the list model in sync
+                listModel.set(idx, target.getName());
             }
-            
+
             JDBGenConfig.saveInstance(this);
             saveSuccess = true;
             selectedConnection = target;
@@ -1208,16 +1209,18 @@ public class JDBConnectionManager extends JDialog {
 
     private void btnDelVarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelVarActionPerformed
         int row = tabVars.getSelectedRow();
-        if (tabVars.getRowCount() > 1) {
-            varsModel.removeRow(row);
-        } else if (row == 0) {
-            for (int i=0; i<varsModel.getColumnCount(); i++)
-                varsModel.setValueAt("", row, i);
-        }
-        int idx = lstConnections.getSelectedIndex();
-        if (idx > -1) {
-            JDBConnection target = connections.get(idx);
-            target.setCustomVars(applyToVarsMap());
+        if (row > -1) {
+            if (tabVars.getRowCount() > 1) {
+                varsModel.removeRow(row);
+            } else if (row == 0) {
+                for (int i=0; i<varsModel.getColumnCount(); i++)
+                    varsModel.setValueAt("", row, i);
+            }
+            int idx = lstConnections.getSelectedIndex();
+            if (idx > -1) {
+                JDBConnection target = connections.get(idx);
+                target.setCustomVars(applyToVarsMap());
+            }
         }
     }//GEN-LAST:event_btnDelVarActionPerformed
 
@@ -1233,8 +1236,9 @@ public class JDBConnectionManager extends JDialog {
                 for(int i = propsModel.getRowCount() - 1; i >= 0; --i) {
                     propsModel.removeRow(i);
                 }
-                driver.getProps().forEach((key, value) -> 
-                    propsModel.addRow(new String[]{key, value}));
+                if (driver.getProps() != null)
+                    driver.getProps().forEach((key, value) ->
+                        propsModel.addRow(new String[]{key, value}));
                 txtUser.setEnabled(!driver.isNoAuth());
                 txtPassword.setEnabled(!driver.isNoAuth());
             }
@@ -1246,14 +1250,15 @@ public class JDBConnectionManager extends JDialog {
     }//GEN-LAST:event_tabTemplatesMouseMoved
 
     private void btnDelConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelConnActionPerformed
-        // TODO add your handling code here:
         int idx = lstConnections.getSelectedIndex();
         if (idx > -1) {
+            // use the stored name: the name field may hold unsaved edits
+            JDBConnection obj = connections.get(idx);
             if (UIUtils.confirm(this, "Remove Connection Confirm",
-                    "You realy want to delete '" + txtName.getText() + "' connection?")) {
+                    "You realy want to delete '" + obj.getName() + "' connection?")) {
                 listModel.remove(idx);
                 connections.remove(idx);
-                connMap.remove(txtName.getText());
+                connMap.remove(obj.getName());
                 lstConnections.setSelectedIndex(-1);
                 resetControls();
                 JDBGenConfig.saveInstance(this);

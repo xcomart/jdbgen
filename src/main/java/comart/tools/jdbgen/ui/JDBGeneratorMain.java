@@ -99,6 +99,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     public JDBGeneratorMain() {
         initComponents();
+        // freeze the schema pane's preferred width: the enclosing layout pins
+        // this panel at preferred size, so without this a long tree item would
+        // widen the panel and push the right-hand panels off screen.
+        jScrollPane1.setPreferredSize(jScrollPane1.getPreferredSize());
         conf = JDBGenConfig.getInstance();
         chkDarkUI.setSelected(conf.isDarkUI());
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);

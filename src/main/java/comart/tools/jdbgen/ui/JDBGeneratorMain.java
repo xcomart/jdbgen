@@ -79,6 +79,17 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * Give the connection info label the UI that caps its width. A
+     * look-and-feel change replaces every UI delegate, so this has to run
+     * again afterwards or a long url widens the label and pushes the panels
+     * on the right out of the window.
+     */
+    private void applyConnectionInfoUI() {
+        lblConnectionInfo.setUI(new MyLabelUI());
+        lblConnectionInfo.setAutoscrolls(true);
+    }
+
     private final JDBGenConfig conf;
     private final Map<String, JDBConnection> connMap = new HashMap<>();
     private JDBConnection currConn = null;
@@ -108,8 +119,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         UIUtils.setApplicationIcon(this);
 
-        lblConnectionInfo.setUI(new MyLabelUI());
-        lblConnectionInfo.setAutoscrolls(true);
+        applyConnectionInfoUI();
 
         EventQueue.invokeLater(() -> {
             JDBConnectionManager cm = JDBConnectionManager.getInstance();
@@ -769,6 +779,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
 
         SwingUtilities.updateComponentTreeUI(this);
+        applyConnectionInfoUI();
         conf.setDarkUI(this.chkDarkUI.isSelected());
         JDBGenConfig.saveInstance(this);
     }//GEN-LAST:event_chkDarkUIActionPerformed

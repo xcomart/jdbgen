@@ -57,7 +57,7 @@ public class JDBAbbr {
         abbrMap = new HashMap<>();
         abbrNameMap = new HashMap<>();
         JDBGenConfig.getInstance().getAbbrs().forEach(a -> {
-            if (a.check) {
+            if (Boolean.TRUE.equals(a.check)) {
                 if (a.totalName == null) a.totalName = false;
                 if (a.totalName) {
                     abbrNameMap.put(a.abbr.toLowerCase(), a.replaceTo);

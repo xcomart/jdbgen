@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -52,9 +53,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Function;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.Icon;
@@ -135,10 +135,46 @@ public class UIUtils {
         frames.forEach((f) -> {
             try {
                 SwingUtilities.updateComponentTreeUI(f);
-            } catch (Exception var2) {
+            } catch (Exception e) {
+                log.warn("cannot update component tree of {}: {}",
+                        f.getClass().getName(), e.getLocalizedMessage());
             }
-
         });
+    }
+
+    /**
+     * run <code>task</code> on the Event Dispatch Thread and return its result.
+     * Several callers live on SwingWorker background threads or on the main
+     * thread, and Swing dialogs must not be created off the EDT.
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T onEdt(Callable<T> task) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            try {
+                return task.call();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        final Object[] res = new Object[1];
+        final Exception[] err = new Exception[1];
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                try {
+                    res[0] = task.call();
+                } catch (Exception e) {
+                    err[0] = e;
+                }
+            });
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(ie);
+        } catch (InvocationTargetException ite) {
+            throw new RuntimeException(ite.getCause());
+        }
+        if (err[0] != null)
+            throw new RuntimeException(err[0]);
+        return (T)res[0];
     }
 
     public static Image resize(Image image) {
@@ -227,9 +263,12 @@ public class UIUtils {
                     Color col = (Color)Color.class.getDeclaredField(colName.toUpperCase()).get(null);
                     res = IconFontSwing.buildIcon( FontAwesome.CIRCLE, (float)(fontSize * 1.2), col);
                 } else {
-                    if (StrUtils.isEmpty(path))
+                    boolean isBlank = StrUtils.isEmpty(path);
+                    if (isBlank)
                         npath = "/icons/generic.png";
-                    try (InputStream is = isStock ? UIUtils.class.getResourceAsStream(npath) : new FileInputStream(path)) {
+                    try (InputStream is = (isStock || isBlank)
+                            ? UIUtils.class.getResourceAsStream(npath)
+                            : new FileInputStream(path)) {
                         res = new ImageIcon(resize(ImageIO.read((InputStream)is)));
                     }
                 }
@@ -305,20 +344,26 @@ public class UIUtils {
     }
     
     public static void error(Component parent, String message) {
-        JOptionPane.showMessageDialog(
-                parent, message, "Error", JOptionPane.ERROR_MESSAGE);
+        onEdt(() -> {
+            JOptionPane.showMessageDialog(
+                    parent, message, "Error", JOptionPane.ERROR_MESSAGE);
+            return null;
+        });
         log.warn(message);
     }
-    
+
     public static void info(Component parent, String message) {
-        JOptionPane.showMessageDialog(
-                parent, message, "Information", JOptionPane.INFORMATION_MESSAGE);
+        onEdt(() -> {
+            JOptionPane.showMessageDialog(
+                    parent, message, "Information", JOptionPane.INFORMATION_MESSAGE);
+            return null;
+        });
         log.info(message);
     }
-    
+
     public static boolean confirm(Component parent, String title, String message) {
-        boolean res = JOptionPane.showConfirmDialog(
-                parent, message, title, JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION;
+        boolean res = onEdt(() -> JOptionPane.showConfirmDialog(
+                parent, message, title, JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION);
         log.info("{}: {}", message, res);
         return res;
     }
@@ -341,7 +386,10 @@ public class UIUtils {
             boolean responseOK = false;
             boolean isSame = true;
             do {
-                responseOK = configure(joptionPane, prompt, pwdField).equals(JOptionPane.OK_OPTION);
+                // getValue() is null when the dialog is dismissed with the window
+                // close button, so compare null-safely
+                responseOK = Integer.valueOf(JOptionPane.OK_OPTION)
+                        .equals(configure(joptionPane, prompt, pwdField));
                 if (isFirst) {
                     String pass = String.valueOf(pwdField.getPassword());
                     String conf = String.valueOf(confirmField.getPassword());
@@ -379,7 +427,7 @@ public class UIUtils {
     }
 
     public static String password(String message, boolean isFirst) {
-        return PasswordPanel.getPassword(message, isFirst);
+        return onEdt(() -> PasswordPanel.getPassword(message, isFirst));
     }
     
     public static void loading(Window parent, Runnable worker) {
@@ -398,13 +446,22 @@ public class UIUtils {
                 @Override
                 protected void done() {
                     gpanel.setVisible(false);
+                    try {
+                        get();
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        log.warn("background task interrupted", ie);
+                    } catch (Exception e) {
+                        log.error("background task failed", e);
+                    }
                 }
-            };            
+            };
             gpanel.setVisible(true);
             sworker.execute();
         } catch (Exception ex) {
-            Logger.getLogger(UIUtils.class.getName()).log(Level.SEVERE, null, ex);
-            EventQueue.invokeLater(worker);
+            log.error("cannot show loading glass pane, running the task directly.", ex);
+            // must not run on the EDT - the task is expected to block
+            new Thread(worker).start();
         }
     }
     
@@ -521,6 +578,10 @@ public class UIUtils {
     public static void templateTooltip(JTable tabTemplates, int baseidx, MouseEvent evt) {
         Point p = evt.getPoint();
         int row = tabTemplates.rowAtPoint(p);
+        if (row < 0) {
+            tabTemplates.setToolTipText(null);
+            return;
+        }
         String name = (String)tabTemplates.getValueAt(row, baseidx);
         String tfile = (String)tabTemplates.getValueAt(row, baseidx+1);
         String tout = (String)tabTemplates.getValueAt(row, baseidx+2);

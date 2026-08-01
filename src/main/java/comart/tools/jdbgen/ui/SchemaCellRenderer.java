@@ -29,14 +29,17 @@ import java.awt.Component;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import jiconfont.icons.font_awesome.FontAwesome;
 
 /**
  *
  * @author comart
  */
 public class SchemaCellRenderer extends DefaultTreeCellRenderer {
-    
+
+    // same icon as FontAwesome.WINDOW_RESTORE, but resolved through the shared
+    // icon cache instead of being rebuilt(and registered) on every paint.
+    private static final String SCHEMA_ICON = "fa:window_restore";
+
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded,
                                                   boolean leaf, int row, boolean hasFocus) {
@@ -46,8 +49,9 @@ public class SchemaCellRenderer extends DefaultTreeCellRenderer {
         if (uobj instanceof String) {
             setText((String) uobj);
         } else {
+            setIcon(UIUtils.getIcon(SCHEMA_ICON));
             try {
-                UIUtils.applyIcon(this, FontAwesome.WINDOW_RESTORE, ObjUtils.getValue(uobj, "name").toString());
+                setText(ObjUtils.getValue(uobj, "name").toString());
             } catch(Throwable ignored) {}
         }
         return this;

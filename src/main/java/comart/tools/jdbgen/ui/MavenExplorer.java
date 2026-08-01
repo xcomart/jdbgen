@@ -409,12 +409,17 @@ public class MavenExplorer extends JDialog {
         PlatformUtils.openURL("https://maven.org");
     }//GEN-LAST:event_lblMvnLinkMouseClicked
 
-    private ProcessProgress.Worker getProgressWorker() {
+    /**
+     * @param sitem the version selected on the EDT by the caller
+     * @param errHolder receives the failure message, read by the caller on the EDT
+     */
+    private ProcessProgress.Worker getProgressWorker(
+            final SearchResponseItem sitem, final String[] errHolder) {
         return new ProcessProgress.Worker() {
             @Override
             protected Boolean doInBackground() throws Exception {
-                int vidx = lstVersion.getSelectedIndex();
-                SearchResponseItem sitem = versionItems.get(vidx);
+                // NOTE: this method must not touch any Swing component - the
+                // selected item was snapshotted by the caller on the EDT.
                 try {
                     String url = MavenREST.downloadLink(sitem);
                     String fname = "drivers/" + url.substring(url.lastIndexOf('/') + 1);
@@ -434,19 +439,21 @@ public class MavenExplorer extends JDialog {
                             if (cnt > 0) {
                                 fos.write(buffer, 0, cnt);
                                 curlen += cnt;
-                                setProgress((int)(curlen * 100 / totallen));
+                                // contentLength() is -1 for chunked responses
+                                if (totallen > 0)
+                                    setProgress((int)Math.min(100, curlen * 100 / totallen));
                                 publish("" + curlen + "/" + totallen + " bytes received.");
                             }
                         }
                         saveLocation = fname;
                         changed = true;
                         publish("Download complete.");
-                        UIUtils.info(parent, "Download complete!");
                         return true;
                     }
                 } catch(Exception e) {
                     log.error(e.getLocalizedMessage(), e);
-                    UIUtils.error(parent, e.getLocalizedMessage());
+                    errHolder[0] = e.getLocalizedMessage();
+                    publish("download failed! : " + e.getLocalizedMessage());
                 }
                 return false;
             }
@@ -455,15 +462,26 @@ public class MavenExplorer extends JDialog {
 
     @SuppressWarnings("UseSpecificCatch")
     private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
+        int vidx = lstVersion.getSelectedIndex();
+        if (vidx < 0 || vidx >= versionItems.size()) {
+            UIUtils.error(this, "Please select a version to download.");
+            return;
+        }
+        SearchResponseItem sitem = versionItems.get(vidx);
+        final String[] err = new String[1];
         // We need to show modal dialog in front of another modal dialog.
         JFrame dummy = new JFrame();
-        ProcessProgress pp = new ProcessProgress(dummy, true, getProgressWorker());
+        ProcessProgress pp = new ProcessProgress(dummy, true, getProgressWorker(sitem, err));
         pp.setModal(true);
         pp.setLocationRelativeTo(this);
         pp.start();
+        // modal - returns once the worker's done() hides the dialog
         pp.setVisible(true);
         if (pp.result) {
+            UIUtils.info(this, "Download complete!");
             setVisible(false);
+        } else {
+            UIUtils.error(this, err[0] == null ? "Download failed!" : err[0]);
         }
     }//GEN-LAST:event_btnDownloadActionPerformed
 

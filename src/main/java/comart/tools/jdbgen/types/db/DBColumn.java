@@ -46,6 +46,9 @@ public class DBColumn extends DBMetaModel {
         name = column;
         dataType = rs.getShort("DATA_TYPE");
         typeName = rs.getString("TYPE_NAME");
+        // custom column queries may omit TYPE_NAME entirely
+        if (typeName == null)
+            typeName = "";
         length = rs.getInt("COLUMN_SIZE");
         nullable = rs.getShort("NULLABLE");
         remarks = rs.getString("REMARKS");

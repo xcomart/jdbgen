@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TemplateManager {
     private static final String USER_ID = ObjUtils.getLoginUserId();
+    private static final String DEFAULT_DATE_FORMAT = "yyyy-MM-dd";
     
     private interface TemplateHandler {
         TemplateItem process(String extra, ParseContext ctx) throws ParseException;
@@ -169,10 +170,13 @@ public class TemplateManager {
                 boolean isEscape = false;
                 while ((c = ctx.nextChar()) > -1) {
                     if (!isEscape) {
-                        if (c == '\\')
+                        if (c == '\\') {
+                            // the escape character itself is not part of the literal
                             isEscape = true;
-                        else if (c == openChar)
+                            continue;
+                        } else if (c == openChar) {
                             break;
+                        }
                     } else {
                         isEscape = false;
                     }
@@ -208,6 +212,9 @@ public class TemplateManager {
             char c = data.charAt(idx);
             if (c == '\\') {
                 idx++;
+                if (idx >= data.length())
+                    throw new ParseException("Dangling escape character at end of: "+
+                            data+". invalid syntax before: "+ctx.near(), idx);
                 c = data.charAt(idx);
                 switch(c) {
                     case 'n': sb.append('\n'); break;
@@ -454,6 +461,10 @@ public class TemplateManager {
     }
     
     private static String procReplace(String item, List<Object> params) {
+        if (params.size() < 2)
+            throw new RuntimeException(
+                    "'replace' processor requires 2 arguments - replace(find, replacement), but got "+
+                    params.size()+": "+params);
         String find = params.get(0).toString();
         String repl = params.get(1).toString();
         return StrUtils.replace(item, find, repl);
@@ -542,8 +553,8 @@ public class TemplateManager {
 
         // preserve line end with source
         int idx = template.indexOf("\n");
-        if (idx > 0) {
-            if (template.charAt(idx - 1) == '\r')
+        if (idx >= 0) {
+            if (idx > 0 && template.charAt(idx - 1) == '\r')
                 lineEnd = "\r\n";
             else
                 lineEnd = "\n";
@@ -580,9 +591,12 @@ public class TemplateManager {
         }
     }
     
-    private String getKey(Map<String,Object> props) {
+    private String getKey(Map<String,Object> props) throws ParseException {
         String mkey = (String)props.get("key");
         if (mkey == null) mkey = (String)props.get("item");
+        if (mkey == null)
+            throw new ParseException(
+                    "'key' or 'item' is required, but none given in: "+props.keySet(), 0);
         return mkey;
     }
     
@@ -639,8 +653,15 @@ public class TemplateManager {
                 isParam = true;
             } else if (isParam) {
                 if (c == ')' || c == ',') {
-                    isParam = c == ')';
+                    // collect the accumulated unquoted argument, if any.
+                    // quoted arguments are already collected by the isOpen branch,
+                    // which leaves sb empty here.
+                    String param = sb.toString();
+                    if (!param.isEmpty())
+                        curr.params.add(param);
                     sb = new StringBuilder();
+                    if (c == ')')
+                        isParam = false;
                 } else if (!StrUtils.isSpace(c)) {
                     sb.append(c);
                 }
@@ -816,16 +837,12 @@ public class TemplateManager {
             }
             if (!isFirst) {
                 if (instr != null) {
-                    int idx = instr.indexOf("\n");
-                    if (idx > -1) {
-                        if (idx > 0)
-                            sb.append(instr, 0, idx);
-                        sb.append(lineEnd).append(prepend);
-                        if (instr.length()-1 > idx)
-                            sb.append(instr.substring(idx+1));
-                    } else {
-                        sb.append(instr);
-                    }
+                    // normalize every line break in 'instr' to the template line end
+                    // and re-indent each following fragment
+                    String[] parts = instr.split("\r?\n", -1);
+                    sb.append(parts[0]);
+                    for (int p=1; p<parts.length; p++)
+                        sb.append(lineEnd).append(prepend).append(parts[p]);
                 }
             }
             ObjUtils.setValue(o, "no", (i+1));
@@ -837,7 +854,7 @@ public class TemplateManager {
     @SuppressWarnings("unused")
     private void appendDate(StringBuilder sb, TemplateItem template, Object mapper, Object supr) throws Exception {
         Map<String,Object> map = (Map<String,Object>)template.cont;
-        String format = (String)map.get("format");
+        String format = (String)map.getOrDefault("format", DEFAULT_DATE_FORMAT);
         SimpleDateFormat sdf = new SimpleDateFormat(format);
         appendBase(sb, map, sdf.format(new Date()));
     }

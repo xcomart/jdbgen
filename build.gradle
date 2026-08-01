@@ -1,0 +1,134 @@
+plugins {
+    id 'java'
+}
+
+group = 'comart.tools'
+version = '0.2.5'
+description = 'jdbgen'
+
+ext {
+    mainClassName = 'comart.tools.jdbgen.JDBGenerator'
+    lombokVersion = '1.18.40'
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src/main/java']
+        }
+        resources {
+            // 'src/main/configs' is token-filtered by processResources (see below)
+            srcDirs = ['src/main/resources', 'src/main/configs']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['src/test/java']
+        }
+        resources {
+            srcDirs = ['src/test/resources']
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'org.apache.commons:commons-lang3:3.20.0'
+    implementation 'com.github.jiconfont:jiconfont-swing:1.0.1'
+    implementation 'com.github.jiconfont:jiconfont-font_awesome:4.7.0.1'
+    implementation 'org.reflections:reflections:0.10.2'
+    implementation 'com.formdev:flatlaf:3.7'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+    implementation 'commons-io:commons-io:2.21.0'
+    implementation 'org.slf4j:slf4j-api:2.0.17'
+    implementation 'ch.qos.logback:logback-classic:1.5.23'
+    implementation 'org.netbeans.external:AbsoluteLayout:RELEASE280'
+
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    // The Maven build declared junit-jupiter-params 6.0.1 next to junit-jupiter-api
+    // 5.10.2. That only ever "worked" because Maven ignores JVM compatibility
+    // metadata and nothing actually imported the params API - JUnit 6 artifacts are
+    // Java 17 bytecode and cannot be used from a Java 11 target. Gradle validates
+    // this, so the params artifact is aligned with the rest of the JUnit 5.10.2 line.
+    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = 11
+}
+
+tasks.withType(Javadoc).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// 'src/main/configs/version.properties' carries a ${version} placeholder, the
+// equivalent of the filtered Maven resource directory.
+def appVersion = project.version.toString()
+processResources {
+    inputs.property('appVersion', appVersion)
+    filesMatching('version.properties') {
+        expand(version: appVersion)
+    }
+}
+
+jar {
+    manifest {
+        attributes(
+            'Main-Class': mainClassName,
+            'Class-Path': configurations.runtimeClasspath.elements.map { files ->
+                files.collect { 'lib/' + it.asFile.name }.join(' ')
+            }
+        )
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Equivalent of the maven-assembly-plugin run driven by zip.xml
+tasks.register('distZip', Zip) {
+    group = 'distribution'
+    description = 'Builds the jdbgen distribution archive.'
+
+    archiveFileName = "${project.name}-${project.version}.zip"
+    destinationDirectory = layout.buildDirectory.dir('distributions')
+
+    into("${project.name}-${project.version}") {
+        into('templates') {
+            from('templates')
+        }
+        into('resource') {
+            from('resource')
+        }
+        into('lib') {
+            from(configurations.runtimeClasspath)
+        }
+        from(tasks.named('jar'))
+        from('shells/jdbgen.cmd')
+        from('shells/jdbgen.sh')
+        from('sample_h2.db.mv.db')
+    }
+}
+
+assemble.dependsOn tasks.named('distZip')
+
+tasks.register('run', JavaExec) {
+    group = 'application'
+    description = "Runs ${mainClassName}."
+    mainClass = mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    jvmArgs = ['-Duser.language=en']
+}

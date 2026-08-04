@@ -35,3 +35,4 @@ config*.json.*.bak
 /nbproject/
 *.trace.db
 /jdbgen-*/
+.claude

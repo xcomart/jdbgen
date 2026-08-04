@@ -472,6 +472,9 @@
                         <Property name="text" type="java.lang.String" value="..."/>
                         <Property name="toolTipText" type="java.lang.String" value="Browse Icon File"/>
                       </Properties>
+                      <Events>
+                        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnBrowseIconActionPerformed"/>
+                      </Events>
                     </Component>
                     <Component class="javax.swing.JLabel" name="jLabel12">
                       <Properties>

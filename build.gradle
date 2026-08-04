@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'comart.tools'
-version = '0.2.5'
+version = '0.3.0'
 description = 'jdbgen'
 
 ext {

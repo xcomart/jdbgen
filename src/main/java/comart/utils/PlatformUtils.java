@@ -117,9 +117,16 @@ public class PlatformUtils {
         return _version;
     }
 
-    public static void openDoc(String item) {
+    /**
+     * Opens a page of the documentation shipped with this release.
+     *
+     * @param page path below {@code docs/}, optionally with an anchor
+     *             (for example {@code "icons.md"} or
+     *             {@code "custom-queries.md#get-table-list-sql"})
+     */
+    public static void openDoc(String page) {
         String version = getVersion();
-        String docUrl = "https://github.com/xcomart/jdbgen/blob/v"+version+"/docs/README.md#"+item;
+        String docUrl = "https://github.com/xcomart/jdbgen/blob/v"+version+"/docs/"+page;
         openURL(docUrl);
     }
 

@@ -1,22 +1,25 @@
 # jdbgen
 
-jdbgen is a tool for generating text(source) files from database table
-informations, using in-house template engine.
+jdbgen generates text and source files from database table metadata, using a
+built-in template engine.
 
-## Introduction
-
-According to recent programming trends, data object is used for information
-exchange in MVC like architecture.
-These approach reduces typo error and intuitive, but requires many repeatitive
-works.
-This tool makes easy to create model like objects, DML SQLs and many other
-applicable text files.
+Point it at a database, pick some tables, pick some templates, and it writes one
+file per table per template — model classes, DML statements, mapper XML,
+documentation, or anything else you can express as text.
 
 ![Generator main window](docs/images/generator_main.png "Generator Main Window")
 
-Here is a sample which shows how does it works.
+## Why
 
-If we have a database table created with below SQL script:
+Data objects carry information between layers in MVC-style architectures. They
+are intuitive and they keep typos out of your code, but writing them by hand is
+repetitive work that follows directly from the table definition you already
+have. jdbgen turns that definition into the files you would have typed.
+
+## How it works
+
+Given a table:
+
 ```sql
 create table t_sample_album (
   album_id int not null,
@@ -32,7 +35,8 @@ comment on column t_sample_album.artist_name is 'Creator artist name';
 comment on column t_sample_album.publish_date is 'Published date';
 ```
 
-and we have a template like:
+and a template:
+
 ```java
 /**
  * ${remarks} Model class
@@ -59,7 +63,8 @@ class ${table.suffix.pascal}Model {
 }
 ```
 
-then will generate below code:
+jdbgen writes:
+
 ```java
 /**
  * Music Album Model class
@@ -76,9 +81,9 @@ class SampleAlbumModel {
     private String     artistName;
     // Published date
     private Date       publishDate;
-    
+
     // Getters and Setters
-    
+
     // get Album identifier
     public Integer getAlbumId() {
         return albumId;
@@ -88,7 +93,7 @@ class SampleAlbumModel {
     public void setAlbumId(Integer albumId) {
         this.albumId = albumId;
     }
-    
+
     // get Album display name
     public String getAlbumName() {
         return albumName;
@@ -98,7 +103,7 @@ class SampleAlbumModel {
     public void setAlbumName(String albumName) {
         this.albumName = albumName;
     }
-    
+
     // get Creator artist name
     public String getArtistName() {
         return artistName;
@@ -108,7 +113,7 @@ class SampleAlbumModel {
     public void setArtistName(String artistName) {
         this.artistName = artistName;
     }
-    
+
     // get Published date
     public Date getPublishDate() {
         return publishDate;
@@ -118,20 +123,48 @@ class SampleAlbumModel {
     public void setPublishDate(Date publishDate) {
         this.publishDate = publishDate;
     }
-    
+
 }
 ```
 
-Awesome!
+The template language has loops, conditionals, name-case decorators, padding,
+abbreviation rules and custom variables. See the
+[Template Reference](docs/template-reference.md).
 
 ## Installation
 
-> Note! JRE 11 or above is required to run this application.
-> Make sure JRE `bin` directory in `PATH` or `JAVA_HOME` has been set.
+> **Requirements** — a Java runtime, version 11 or above. Make sure its `bin`
+> directory is on `PATH`, or that `JAVA_HOME` points at the installation. See
+> [Installation](docs/installation.md) for the details.
 
-1. Download application from [latest release](https://github.com/xcomart/jdbgen/releases/latest).
-1. Unzip downloaded archive to desired location.
-1. Run jdbgen.sh(for Linux/Unix/Mac) or jdbgen.cmd(for Windows) or run jdbgen-xx.jar directly as java application.
+1. Download the archive from the [latest release](https://github.com/xcomart/jdbgen/releases/latest).
+2. Unzip it wherever you like. It expands into a `jdbgen-<version>/` directory.
+3. Run `jdbgen.sh` (Linux/macOS) or `jdbgen.cmd` (Windows). You can also run
+   `java -jar jdbgen-<version>.jar` directly, as long as that directory is your
+   current working directory.
 
+The archive ships with a small H2 sample database and three example templates,
+and the default configuration includes a `Sample H2 Embedded` connection that
+uses them, so you can generate something on the first run without setting up a
+database.
 
-If you need more information, read [full document](docs/README.md)
+JDBC drivers are not bundled. jdbgen can download them from Maven Central for
+you — see the [User Interface Guide](docs/ui-guide.md).
+
+## Documentation
+
+| Document | Contents |
+|:---|:---|
+| [Installation](docs/installation.md) | Requirements, directory layout, where jdbgen keeps its data, bundled drivers |
+| [User Interface Guide](docs/ui-guide.md) | Every window, field and button, and what they do |
+| [Template Reference](docs/template-reference.md) | The complete template language |
+| [Custom Queries](docs/custom-queries.md) | Metadata SQL for drivers that need it |
+| [Icons](docs/icons.md) | How to specify icons for connections and drivers |
+| [Troubleshooting](docs/troubleshooting.md) | Known issues, pitfalls and fixes |
+| [Building from Source](docs/building.md) | Gradle build, project layout, tests |
+
+Start at the [documentation index](docs/README.md).
+
+## License
+
+Distributed under the terms in [LICENSE](LICENSE).

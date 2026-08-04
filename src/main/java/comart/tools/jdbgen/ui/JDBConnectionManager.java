@@ -497,6 +497,11 @@ public class JDBConnectionManager extends JDialog {
 
         btnBrowseIcon.setText("...");
         btnBrowseIcon.setToolTipText("Browse Icon File");
+        btnBrowseIcon.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrowseIconActionPerformed(evt);
+            }
+        });
 
         jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel12.setText("Icon:");
@@ -1165,6 +1170,12 @@ public class JDBConnectionManager extends JDialog {
         if (!StrUtils.isEmpty(path))
             this.txtTemplateFile.setText(path);
     }//GEN-LAST:event_btnBrowseTemplateActionPerformed
+
+    private void btnBrowseIconActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseIconActionPerformed
+        String fpath = UIUtils.openIconDlg(this, "");
+        if (!StrUtils.isEmpty(fpath))
+            this.txtIcon.setText(fpath);
+    }//GEN-LAST:event_btnBrowseIconActionPerformed
 
     private void btnBrowseOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseOutputActionPerformed
         String path = UIUtils.openDirDlg(this, "", true);

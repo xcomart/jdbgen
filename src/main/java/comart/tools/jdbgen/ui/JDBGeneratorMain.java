@@ -116,6 +116,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jScrollPane1.setPreferredSize(jScrollPane1.getPreferredSize());
         conf = JDBGenConfig.getInstance();
         chkDarkUI.setSelected(conf.isDarkUI());
+        chkApplyAbbr.setSelected(conf.isApplyAbbr());
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         UIUtils.setApplicationIcon(this);
 
@@ -544,6 +545,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jLabel11.setText("Output Directory:");
 
         btnBrowseOutput.setText("...");
+        btnBrowseOutput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBrowseOutputActionPerformed(evt);
+            }
+        });
 
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel14.setText("Author Name:");
@@ -1021,6 +1027,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         conf.setApplyAbbr(chkApplyAbbr.isSelected());
         JDBGenConfig.saveInstance(this);
     }//GEN-LAST:event_chkApplyAbbrActionPerformed
+
+    private void btnBrowseOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseOutputActionPerformed
+        String path = UIUtils.openDirDlg(this, "", true);
+        if (!StrUtils.isEmpty(path))
+            this.txtOutputDir.setText(path);
+    }//GEN-LAST:event_btnBrowseOutputActionPerformed
 
     /**
      * @param args the command line arguments

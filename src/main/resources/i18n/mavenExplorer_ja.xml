@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Japanese translation of i18n/mavenExplorer.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window and search -->
+  <entry key="mavenExplorer.title">Maven リポジトリエクスプローラー</entry>
+  <entry key="mavenExplorer.jLabel1.text">Maven リポジトリを検索:</entry>
+
+  <!-- result lists -->
+  <entry key="mavenExplorer.jLabel3.text">検索結果</entry>
+  <entry key="mavenExplorer.jLabel4.text">バージョン</entry>
+  <entry key="mavenExplorer.btnMore.text">さらに表示</entry>
+  <entry key="mavenExplorer.btnMore1.text">さらに表示</entry>
+
+  <!-- buttons and credit -->
+  <entry key="mavenExplorer.btnDownload.text">ダウンロードして使用</entry>
+  <entry key="mavenExplorer.btnCancel.text">キャンセル</entry>
+  <entry key="mavenExplorer.jLabel2.text">提供</entry>
+
+  <!-- messages -->
+  <entry key="mavenExplorer.msg.noMoreResults">これ以上の検索結果はありません</entry>
+  <entry key="mavenExplorer.msg.noMoreVersions">これ以上のバージョンはありません</entry>
+  <entry key="mavenExplorer.msg.selectVersion">ダウンロードするバージョンを選択してください。</entry>
+  <entry key="mavenExplorer.msg.downloadComplete">ダウンロードが完了しました!</entry>
+  <entry key="mavenExplorer.msg.downloadFailed">ダウンロードに失敗しました!</entry>
+
+  <!-- download progress log -->
+  <entry key="mavenExplorer.progress.saving">ドライバーを {0} に保存しています...</entry>
+  <entry key="mavenExplorer.progress.received">{0}/{1} バイトを受信しました。</entry>
+  <entry key="mavenExplorer.progress.complete">ダウンロードが完了しました。</entry>
+  <entry key="mavenExplorer.progress.failed">ダウンロードに失敗しました! : {0}</entry>
+</properties>

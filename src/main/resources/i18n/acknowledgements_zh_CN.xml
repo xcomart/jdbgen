@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/acknowledgements.xml. The key set has to stay identical to the English original. The listed third party notices themselves are shown verbatim and are not translated.</comment>
+
+  <entry key="acknowledgements.jLabel1.text">致谢</entry>
+  <entry key="acknowledgements.btnOk.text">确定</entry>
+</properties>

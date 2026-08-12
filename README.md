@@ -148,6 +148,10 @@ install it on the next start, downloads it and restarts itself. Your
 `config.json`, the drivers you downloaded and the templates you edited are kept
 — see [Updating](docs/installation.md#updating).
 
+The user interface follows your operating system language and can be switched
+by hand in the main window: English, 한국어, Español, 日本語 and 简体中文 are
+included.
+
 The archive ships with a small H2 sample database and three example templates,
 and the default configuration includes a `Sample H2 Embedded` connection that
 uses them, so you can generate something on the first run without setting up a

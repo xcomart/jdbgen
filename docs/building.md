@@ -133,16 +133,21 @@ The self-update, split in two because the second half has to run while `lib/` is
 
 ## Translations
 
-The user interface is English by default and ships a Korean translation. The language is stored as the `language` entry of `config.json` (`null`/absent or `"system"` = operating system locale, otherwise a language tag such as `"en"` or `"ko"`) and is picked in the combo box next to `Dark UI` in the main window. `JDBGenerator.main()` reads it with `JDBGenConfig.peekLanguage()` before anything else can open a dialog and hands it to `I18n.applyLanguage()`, which also sets the JVM default locale. A change only takes effect on the next start.
+The user interface is English by default and ships Korean, Spanish, Japanese and Simplified Chinese translations. The language is stored as the `language` entry of `config.json` (`null`/absent or `"system"` = operating system locale, otherwise a language tag such as `"en"` or `"ko"`) and is picked in the combo box next to `Dark UI` in the main window. `JDBGenerator.main()` reads it with `JDBGenConfig.peekLanguage()` before anything else can open a dialog and hands it to `I18n.applyLanguage()`, which also sets the JVM default locale. A change only takes effect on the next start.
 
 ### Bundle files
 
 Bundles are [Java properties XML](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html#loadFromXML-java.io.InputStream-) documents in UTF-8, on the class path below `i18n/`:
 
 ```
-src/main/resources/i18n/common.xml      English, the fallback of every locale
-src/main/resources/i18n/common_ko.xml   Korean
+src/main/resources/i18n/common.xml        English, the fallback of every locale
+src/main/resources/i18n/common_ko.xml     Korean
+src/main/resources/i18n/common_es.xml     Spanish
+src/main/resources/i18n/common_ja.xml     Japanese
+src/main/resources/i18n/common_zh_CN.xml  Simplified Chinese
 ```
+
+Adding a language means one `_<locale>` file per base bundle, a new entry in the `LANGUAGES` array and combo model of `JDBGeneratorMain.initLanguageCombo()`, and the suffix in the `LANGUAGES` list of `I18nBundleTest`, which then enforces that every bundle carries the new translation completely.
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -182,7 +187,7 @@ The suite runs on JUnit 5 (Jupiter 5.10.2) via `useJUnitPlatform()`.
 | `comart/utils/ObjUtilsTest` | Reflection-based property lookup. |
 | `comart/utils/EncryptionTest` | v2 round trips, non-deterministic ciphertext, rejection of a wrong master password, reading legacy-format values, null/empty pass-through, and malformed input. |
 | `comart/utils/I18nTest` | The bundle loader: the English default, a Korean locale, a regional locale falling back to its language, an untranslated key falling back to the original, unknown keys and unknown bundles returning the key instead of throwing, `MessageFormat` substitution, and the language setting to locale mapping. Its fixtures are `src/test/resources/i18n/testonly*.xml`. |
-| `comart/utils/I18nBundleTest` | The shipped bundles: `common.xml` and `common_ko.xml` carry the same key set and the same `{0}` placeholders, every key is prefixed with its bundle name, and every entry parses as a message pattern. |
+| `comart/utils/I18nBundleTest` | The shipped bundles: every bundle below `i18n/` carries every supported language, each translation has the key set and `{0}` placeholders of the English original, every key is prefixed with its bundle name, and every entry parses as a message pattern. |
 | `comart/tools/jdbgen/types/JDBGenConfigBackupTest` | Configuration backup and restore: moving an unreadable file aside, reporting a failed backup, and putting it back. |
 | `comart/tools/jdbgen/types/JDBGenConfigLanguageTest` | Reading the `language` entry out of `config.json` without the master password: a stored value, no entry, an empty entry, a broken file and a missing file. |
 | `comart/tools/jdbgen/types/ConfigRoundTripTest` | Configuration serialisation, including that encrypted fields survive a save/load cycle and that the bundled `defaultConfig.json` serialises cleanly. |

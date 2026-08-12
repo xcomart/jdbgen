@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Japanese translation of i18n/common.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- generic dialog chrome -->
+  <entry key="common.dialog.error.title">エラー</entry>
+  <entry key="common.dialog.info.title">情報</entry>
+  <entry key="common.button.cancel">キャンセル</entry>
+
+  <!-- password prompt -->
+  <entry key="common.password.label">パスワード:</entry>
+  <entry key="common.password.confirm.label">確認:</entry>
+  <entry key="common.password.mismatch">パスワードと確認用の入力が一致しません。</entry>
+
+  <!-- shared UI helpers -->
+  <entry key="common.validation.required">''{0}'' は必須項目です</entry>
+  <entry key="common.filechooser.imageFilter">画像/アイコンファイル</entry>
+  <entry key="common.template.tooltip">テンプレート名  : {0}&#10;テンプレートファイル: {1}&#10;出力ファイル名  : {2}</entry>
+
+  <!-- update check and download -->
+  <entry key="common.update.title">更新があります</entry>
+  <entry key="common.update.available">新しいバージョン {0} が利用できます。&#10;今すぐ更新しますか?</entry>
+  <entry key="common.update.failed">更新を自動的にインストールできませんでした。</entry>
+  <entry key="common.update.openReleasePage">リリースページを開いて手動でダウンロードしますか?</entry>
+  <entry key="common.update.progress.title">jdbgen の更新</entry>
+  <entry key="common.update.progress.downloading">{0} をダウンロードしています</entry>
+
+  <!-- loading and saving the configuration -->
+  <entry key="common.config.password.enter">マスターパスワードを入力してください</entry>
+  <entry key="common.config.password.new">新しいマスターパスワードを入力してください</entry>
+  <entry key="common.config.password.incorrect">パスワードが正しくありません!</entry>
+  <entry key="common.config.error.title">設定エラー</entry>
+  <entry key="common.config.error.message">{0} 回試みましたが、設定を開けませんでした。&#10;&#10;最後のエラー: {1}&#10;&#10;マスターパスワードの誤りが最も考えられる原因です。設定ファイルは変更されていません。&#10;&#10;[OK] パスワードを入力し直す&#10;[キャンセル] 既定の設定で開始する</entry>
+  <entry key="common.config.default.title">既定の設定で開始</entry>
+  <entry key="common.config.default.message">既定の設定を新しく作成し、新しいマスターパスワードの入力を求めます。&#10;&#10;現在の設定は削除されず、''{0}'' と同じ場所にバックアップファイルとして保管されます。&#10;&#10;続行しますか?</entry>
+  <entry key="common.config.default.loadFailed">既定の設定を読み込めません: {0}</entry>
+  <entry key="common.config.backup.failed">既存の設定 ''{0}'' をバックアップできなかったため、そのまま残しました。&#10;そのディレクトリのファイル権限を確認してから、もう一度実行してください。</entry>
+  <entry key="common.config.backup.kept">既存の設定は次の場所に保管しました:&#10;{0}&#10;&#10;ファイル名を ''{1}'' に戻すと復元できます。</entry>
+  <entry key="common.config.write.failed">既定の設定を ''{0}'' に書き込めませんでした。</entry>
+  <entry key="common.config.write.restored">&#10;&#10;以前の設定は変更されずにそのまま残っています。</entry>
+  <entry key="common.config.write.keptBackup">&#10;&#10;以前の設定は次の場所に保管されています:&#10;{0}&#10;&#10;ファイル名を ''{1}'' に戻すと復元できます。</entry>
+  <entry key="common.config.save.failed">設定を保存できません: {0}</entry>
+
+  <!-- language selection in the main window -->
+  <entry key="common.language.system">システムの既定</entry>
+  <entry key="common.language.tooltip">ユーザーインターフェイスの言語。再起動後に適用されます</entry>
+  <entry key="common.language.restartRequired">言語設定は次回 jdbgen を起動したときに適用されます。</entry>
+</properties>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Spanish translation of i18n/driverManager.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window and buttons -->
+  <entry key="driverManager.title">Administrador de controladores</entry>
+  <entry key="driverManager.btnCancel.text">Cancelar</entry>
+  <entry key="driverManager.btnSave.text">Aceptar</entry>
+
+  <!-- driver list -->
+  <entry key="driverManager.jLabel1.text">Controladores</entry>
+
+  <!-- tabs -->
+  <entry key="driverManager.tab.general">General</entry>
+  <entry key="driverManager.tab.customQueries">Consultas personalizadas</entry>
+
+  <!-- general tab -->
+  <entry key="driverManager.jLabel3.text">Nombre del controlador:</entry>
+  <entry key="driverManager.jLabel4.text">Jar JDBC:</entry>
+  <entry key="driverManager.btnDownJdbc.text">Descargar el controlador JDBC del repositorio Maven</entry>
+  <entry key="driverManager.jLabel8.text">Plantilla de URL:</entry>
+  <entry key="driverManager.jLabel9.text">Clase del controlador:</entry>
+  <entry key="driverManager.jLabel10.text">Icono:</entry>
+  <entry key="driverManager.jLabel11.text">Propiedades de conexión:</entry>
+  <entry key="driverManager.tabProps.key">Clave</entry>
+  <entry key="driverManager.tabProps.value">Valor</entry>
+  <entry key="driverManager.chkNoAuth.text">Este controlador no requiere autenticación.</entry>
+
+  <!-- custom queries tab -->
+  <entry key="driverManager.chkTableComments.text">Obtener comentarios de tablas</entry>
+  <entry key="driverManager.chkColumnComments.text">Obtener comentarios de columnas de tabla</entry>
+  <entry key="driverManager.chkTables.text">Obtener lista de tablas</entry>
+  <entry key="driverManager.chkColumns.text">Obtener lista de columnas de tabla</entry>
+
+  <!-- validation and messages -->
+  <entry key="driverManager.msg.nameExists">El nombre ''{0}'' ya existe.</entry>
+  <entry key="driverManager.msg.driverNameRequired">Se requiere el nombre del controlador.</entry>
+  <entry key="driverManager.msg.jarRequired">Se requiere el archivo jar del controlador JDBC.</entry>
+  <entry key="driverManager.msg.driverClassRequired">Se requiere la clase del controlador.</entry>
+  <entry key="driverManager.msg.tableCommentsRequired">Se requiere la consulta de comentarios de tablas.</entry>
+  <entry key="driverManager.msg.columnCommentsRequired">Se requiere la consulta de comentarios de columnas.</entry>
+  <entry key="driverManager.msg.tablesRequired">Se requiere la consulta de lista de tablas.</entry>
+  <entry key="driverManager.msg.columnsRequired">Se requiere la consulta de lista de columnas.</entry>
+  <entry key="driverManager.msg.newDriverName">Controlador nuevo</entry>
+  <entry key="driverManager.msg.copyOfName">Copia de {0}</entry>
+  <entry key="driverManager.filechooser.jarFilter">Archivos de biblioteca Java</entry>
+</properties>

@@ -408,7 +408,7 @@ generation will do.
 | `Generate` | Starts generation; opens the [progress window](#progress). |
 | `Close` | Closes the database connection and exits the program. |
 
-The language list offers `System Default` — the language of your operating system, and the setting a fresh installation starts with — plus `English` and `한국어`. Each language is named in itself, so you can find yours whatever the window currently speaks. The choice is saved to `config.json` right away, but **it only takes effect the next time you start jdbgen**; a confirmation says so. Anything jdbgen has not translated yet stays English.
+The language list offers `System Default` — the language of your operating system, and the setting a fresh installation starts with — plus `English`, `한국어`, `Español`, `日本語` and `简体中文`. Each language is named in itself, so you can find yours whatever the window currently speaks. The choice is saved to `config.json` right away, but **it only takes effect the next time you start jdbgen**; a confirmation says so. Anything jdbgen has not translated yet stays English.
 
 `Generate` refuses to start and shows an error when there is no open connection (*"Please connect to a database first."*), when no table is selected (*"Please select at least one table to generate."*), or when no template is ticked (*"Please select at least one template to generate."*).
 

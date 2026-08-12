@@ -96,7 +96,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * <code>cboLanguage</code>, in the order the entries appear.
      * <code>null</code> is the operating system locale.
      */
-    private static final String[] LANGUAGES = { null, "en", "ko" };
+    private static final String[] LANGUAGES = { null, "en", "ko", "es", "ja", "zh-CN" };
 
     private final JDBGenConfig conf;
     private final Map<String, JDBConnection> connMap = new HashMap<>();
@@ -851,7 +851,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private void initLanguageCombo() {
         cboLanguage.setModel(new DefaultComboBoxModel<>(new String[] {
             I18n.t("common.language.system"), "English",
-            "한국어" }));
+            "한국어", "Español", "日本語", "简体中文" }));
         cboLanguage.setToolTipText(I18n.t("common.language.tooltip"));
         cboLanguage.setSelectedIndex(languageIndex(conf.getLanguage()));
     }

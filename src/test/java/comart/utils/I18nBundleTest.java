@@ -19,11 +19,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * would only show up as an English string in a Korean dialog, which nobody
  * notices until a user reports it.
  *
- * Every bundle below <code>src/main/resources/i18n/</code> is checked, so a
- * newly added one is covered without touching this test.
+ * Every bundle below <code>src/main/resources/i18n/</code> is checked against
+ * every supported language, so a newly added bundle is covered without
+ * touching this test. A new language is added to {@link #LANGUAGES} - and to
+ * the language combo of the main window.
  */
 public class I18nBundleTest {
     private static final File BUNDLE_DIR = new File("src/main/resources/i18n");
+
+    /**
+     * the locale suffixes every bundle has to ship a translation for. Keep in
+     * step with <code>JDBGeneratorMain.LANGUAGES</code>.
+     */
+    private static final String[] LANGUAGES = { "ko", "es", "ja", "zh_CN" };
 
     private static Properties load(File file) throws Exception {
         Properties props = new Properties();
@@ -50,29 +58,36 @@ public class I18nBundleTest {
         return res;
     }
 
-    private static File koreanOf(File base) {
+    private static File translationOf(File base, String language) {
         String name = base.getName();
         return new File(base.getParentFile(),
-                name.substring(0, name.length() - 4) + "_ko.xml");
+                name.substring(0, name.length() - 4) + "_" + language + ".xml");
     }
 
     @Test
-    public void everyBundleCarriesAKoreanTranslation() {
+    public void everyBundleCarriesEverySupportedLanguage() {
         for (File base: baseBundles()) {
-            assertTrue(koreanOf(base).isFile(),
-                    base.getName() + " has no Korean counterpart " + koreanOf(base).getName());
+            for (String language: LANGUAGES) {
+                assertTrue(translationOf(base, language).isFile(),
+                        base.getName() + " has no " + language + " counterpart "
+                        + translationOf(base, language).getName());
+            }
         }
     }
 
     @Test
-    public void theKoreanTranslationCarriesExactlyTheKeysOfTheOriginal() throws Exception {
+    public void everyTranslationCarriesExactlyTheKeysOfTheOriginal() throws Exception {
         for (File base: baseBundles()) {
             Set<String> english = new TreeSet<>(load(base).stringPropertyNames());
-            Set<String> korean = new TreeSet<>(load(koreanOf(base)).stringPropertyNames());
-
             assertTrue(english.size() > 0, base.getName() + " is empty");
-            assertEquals(english, korean,
-                    "every entry of " + base.getName() + " needs a Korean counterpart and vice versa");
+            for (String language: LANGUAGES) {
+                File file = translationOf(base, language);
+                if (!file.isFile())
+                    continue; // the missing file has its own test
+                Set<String> translated = new TreeSet<>(load(file).stringPropertyNames());
+                assertEquals(english, translated, "every entry of " + base.getName()
+                        + " needs a counterpart in " + file.getName() + " and vice versa");
+            }
         }
     }
 
@@ -90,17 +105,21 @@ public class I18nBundleTest {
     }
 
     @Test
-    public void bothBundlesUseTheSamePlaceholders() throws Exception {
+    public void everyTranslationUsesThePlaceholdersOfTheOriginal() throws Exception {
         for (File base: baseBundles()) {
             Properties english = load(base);
-            Properties korean = load(koreanOf(base));
-
-            for (String key: new TreeSet<>(english.stringPropertyNames())) {
-                String kor = korean.getProperty(key);
-                if (kor == null)
-                    continue; // the key set mismatch has its own test
-                assertEquals(placeholders(english.getProperty(key)), placeholders(kor),
-                        "'" + key + "' uses different arguments in the two languages");
+            for (String language: LANGUAGES) {
+                File file = translationOf(base, language);
+                if (!file.isFile())
+                    continue;
+                Properties translated = load(file);
+                for (String key: new TreeSet<>(english.stringPropertyNames())) {
+                    String value = translated.getProperty(key);
+                    if (value == null)
+                        continue; // the key set mismatch has its own test
+                    assertEquals(placeholders(english.getProperty(key)), placeholders(value),
+                            "'" + key + "' uses different arguments in " + file.getName());
+                }
             }
         }
     }
@@ -108,7 +127,11 @@ public class I18nBundleTest {
     @Test
     public void everyEntryIsAValidMessagePattern() throws Exception {
         for (File base: baseBundles()) {
-            for (File file: new File[] { base, koreanOf(base) }) {
+            List<File> all = new ArrayList<>();
+            all.add(base);
+            for (String language: LANGUAGES)
+                all.add(translationOf(base, language));
+            for (File file: all) {
                 if (!file.isFile())
                     continue;
                 Properties props = load(file);

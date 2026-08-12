@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Japanese translation of i18n/generatorMain.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window chrome -->
+  <entry key="generatorMain.title">JDBGen メイン</entry>
+
+  <!-- connection bar -->
+  <entry key="generatorMain.jLabel2.text">接続</entry>
+  <entry key="generatorMain.btnManageConn.text">管理</entry>
+  <entry key="generatorMain.btnMapper.text">略語マッパー</entry>
+  <entry key="generatorMain.btnAck.toolTipText">このプログラムについて</entry>
+
+  <!-- catalog/schema pane -->
+  <entry key="generatorMain.jLabel1.text">カタログ/スキーマ</entry>
+  <entry key="generatorMain.tree.database">データベース</entry>
+
+  <!-- table pane -->
+  <entry key="generatorMain.jLabel5.text">テーブル</entry>
+  <entry key="generatorMain.chkShowView.text">ビューを表示</entry>
+
+  <!-- generation options -->
+  <entry key="generatorMain.jLabel4.text">生成オプション</entry>
+  <entry key="generatorMain.jLabel6.text">テンプレート</entry>
+  <entry key="generatorMain.tabTemplates.column.select">選択</entry>
+  <entry key="generatorMain.tabTemplates.column.name">名前</entry>
+  <entry key="generatorMain.tabTemplates.column.templateFile">テンプレートファイル</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">出力テンプレート</entry>
+  <entry key="generatorMain.jLabel11.text">出力ディレクトリ:</entry>
+  <entry key="generatorMain.jLabel14.text">作成者名:</entry>
+  <entry key="generatorMain.jLabel15.text">略語:</entry>
+  <entry key="generatorMain.chkApplyAbbr.text">すべての名前項目に略語ルールを適用します。</entry>
+  <entry key="generatorMain.jLabel16.text">カスタム変数:</entry>
+  <entry key="generatorMain.tabVars.column.name">名前</entry>
+  <entry key="generatorMain.tabVars.column.value">値</entry>
+
+  <!-- bottom bar -->
+  <entry key="generatorMain.chkDarkUI.text">ダークテーマ</entry>
+  <entry key="generatorMain.btnGenerate.text">生成</entry>
+  <entry key="generatorMain.btnClose.text">閉じる</entry>
+
+  <!-- connecting and reading the metadata -->
+  <entry key="generatorMain.msg.connectFailed">''{0}'' に接続できません: {1}</entry>
+  <entry key="generatorMain.msg.driverNotFound">接続 ''{1}'' のドライバー ''{0}'' が見つかりません。</entry>
+  <entry key="generatorMain.msg.getTablesFailed">テーブル一覧を取得できません: {0}</entry>
+  <entry key="generatorMain.msg.getColumnsFailed">列一覧を取得できません: {0}</entry>
+
+  <!-- generation -->
+  <entry key="generatorMain.msg.connectFirst">先にデータベースへ接続してください。</entry>
+  <entry key="generatorMain.msg.selectTable">生成するテーブルを 1 つ以上選択してください。</entry>
+  <entry key="generatorMain.msg.selectTemplate">生成するテンプレートを 1 つ以上選択してください。</entry>
+  <entry key="generatorMain.msg.complete.title">処理完了</entry>
+  <entry key="generatorMain.msg.complete">処理が正常に完了しました!&#10;出力ディレクトリを開きますか?</entry>
+  <entry key="generatorMain.msg.failed">処理に失敗しました!</entry>
+  <entry key="generatorMain.progress.readingColumns">テーブルの列を読み込んでいます...</entry>
+  <entry key="generatorMain.progress.templateProcessing">{0} テンプレートを処理しています...</entry>
+  <entry key="generatorMain.progress.applying">{0} を {1} に適用しています...</entry>
+  <entry key="generatorMain.progress.complete">すべての処理が完了しました!</entry>
+  <entry key="generatorMain.progress.failed">処理に失敗しました! : {0}</entry>
+</properties>

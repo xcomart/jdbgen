@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Japanese translation of i18n/presets.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- preset list -->
+  <entry key="presets.jLabel1.text">テンプレートプリセット</entry>
+
+  <!-- preset detail -->
+  <entry key="presets.jLabel2.text">プリセットの詳細</entry>
+  <entry key="presets.jLabel3.text">プリセット名:</entry>
+  <entry key="presets.tabTemplates.column.templateName">テンプレート名</entry>
+  <entry key="presets.tabTemplates.column.templateFile">テンプレートファイル</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">出力テンプレート</entry>
+  <entry key="presets.btnNewTemplate.text">新規</entry>
+  <entry key="presets.btnDelTemplate.text">削除</entry>
+  <entry key="presets.btnSaveTemplate.text">適用</entry>
+  <entry key="presets.jLabel9.text">テンプレート名:</entry>
+  <entry key="presets.jLabel8.text">テンプレートファイル:</entry>
+  <entry key="presets.jLabel13.text">出力ファイル名テンプレート:</entry>
+
+  <!-- bottom bar -->
+  <entry key="presets.btnNewFromConn.text">現在の接続からプリセットを作成</entry>
+  <entry key="presets.btnApply.text">現在の接続に適用</entry>
+  <entry key="presets.btnSave.text">保存</entry>
+  <entry key="presets.btnCancel.text">キャンセル</entry>
+
+  <!-- generated preset names -->
+  <entry key="presets.msg.newName">新しいプリセット</entry>
+  <entry key="presets.msg.copyName">{0} のコピー</entry>
+
+  <!-- messages -->
+  <entry key="presets.msg.cloneFailed">プリセットを複製できません: {0}</entry>
+  <entry key="presets.msg.delete.title">プリセットの削除</entry>
+  <entry key="presets.msg.delete">プリセット ''{0}'' を削除しますか?</entry>
+  <entry key="presets.msg.nameExists">名前 {0} は既に使用されています。</entry>
+  <entry key="presets.msg.nameRequired">プリセット名を入力してください。</entry>
+</properties>

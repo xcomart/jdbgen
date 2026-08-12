@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/connectionManager.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window -->
+  <entry key="connectionManager.title">连接管理器</entry>
+
+  <!-- dialog buttons -->
+  <entry key="connectionManager.btnSave.text">保存</entry>
+  <entry key="connectionManager.btnConnect.text">连接</entry>
+  <entry key="connectionManager.btnCancel.text">取消</entry>
+
+  <!-- connection list -->
+  <entry key="connectionManager.jLabel1.text">连接列表</entry>
+  <entry key="connectionManager.btnNewConn.toolTipText">新建连接</entry>
+  <entry key="connectionManager.btnCloneConn.toolTipText">复制当前连接</entry>
+  <entry key="connectionManager.btnDelConn.toolTipText">删除当前连接</entry>
+
+  <!-- tabs -->
+  <entry key="connectionManager.tab.general">常规</entry>
+  <entry key="connectionManager.tab.templates">模板</entry>
+  <entry key="connectionManager.tab.options">选项</entry>
+
+  <!-- general tab -->
+  <entry key="connectionManager.jLabel2.text">连接名称：</entry>
+  <entry key="connectionManager.jLabel3.text">驱动：</entry>
+  <entry key="connectionManager.btnManage.text">管理</entry>
+  <entry key="connectionManager.btnManage.toolTipText">管理驱动</entry>
+  <entry key="connectionManager.jLabel4.text">连接 URL：</entry>
+  <entry key="connectionManager.jLabel5.text">用户名：</entry>
+  <entry key="connectionManager.jLabel6.text">用户密码：</entry>
+  <entry key="connectionManager.jLabel12.text">图标：</entry>
+  <entry key="connectionManager.btnBrowseIcon.toolTipText">浏览图标文件</entry>
+  <entry key="connectionManager.jLabel7.text">连接属性：</entry>
+  <entry key="connectionManager.tabProps.col.key">键</entry>
+  <entry key="connectionManager.tabProps.col.value">值</entry>
+  <entry key="connectionManager.chkKeepAlive.text">使用下面的语句保持连接，间隔</entry>
+  <entry key="connectionManager.jLabel15.text">秒。</entry>
+
+  <!-- templates tab -->
+  <entry key="connectionManager.tabTemplates.col.name">名称</entry>
+  <entry key="connectionManager.tabTemplates.col.templateFile">模板文件</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">输出模板</entry>
+  <entry key="connectionManager.btnTemplateHelp.toolTipText">模板帮助</entry>
+  <entry key="connectionManager.btnPresets.text">预设</entry>
+  <entry key="connectionManager.btnPresets.toolTipText">管理模板预设</entry>
+  <entry key="connectionManager.btnNewTemplate.text">新建</entry>
+  <entry key="connectionManager.btnNewTemplate.toolTipText">新建模板</entry>
+  <entry key="connectionManager.btnDelTemplate.text">删除</entry>
+  <entry key="connectionManager.btnDelTemplate.toolTipText">删除当前模板</entry>
+  <entry key="connectionManager.btnSaveTemplate.text">应用</entry>
+  <entry key="connectionManager.btnSaveTemplate.toolTipText">应用所选模板的修改</entry>
+  <entry key="connectionManager.jLabel9.text">模板名称：</entry>
+  <entry key="connectionManager.txtTemplateName.toolTipText">模板的名称</entry>
+  <entry key="connectionManager.jLabel8.text">模板文件：</entry>
+  <entry key="connectionManager.txtTemplateFile.toolTipText">模板文件位置</entry>
+  <entry key="connectionManager.btnBrowseTemplate.toolTipText">浏览模板文件</entry>
+  <entry key="connectionManager.jLabel13.text">输出文件名模板：</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">输出文件名的模板</entry>
+
+  <!-- options tab -->
+  <entry key="connectionManager.jLabel11.text">输出目录：</entry>
+  <entry key="connectionManager.jLabel14.text">作者名称：</entry>
+  <entry key="connectionManager.jLabel16.text">自定义变量：</entry>
+  <entry key="connectionManager.tabVars.col.name">名称</entry>
+  <entry key="connectionManager.tabVars.col.value">值</entry>
+
+  <!-- default names of newly created connections -->
+  <entry key="connectionManager.msg.newConnection">新建连接</entry>
+  <entry key="connectionManager.msg.copyOf">{0} 的副本</entry>
+
+  <!-- validation of the edited connection -->
+  <entry key="connectionManager.msg.nameExists">名称 {0} 已存在。</entry>
+  <entry key="connectionManager.msg.nameRequired">请输入连接名称。</entry>
+  <entry key="connectionManager.msg.urlRequired">请输入连接 URL。</entry>
+  <entry key="connectionManager.msg.driverRequired">请选择驱动。</entry>
+  <entry key="connectionManager.msg.userRequired">请输入数据库用户名。</entry>
+  <entry key="connectionManager.msg.passwordRequired">请输入数据库用户密码。</entry>
+  <entry key="connectionManager.msg.keepAliveQueryRequired">请输入用于保持连接的 SQL 语句。</entry>
+  <entry key="connectionManager.msg.keepAliveSecRequired">请输入保持连接语句的执行间隔。</entry>
+  <entry key="connectionManager.msg.outputDirRequired">请输入输出目录。</entry>
+  <entry key="connectionManager.msg.driverIncomplete">驱动信息不完整。</entry>
+
+  <!-- removing a connection -->
+  <entry key="connectionManager.msg.removeConfirm.title">删除连接确认</entry>
+  <entry key="connectionManager.msg.removeConfirm.message">确定要删除连接 ''{0}'' 吗？</entry>
+</properties>

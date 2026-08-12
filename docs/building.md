@@ -127,6 +127,8 @@ powershell -ExecutionPolicy Bypass -File packaging\make-icon.ps1
 
 Re-run it whenever `icon.png` changes. It needs nothing but Windows PowerShell (it uses `System.Drawing`) and writes a multi-resolution PNG-in-ICO container with frames from 16 to 256 pixels. The application itself keeps using `icon.png`.
 
+`icon.png` is itself generated, by `packaging/draw-icon.java` — run `java packaging/draw-icon.java` from the repository root to redraw the 512×512 source, then re-run `make-icon.ps1`.
+
 ## Project layout
 
 ```

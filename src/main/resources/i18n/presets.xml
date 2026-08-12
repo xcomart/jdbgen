@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the template preset dialog (JDBPresets). English original, i18n/presets_ko.xml is its Korean translation.</comment>
+
+  <!-- preset list -->
+  <entry key="presets.jLabel1.text">Template Presets</entry>
+
+  <!-- preset detail -->
+  <entry key="presets.jLabel2.text">Preset Detail</entry>
+  <entry key="presets.jLabel3.text">Preset Name:</entry>
+  <entry key="presets.tabTemplates.column.templateName">Template Name</entry>
+  <entry key="presets.tabTemplates.column.templateFile">Template File</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">Out Template</entry>
+  <entry key="presets.btnNewTemplate.text">New</entry>
+  <entry key="presets.btnDelTemplate.text">Delete</entry>
+  <entry key="presets.btnSaveTemplate.text">Apply</entry>
+  <entry key="presets.jLabel9.text">Template Name:</entry>
+  <entry key="presets.jLabel8.text">Template File:</entry>
+  <entry key="presets.jLabel13.text">Output Name Template:</entry>
+
+  <!-- bottom bar -->
+  <entry key="presets.btnNewFromConn.text">New Preset from Current Connection</entry>
+  <entry key="presets.btnApply.text">Apply to Current Connection</entry>
+  <entry key="presets.btnSave.text">Save</entry>
+  <entry key="presets.btnCancel.text">Cancel</entry>
+
+  <!-- generated preset names -->
+  <entry key="presets.msg.newName">New Preset</entry>
+  <entry key="presets.msg.copyName">Copy of {0}</entry>
+
+  <!-- messages -->
+  <entry key="presets.msg.cloneFailed">Cannot clone preset: {0}</entry>
+  <entry key="presets.msg.delete.title">Delete Preset</entry>
+  <entry key="presets.msg.delete">Do you want to delete ''{0}'' preset?</entry>
+  <entry key="presets.msg.nameExists">Name {0} exists already.</entry>
+  <entry key="presets.msg.nameRequired">Preset name required.</entry>
+</properties>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the driver manager dialog (comart.tools.jdbgen.ui.JDBDriverManager). English original, every other i18n/driverManager_*.xml falls back to this one.</comment>
+
+  <!-- window and buttons -->
+  <entry key="driverManager.title">Driver Manager</entry>
+  <entry key="driverManager.btnCancel.text">Cancel</entry>
+  <entry key="driverManager.btnSave.text">Ok</entry>
+
+  <!-- driver list -->
+  <entry key="driverManager.jLabel1.text">Drivers</entry>
+
+  <!-- tabs -->
+  <entry key="driverManager.tab.general">General</entry>
+  <entry key="driverManager.tab.customQueries">Custom Queries</entry>
+
+  <!-- general tab -->
+  <entry key="driverManager.jLabel3.text">Driver Name:</entry>
+  <entry key="driverManager.jLabel4.text">JDBC Jar:</entry>
+  <entry key="driverManager.btnDownJdbc.text">Download jdbc driver from Maven Repository</entry>
+  <entry key="driverManager.jLabel8.text">URL Template:</entry>
+  <entry key="driverManager.jLabel9.text">Driver Class:</entry>
+  <entry key="driverManager.jLabel10.text">Icon:</entry>
+  <entry key="driverManager.jLabel11.text">Connection Props:</entry>
+  <entry key="driverManager.tabProps.key">Key</entry>
+  <entry key="driverManager.tabProps.value">Value</entry>
+  <entry key="driverManager.chkNoAuth.text">Authentication is not required for this driver.</entry>
+
+  <!-- custom queries tab -->
+  <entry key="driverManager.chkTableComments.text">Get table comments</entry>
+  <entry key="driverManager.chkColumnComments.text">Get table column comments</entry>
+  <entry key="driverManager.chkTables.text">Get table list</entry>
+  <entry key="driverManager.chkColumns.text">Get table column list</entry>
+
+  <!-- validation and messages -->
+  <entry key="driverManager.msg.nameExists">Name ''{0}'' exists already.</entry>
+  <entry key="driverManager.msg.driverNameRequired">Driver name required.</entry>
+  <entry key="driverManager.msg.jarRequired">JDBC jar file required.</entry>
+  <entry key="driverManager.msg.driverClassRequired">Driver class required.</entry>
+  <entry key="driverManager.msg.tableCommentsRequired">Table comments query required.</entry>
+  <entry key="driverManager.msg.columnCommentsRequired">Column comments query required.</entry>
+  <entry key="driverManager.msg.tablesRequired">Table list query required.</entry>
+  <entry key="driverManager.msg.columnsRequired">Column list query required.</entry>
+  <entry key="driverManager.msg.newDriverName">New Driver</entry>
+  <entry key="driverManager.msg.copyOfName">Copy of {0}</entry>
+  <entry key="driverManager.filechooser.jarFilter">Java library files</entry>
+</properties>

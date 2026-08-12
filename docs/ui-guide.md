@@ -10,7 +10,7 @@ This guide walks through every window jdbgen shows, in roughly the order you mee
 
 Three things happen before the main window becomes usable, in this exact order:
 
-1. **Update check.** jdbgen reads its own version from the bundled `version.properties` and queries the GitHub Releases API for the latest release tag. If the release tag is numerically newer, an `Update Available` confirmation appears: *"New version `<tag>` is available. Do you want to update now?"* Choosing **Yes** opens the [releases page](https://github.com/xcomart/jdbgen/releases/latest) in your browser and **immediately exits jdbgen** — the update itself is manual. Choosing **No** continues startup. If the version cannot be determined, or the network call fails, the check is silently skipped.
+1. **Update check.** jdbgen reads its own version from the bundled `version.properties` and queries the GitHub Releases API for the latest release tag. If the release tag is numerically newer, an `Update Available` confirmation appears: *"New version `<tag>` is available. Do you want to update now?"* Choosing **Yes** downloads the release archive — a progress window with a `Cancel` button appears — installs it over the installation directory and restarts jdbgen; cancelling the download continues the startup as if you had said no. If the update cannot be installed, an error is shown and jdbgen offers to open the [releases page](https://github.com/xcomart/jdbgen/releases/latest) in your browser instead, exiting if you accept. Choosing **No** continues startup. When jdbgen is installed where it may not write — an MSI installation below `C:\Program Files`, say — it does not offer to update at all: the dialog reports the new version, gives you the `winget upgrade Xcomart.Jdbgen` command on Windows, and offers the releases page. If the version cannot be determined, or the network call fails, the check is silently skipped. See [Updating](installation.md#updating) for which files are replaced.
 2. **Master password.** See [Master password](#master-password) below. This is where `config.json` is decrypted.
 3. **Connection Manager.** The main window is built, then the [Connection Manager](#connection-manager) opens **modally** on top of it. It is not optional: pressing `Cancel` (or closing the window) at this point **terminates the program**. Press `Connect` on the connection you want, and the main window opens the database in the background.
 
@@ -130,7 +130,7 @@ The templates listed here are the ones offered for generation when this connecti
 | Field | Setting | Format / constraints | Default |
 |:---|:---|:---|:---|
 | `Template Name:` | Label shown in the generator's template list | Free text | *(empty)* |
-| `Template File:` | Path to the template file | Relative to the jdbgen working directory when the file is picked underneath it; see [Template Reference](template-reference.md) | *(empty)* |
+| `Template File:` | Path to the template file | Stored relative to the [user data directory or the installation](installation.md#where-jdbgen-keeps-its-data) when the file is picked underneath one of them, absolute otherwise; see [Template Reference](template-reference.md) | *(empty)* |
 | `Output Name Template:` | Template that produces the output file name | A template expression, e.g. `${name.suffix.pascal}Model.java` | *(empty)* |
 
 | Button | Tooltip | Action |
@@ -140,7 +140,7 @@ The templates listed here are the ones offered for generation when this connecti
 | `New` | Create New Template | Clears the table selection and the three fields, ready for a new entry. |
 | `Delete` | Remove Current Template | Removes the selected row from the table. |
 | `Apply` | Apply Selected Template Modification | Writes the three fields back into the selected row — **or appends them as a new row when nothing is selected**. |
-| `...` | Browse Template File | File chooser starting in the `templates` directory; stores a path relative to the working directory when possible. |
+| `...` | Browse Template File | File chooser starting in the `templates` directory; stores a path relative to the user data directory or the installation when the file sits below one of them. |
 
 Hovering a row shows a tooltip with the full `Template Name`, `Template File` and `Output Template`, which is useful when the columns are too narrow.
 
@@ -152,7 +152,7 @@ Hovering a row shows a tooltip with the full `Template Name`, `Template File` an
 
 | Field | Setting | Format / constraints | Default |
 |:---|:---|:---|:---|
-| `Output Directory:` | Where generated files are written | Required; relative paths resolve against the jdbgen working directory | `output` |
+| `Output Directory:` | Where generated files are written | Required. An absolute path is written to as it is; a relative one is taken relative to the [user data directory](installation.md#where-jdbgen-keeps-its-data), or to the installation when it names an existing directory there — the same rule as for every other path in the configuration, and what the `...` button stores. The directory is created if it does not exist. The default configuration uses `output` below the user data directory | `output` |
 | `Author Name:` | Value of `${author}` in templates | Free text, e.g. `John Doe <john.doe@abc.com>` | *(empty)* |
 | `Custom Variables:` | User-defined `item`-style variables usable in templates | Two-column `Name` / `Value` table | *(empty)* |
 
@@ -197,7 +197,7 @@ Window title: **`Driver Manager`**. Reached from the `Manage` button on the Conn
 | Field | Setting | Format / constraints | Default |
 |:---|:---|:---|:---|
 | `Driver Name:` | Name shown in the list and in the connection's `Driver:` combo | Required; must be unique. **Read-only for built-in drivers** | `New Driver` |
-| `JDBC Jar:` | Path to the driver jar | Required. Stored relative to the working directory when the file lives underneath it | *(empty)* |
+| `JDBC Jar:` | Path to the driver jar | Required. Stored relative to the user data directory or the installation when the file lives underneath one of them — a jar downloaded from Maven Central lands in `drivers/` below the user data directory | *(empty)* |
 | `URL Template:` | Connection URL skeleton offered to new connections | Free text; conventionally uses `<...>` placeholders, e.g. `jdbc:h2:<database file>` | *(empty)* |
 | `Driver Class:` | The `java.sql.Driver` implementation to load | Required. **Read-only for built-in drivers.** Clicking the field scans the jar and offers the implementations it finds | *(empty)* |
 | `Icon:` | Icon shown in the driver and connection lists | See [Icons](icons.md). **Read-only for built-in drivers** | `stock:generic.png` for new drivers |
@@ -268,7 +268,7 @@ Window title: **`Maven Repository Explorer`**. Opened from `Download jdbc driver
 | `Cancel` | Closes the window without downloading. |
 | `Powered by` `Apache Maven` | A clickable link to `https://maven.org`. |
 
-The download opens a [progress window](#progress) that reports bytes received, saves the jar into the **`drivers/`** directory under its original file name (creating the directory if needed), then reports `Download complete!`, closes the explorer and writes the saved path into the driver's `JDBC Jar:` field. Failures are reported with the underlying error message and leave the explorer open.
+The download opens a [progress window](#progress) that reports bytes received, saves the jar into the **`drivers/`** directory below the [user data directory](installation.md#where-jdbgen-keeps-its-data), under its original file name (creating the directory if needed), then reports `Download complete!`, closes the explorer and writes the saved path into the driver's `JDBC Jar:` field. Failures are reported with the underlying error message and leave the explorer open.
 
 > **Note**
 > Every HTTP call — search, version lookup and download — uses a 60-second connect/read/write timeout. A large driver jar on a slow link can therefore fail with a read timeout even though the download had started.
@@ -375,14 +375,14 @@ The rows come from the current connection; edit them in the Connection Manager's
 
 | Field | Setting | Format / constraints | Default |
 |:---|:---|:---|:---|
-| `Output Directory:` | Where files are written for this run | Free text. An empty value writes into the working directory | The connection's output directory |
+| `Output Directory:` | Where files are written for this run | Free text, resolved like the connection's own setting: an absolute path as it is, a relative one below the user data directory or the installation. An empty value writes the file names of the templates as they are, relative to the working directory | The connection's output directory |
 | `Author Name:` | Value of `${author}` for this run | Free text | The connection's author |
 | `Custom Variables:` | `Name` / `Value` pairs usable as `item` variables | Same table rules as elsewhere: trailing empty row, blank rows dropped | The connection's custom variables |
 | `Abbreviation:` `Apply abbreviation rule to all name fields.` | Applies abbreviation mapping automatically | Checkbox. Ticking or unticking it saves the configuration immediately | Restored from the saved configuration |
 
 | Button | Action |
 |:---:|:---|
-| `...` (next to `Output Directory:`) | Opens a directory chooser and puts the chosen path into `Output Directory:`, relative to the working directory when it sits below it. |
+| `...` (next to `Output Directory:`) | Opens a directory chooser and puts the chosen path into `Output Directory:`, relative to the user data directory or the installation when it sits below one of them. |
 | `-` (under `Custom Variables:`) | Removes the selected variable row. |
 | `Abbreviation Mapper` | Opens the [Abbreviation Mapping](#abbreviation-mapping) window. Independent of the checkbox — the rules can be edited whether or not the checkbox is set. |
 
@@ -404,8 +404,11 @@ generation will do.
 | Button | Action |
 |:---:|:---|
 | `Dark UI` | Switches between the light and dark themes, applies the change to every open window, and saves it to `config.json` immediately. |
+| Language | Selects the language of the user interface. |
 | `Generate` | Starts generation; opens the [progress window](#progress). |
 | `Close` | Closes the database connection and exits the program. |
+
+The language list offers `System Default` — the language of your operating system, and the setting a fresh installation starts with — plus `English`, `한국어`, `Español`, `日本語` and `简体中文`. Each language is named in itself, so you can find yours whatever the window currently speaks. The choice is saved to `config.json` right away, but **it only takes effect the next time you start jdbgen**; a confirmation says so. Anything jdbgen has not translated yet stays English.
 
 `Generate` refuses to start and shows an error when there is no open connection (*"Please connect to a database first."*), when no table is selected (*"Please select at least one table to generate."*), or when no template is ticked (*"Please select at least one template to generate."*).
 

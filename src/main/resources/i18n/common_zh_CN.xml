@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/common.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- generic dialog chrome -->
+  <entry key="common.dialog.error.title">错误</entry>
+  <entry key="common.dialog.info.title">提示</entry>
+  <entry key="common.button.cancel">取消</entry>
+
+  <!-- password prompt -->
+  <entry key="common.password.label">密码：</entry>
+  <entry key="common.password.confirm.label">确认：</entry>
+  <entry key="common.password.mismatch">两次输入的密码不一致。</entry>
+
+  <!-- shared UI helpers -->
+  <entry key="common.validation.required">必须填写 ''{0}''</entry>
+  <entry key="common.filechooser.imageFilter">图像/图标文件</entry>
+  <entry key="common.template.tooltip">模板名称：{0}&#10;模板文件：{1}&#10;输出文件名模板：{2}</entry>
+
+  <!-- update check and download -->
+  <entry key="common.update.title">有可用更新</entry>
+  <entry key="common.update.available">新版本 {0} 已发布。&#10;是否立即更新？</entry>
+  <entry key="common.update.failed">无法自动安装更新。</entry>
+  <entry key="common.update.manual">新版本 {0} 已发布。&#10;jdbgen 安装在没有写入权限的目录中，因此无法自行更新。</entry>
+  <entry key="common.update.manual.winget">请在命令提示符中运行以下命令进行更新：&#10;    winget upgrade Xcomart.Jdbgen</entry>
+  <entry key="common.update.openReleasePage">是否打开发布页面自行下载？</entry>
+  <entry key="common.update.progress.title">正在更新 jdbgen</entry>
+  <entry key="common.update.progress.downloading">正在下载 {0}</entry>
+
+  <!-- loading and saving the configuration -->
+  <entry key="common.config.password.enter">请输入主密码</entry>
+  <entry key="common.config.password.new">请输入新的主密码</entry>
+  <entry key="common.config.password.incorrect">密码不正确！</entry>
+  <entry key="common.config.error.title">配置错误</entry>
+  <entry key="common.config.error.message">尝试 {0} 次后仍无法打开配置。&#10;&#10;最后一次错误：{1}&#10;&#10;最可能的原因是主密码错误。您的配置文件未被修改。&#10;&#10;[确定] 重新输入密码&#10;[取消] 以默认配置启动</entry>
+  <entry key="common.config.default.title">以默认配置启动</entry>
+  <entry key="common.config.default.message">将创建默认配置，并要求您设置新的主密码。&#10;&#10;当前配置不会被删除：它会作为备份文件保留在 ''{0}'' 旁边。&#10;&#10;是否继续？</entry>
+  <entry key="common.config.default.loadFailed">无法加载默认配置：{0}</entry>
+  <entry key="common.config.backup.failed">无法备份现有配置 ''{0}''，因此未做任何改动。&#10;请检查该目录的文件权限后重试。</entry>
+  <entry key="common.config.backup.kept">现有配置已保留在：&#10;{0}&#10;&#10;将文件名改回 ''{1}'' 即可恢复。</entry>
+  <entry key="common.config.write.failed">无法将默认配置写入 ''{0}''。</entry>
+  <entry key="common.config.write.restored">&#10;&#10;先前的配置保持原样，未被更改。</entry>
+  <entry key="common.config.write.keptBackup">&#10;&#10;先前的配置保留在：&#10;{0}&#10;&#10;将文件名改回 ''{1}'' 即可恢复。</entry>
+  <entry key="common.config.save.failed">无法保存配置：{0}</entry>
+
+  <!-- language selection in the main window -->
+  <entry key="common.language.system">系统默认</entry>
+  <entry key="common.language.tooltip">界面语言，重启后生效</entry>
+  <entry key="common.language.restartRequired">语言设置将在下次启动 jdbgen 时生效。</entry>
+</properties>

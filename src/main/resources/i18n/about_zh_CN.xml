@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/about.xml. The key set has to stay identical to the English original.</comment>
+
+  <entry key="about.lblVersion.text">版本 v{0}</entry>
+  <entry key="about.jLabel2.text">作者：Dennis Park</entry>
+  <entry key="about.btnAck.text">致谢</entry>
+  <entry key="about.btnOk.text">确定</entry>
+</properties>

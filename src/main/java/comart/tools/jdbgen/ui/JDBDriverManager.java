@@ -25,7 +25,9 @@ package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.utils.AppDirs;
 import comart.utils.ClassUtils;
+import comart.utils.I18n;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
@@ -89,6 +91,10 @@ public class JDBDriverManager extends JDialog {
         applyIcons();
         eventSetup();
         tableModel = (DefaultTableModel)tabProps.getModel();
+        // the column titles come from the form's design time table model, which
+        // cannot hold custom code, so they are translated here.
+        tabProps.getColumnModel().getColumn(0).setHeaderValue(I18n.t("driverManager.tabProps.key"));
+        tabProps.getColumnModel().getColumn(1).setHeaderValue(I18n.t("driverManager.tabProps.value"));
         listModel = new DefaultListModel();
         lstDrivers.setModel(listModel);
         listModel.removeAllElements();
@@ -247,16 +253,16 @@ public class JDBDriverManager extends JDialog {
         chkColumns = new javax.swing.JCheckBox();
         btnColumns = new javax.swing.JButton();
 
-        setTitle("Driver Manager");
+        setTitle(I18n.t("driverManager.title"));
 
-        btnCancel.setText("Cancel");
+        btnCancel.setText(I18n.t("driverManager.btnCancel.text"));
         btnCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCancelActionPerformed(evt);
             }
         });
 
-        btnSave.setText("Ok");
+        btnSave.setText(I18n.t("driverManager.btnSave.text"));
         btnSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveActionPerformed(evt);
@@ -290,7 +296,7 @@ public class JDBDriverManager extends JDialog {
         jPanel3.add(btnDelDriver);
 
         jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText("Drivers");
+        jLabel1.setText(I18n.t("driverManager.jLabel1.text"));
 
         lstDrivers.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -329,10 +335,10 @@ public class JDBDriverManager extends JDialog {
         jTabbedPane1.setFont(jTabbedPane1.getFont().deriveFont(jTabbedPane1.getFont().getStyle() | java.awt.Font.BOLD, jTabbedPane1.getFont().getSize()+4));
 
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel3.setText("Driver Name:");
+        jLabel3.setText(I18n.t("driverManager.jLabel3.text"));
 
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel4.setText("JDBC Jar:");
+        jLabel4.setText(I18n.t("driverManager.jLabel4.text"));
 
         btnBrowseJar.setText("...");
         btnBrowseJar.addActionListener(new java.awt.event.ActionListener() {
@@ -345,7 +351,7 @@ public class JDBDriverManager extends JDialog {
 
         btnDownJdbc.setFont(btnDownJdbc.getFont().deriveFont(btnDownJdbc.getFont().getSize()-1f));
         btnDownJdbc.setForeground(javax.swing.UIManager.getDefaults().getColor("Component.accentColor"));
-        btnDownJdbc.setText("Download jdbc driver from Maven Repository");
+        btnDownJdbc.setText(I18n.t("driverManager.btnDownJdbc.text"));
         btnDownJdbc.setBorder(null);
         btnDownJdbc.setBorderPainted(false);
         btnDownJdbc.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
@@ -356,10 +362,10 @@ public class JDBDriverManager extends JDialog {
         });
 
         jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel8.setText("URL Template:");
+        jLabel8.setText(I18n.t("driverManager.jLabel8.text"));
 
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel9.setText("Driver Class:");
+        jLabel9.setText(I18n.t("driverManager.jLabel9.text"));
 
         txtDriverClass.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -368,7 +374,7 @@ public class JDBDriverManager extends JDialog {
         });
 
         jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel10.setText("Icon:");
+        jLabel10.setText(I18n.t("driverManager.jLabel10.text"));
 
         btnBrowseIcon.setText("...");
         btnBrowseIcon.addActionListener(new java.awt.event.ActionListener() {
@@ -380,7 +386,7 @@ public class JDBDriverManager extends JDialog {
         txtIcon.setEditable(false);
 
         jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel11.setText("Connection Props:");
+        jLabel11.setText(I18n.t("driverManager.jLabel11.text"));
 
         tabProps.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -408,7 +414,7 @@ public class JDBDriverManager extends JDialog {
             }
         });
 
-        chkNoAuth.setText("Authentication is not required for this driver.");
+        chkNoAuth.setText(I18n.t("driverManager.chkNoAuth.text"));
 
         btnIconHelp.setText("?");
 
@@ -493,7 +499,7 @@ public class JDBDriverManager extends JDialog {
                         .addContainerGap())))
         );
 
-        jTabbedPane1.addTab("General", jPanel2);
+        jTabbedPane1.addTab(I18n.t("driverManager.tab.general"), jPanel2);
 
         btnTableComments.setText("?");
         btnTableComments.addActionListener(new java.awt.event.ActionListener() {
@@ -502,7 +508,7 @@ public class JDBDriverManager extends JDialog {
             }
         });
 
-        chkTableComments.setText("Get table comments");
+        chkTableComments.setText(I18n.t("driverManager.chkTableComments.text"));
         chkTableComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkTableCommentsActionPerformed(evt);
@@ -520,7 +526,7 @@ public class JDBDriverManager extends JDialog {
             }
         });
 
-        chkColumnComments.setText("Get table column comments");
+        chkColumnComments.setText(I18n.t("driverManager.chkColumnComments.text"));
         chkColumnComments.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkColumnCommentsActionPerformed(evt);
@@ -531,7 +537,7 @@ public class JDBDriverManager extends JDialog {
         txtTableComments.setRows(5);
         jScrollPane5.setViewportView(txtTableComments);
 
-        chkTables.setText("Get table list");
+        chkTables.setText(I18n.t("driverManager.chkTables.text"));
         chkTables.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkTablesActionPerformed(evt);
@@ -553,7 +559,7 @@ public class JDBDriverManager extends JDialog {
         txtColumns.setRows(5);
         jScrollPane7.setViewportView(txtColumns);
 
-        chkColumns.setText("Get table column list");
+        chkColumns.setText(I18n.t("driverManager.chkColumns.text"));
         chkColumns.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkColumnsActionPerformed(evt);
@@ -647,7 +653,7 @@ public class JDBDriverManager extends JDialog {
             .addComponent(jScrollPane3)
         );
 
-        jTabbedPane1.addTab("Custom Queries", jPanel4);
+        jTabbedPane1.addTab(I18n.t("driverManager.tab.customQueries"), jPanel4);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -699,28 +705,28 @@ public class JDBDriverManager extends JDialog {
         }
 
         if (isNameExists) {
-            UIUtils.error(this, "Name " + txtDriverName.getText() + " exists already.");
+            UIUtils.error(this, I18n.t("driverManager.msg.nameExists", txtDriverName.getText()));
             txtDriverName.requestFocusInWindow();
         } else if (StringUtils.isBlank(txtDriverName.getText())) {
-            UIUtils.error(this, "Driver name required.");
+            UIUtils.error(this, I18n.t("driverManager.msg.driverNameRequired"));
             txtDriverName.requestFocusInWindow();
         } else if (StringUtils.isBlank(txtJarFile.getText())) {
-            UIUtils.error(this, "JDBC jar file required.");
+            UIUtils.error(this, I18n.t("driverManager.msg.jarRequired"));
             txtJarFile.requestFocusInWindow();
         } else if (StringUtils.isBlank(txtDriverClass.getText())) {
-            UIUtils.error(this, "Driver class required.");
+            UIUtils.error(this, I18n.t("driverManager.msg.driverClassRequired"));
             txtDriverClass.requestFocusInWindow();
         } else if (StringUtils.isBlank(txtTableComments.getText()) && chkTableComments.isSelected()) {
-            UIUtils.error(this, "Table comments query required.");
+            UIUtils.error(this, I18n.t("driverManager.msg.tableCommentsRequired"));
             txtTableComments.requestFocusInWindow();
         } else if (StringUtils.isBlank(txtColumnComments.getText()) && chkColumnComments.isSelected()) {
-            UIUtils.error(this, "Column comments query required.");
+            UIUtils.error(this, I18n.t("driverManager.msg.columnCommentsRequired"));
             txtColumnComments.requestFocusInWindow();
         } else if (StringUtils.isBlank(txtTables.getText()) && chkTables.isSelected()) {
-            UIUtils.error(this, "Table list query required.");
+            UIUtils.error(this, I18n.t("driverManager.msg.tablesRequired"));
             txtTables.requestFocusInWindow();
         } else if (StringUtils.isBlank(txtColumns.getText()) && chkColumns.isSelected()) {
-            UIUtils.error(this, "Column list query required.");
+            UIUtils.error(this, I18n.t("driverManager.msg.columnsRequired"));
             txtColumns.requestFocusInWindow();
         } else {
             boolean isNew = target == null;
@@ -821,7 +827,7 @@ public class JDBDriverManager extends JDialog {
 //        resetControls();
         JDBDriver driver = new JDBDriver();
         driver.setIcon("stock:generic.png");
-        driver.setName(NamingUtils.nextNameOf(drivers, "New Driver"));
+        driver.setName(NamingUtils.nextNameOf(drivers, I18n.t("driverManager.msg.newDriverName")));
         driver.setProps(new LinkedHashMap<>());
         drivers.add(driver);
         listModel.addElement(driver.getName());
@@ -833,7 +839,8 @@ public class JDBDriverManager extends JDialog {
         if (idx >= 0) {
             JDBDriver driver = drivers.get(idx);
             JDBDriver newOne = driver.toBuilder()
-                    .name(NamingUtils.nextNameOf(drivers, "Copy of " + driver.getName()))
+                    .name(NamingUtils.nextNameOf(drivers,
+                            I18n.t("driverManager.msg.copyOfName", driver.getName())))
                     .stockItem(false)
                     .build();
             if (ObjectUtils.isNotEmpty(driver.getProps()))
@@ -924,7 +931,7 @@ public class JDBDriverManager extends JDialog {
 
     private void btnBrowseJarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseJarActionPerformed
         JFileChooser fc = new JFileChooser();
-        fc.setCurrentDirectory(new File("drivers"));
+        fc.setCurrentDirectory(AppDirs.driversDir());
         fc.addChoosableFileFilter(new FileFilter() {
             @Override
             public boolean accept(File f) {
@@ -944,13 +951,13 @@ public class JDBDriverManager extends JDialog {
 
             @Override
             public String getDescription() {
-                return "Java library files";
+                return I18n.t("driverManager.filechooser.jarFilter");
             }
         });
         if (fc.showOpenDialog(this) == 0) {
-            String cpath = new File("").getAbsolutePath();
-            String fpath = fc.getSelectedFile().getAbsolutePath();
-            String relative = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
+            // a jar below the user data or the installation directory is
+            // stored relative to it, see AppDirs.resolve()
+            String relative = AppDirs.relativize(fc.getSelectedFile().getAbsolutePath());
             this.txtJarFile.setText(relative);
             updateDriver(d -> d.setJdbcJar(relative));
         }

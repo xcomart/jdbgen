@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Japanese translation of i18n/abbreviationMapper.xml. The key set has to stay identical to the English original.</comment>
+
+  <entry key="abbreviationMapper.jLabel1.text">略語マッピング</entry>
+  <entry key="abbreviationMapper.tblMapping.toolTipText">オブジェクト(テーブル、列)の名前に適用される略語マッピングルールです。</entry>
+  <entry key="abbreviationMapper.tblMapping.column.apply">適用</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">正式名</entry>
+  <entry key="abbreviationMapper.tblMapping.column.abbreviation">略語</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">置換後の文字列</entry>
+  <entry key="abbreviationMapper.btnDel.toolTipText">選択したマッピングを削除します</entry>
+  <entry key="abbreviationMapper.btnOk.text">OK</entry>
+
+  <!-- messages -->
+  <entry key="abbreviationMapper.msg.duplicated">''{0}'' が重複しています。</entry>
+  <entry key="abbreviationMapper.msg.delete.title">確認</entry>
+  <entry key="abbreviationMapper.msg.delete">{0} を削除しますか?</entry>
+  <entry key="abbreviationMapper.msg.delete.row">この行</entry>
+  <entry key="abbreviationMapper.msg.delete.mapping">''{0}'' -&gt; ''{1}''</entry>
+</properties>

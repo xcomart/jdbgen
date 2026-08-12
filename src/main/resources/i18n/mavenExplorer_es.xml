@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Spanish translation of i18n/mavenExplorer.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window and search -->
+  <entry key="mavenExplorer.title">Explorador de repositorios Maven</entry>
+  <entry key="mavenExplorer.jLabel1.text">Buscar en repositorios Maven:</entry>
+
+  <!-- result lists -->
+  <entry key="mavenExplorer.jLabel3.text">Resultados de la búsqueda</entry>
+  <entry key="mavenExplorer.jLabel4.text">Versiones</entry>
+  <entry key="mavenExplorer.btnMore.text">Más</entry>
+  <entry key="mavenExplorer.btnMore1.text">Más</entry>
+
+  <!-- buttons and credit -->
+  <entry key="mavenExplorer.btnDownload.text">Descargar y usar</entry>
+  <entry key="mavenExplorer.btnCancel.text">Cancelar</entry>
+  <entry key="mavenExplorer.jLabel2.text">Con la tecnología de</entry>
+
+  <!-- messages -->
+  <entry key="mavenExplorer.msg.noMoreResults">No hay más resultados</entry>
+  <entry key="mavenExplorer.msg.noMoreVersions">No hay más versiones</entry>
+  <entry key="mavenExplorer.msg.selectVersion">Seleccione una versión para descargar.</entry>
+  <entry key="mavenExplorer.msg.downloadComplete">Descarga completada.</entry>
+  <entry key="mavenExplorer.msg.downloadFailed">La descarga ha fallado.</entry>
+
+  <!-- download progress log -->
+  <entry key="mavenExplorer.progress.saving">guardando el controlador en {0}...</entry>
+  <entry key="mavenExplorer.progress.received">{0}/{1} bytes recibidos.</entry>
+  <entry key="mavenExplorer.progress.complete">Descarga completada.</entry>
+  <entry key="mavenExplorer.progress.failed">la descarga ha fallado: {0}</entry>
+</properties>

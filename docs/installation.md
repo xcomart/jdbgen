@@ -1,6 +1,6 @@
 # Installation
 
-jdbgen ships as a single ZIP archive that contains everything it needs except the JDBC drivers themselves. This page covers what you need before you start, how to unpack and run the application, where it keeps its configuration, and what the bundled sample connection and drivers give you out of the box.
+jdbgen ships in two forms: a portable ZIP archive for every platform, and a Windows installer (MSI) that carries its own Java runtime. Both contain everything the application needs except the JDBC drivers themselves. This page covers what you need before you start, how to install and run the application, where it keeps its configuration, and what the bundled sample connection and drivers give you out of the box.
 
 [← Documentation index](README.md)
 
@@ -8,12 +8,12 @@ jdbgen ships as a single ZIP archive that contains everything it needs except th
 
 | | |
 |---|---|
-| Java | The application itself is compiled for Java 11 (`options.release = 11`), so a **JRE 11 or newer** is enough to run the jar. |
-| Operating system | Anything with a desktop Java runtime — Linux, macOS, Windows. The UI is Swing with the [FlatLaf](https://www.formdev.com/flatlaf/) look and feel. |
-| Disk space | About 10 MB for the unpacked distribution, plus whatever JDBC driver jars you download. |
+| Java | Only for the ZIP distribution. The application is compiled for Java 11 (`options.release = 11`), so a **JRE 11 or newer** is enough to run the jar. **The Windows MSI needs no Java at all** — it installs a runtime of its own alongside the application. |
+| Operating system | Anything with a desktop Java runtime — Linux, macOS, Windows. The UI is Swing with the [FlatLaf](https://www.formdev.com/flatlaf/) look and feel. The MSI is Windows only. |
+| Disk space | About 10 MB for the unpacked ZIP distribution. The MSI is around 55 MB because of the bundled runtime. Add whatever JDBC driver jars you download. |
 | Network | Optional. It is only used for the update check, the Maven Repository Explorer, and remote (`http`/`https`) icon URLs. |
 
-Make sure the `bin` directory of your Java installation is on `PATH`, or that `JAVA_HOME` points at the installation.
+If you use the ZIP, make sure the `bin` directory of your Java installation is on `PATH`, or that `JAVA_HOME` points at the installation.
 
 Both launchers read the version from `java -version`, which a plain JRE provides,
 and refuse to start only when the major version is below 11. A version string
@@ -28,7 +28,24 @@ never blocks startup.
 
 ## Download and install
 
-1. Download `jdbgen-<version>.zip` from the [latest release](https://github.com/xcomart/jdbgen/releases/latest).
+Both the ZIP and the MSI are attached to every [release](https://github.com/xcomart/jdbgen/releases/latest). Which one to take depends on the platform and on whether you want a real installation or a directory you can carry around.
+
+### Windows: the installer
+
+1. Download `jdbgen-<version>.msi` from the [latest release](https://github.com/xcomart/jdbgen/releases/latest) and run it.
+2. It installs into `C:\Program Files\jdbgen` by default and adds a Start menu entry and a desktop shortcut.
+
+The MSI bundles a Java runtime, so nothing else has to be installed first. Once the package is available in winget, the same installer can be fetched from the command line:
+
+```bat
+winget install Xcomart.Jdbgen
+```
+
+The Windows Installer entry is keyed on a fixed upgrade code, so a later MSI upgrades the installation in place rather than putting a second copy next to it.
+
+### Every platform: the ZIP archive
+
+1. Download `jdbgen-<version>.zip` from the [latest release](https://github.com/xcomart/jdbgen/releases/latest). This one needs a JRE 11 or newer.
 2. Unpack it wherever you like. The archive already contains a top-level `jdbgen-<version>/` directory, so it will not scatter files into the current directory.
 3. On Linux/macOS, make the launcher executable if your unzip tool dropped the permission bit:
 
@@ -36,15 +53,17 @@ never blocks startup.
    chmod +x jdbgen-<version>/jdbgen.sh
    ```
 
-There is no installer and nothing is written outside the unpacked directory.
+Nothing is written into the unpacked directory beyond what the archive brought; your configuration and downloaded drivers go into the [user data directory](#where-jdbgen-keeps-its-data) instead.
 
 ## Directory layout
+
+The installation directory — the unpacked archive, or the `app` directory below the MSI's install location — holds only the files of the release, and jdbgen only ever reads from it:
 
 ```
 jdbgen-<version>/
 ├── jdbgen-<version>.jar     the application
-├── jdbgen.sh                launcher for Linux/Unix/macOS
-├── jdbgen.cmd               launcher for Windows
+├── jdbgen.sh                launcher for Linux/Unix/macOS   (ZIP only)
+├── jdbgen.cmd               launcher for Windows            (ZIP only)
 ├── lib/                     22 dependency jars (gson, flatlaf, okhttp, logback, …)
 ├── templates/               sample templates
 │   ├── java_model.java
@@ -56,16 +75,15 @@ jdbgen-<version>/
 └── sample_h2.db.mv.db       small H2 database to try the tool against
 ```
 
-Two directories appear the first time you run the application:
-
-```
-├── config.json              your configuration (created on first run)
-└── drivers/                 JDBC driver jars downloaded through the UI
-```
+Everything the application writes — `config.json`, its backups, the `drivers/` directory, the generated files — lives in a per-user directory outside the installation. See [Where jdbgen keeps its data](#where-jdbgen-keeps-its-data). That is what makes an installation below `C:\Program Files` work: it never has to be written to.
 
 > **Do not move the jar out of this directory.** Its manifest declares a `Class-Path` of `lib/*.jar` relative to the jar's own location, so a jar without its sibling `lib/` directory fails to start.
 
 ## Running
+
+### From the Start menu (MSI)
+
+The installer generates a native `jdbgen.exe` launcher that starts the bundled runtime. Use the Start menu entry or the desktop shortcut; there is nothing to configure and no console window appears.
 
 ### With the bundled launcher
 
@@ -84,8 +102,7 @@ Both scripts `cd` into the installation directory before starting Java, locate `
 ### Directly with `java -jar`
 
 ```bash
-cd /path/to/jdbgen-<version>
-java -jar jdbgen-<version>.jar
+java -jar /path/to/jdbgen-<version>/jdbgen-<version>.jar
 ```
 
 This is the recommended route if you only have a JRE, or if you want to pass extra JVM options:
@@ -94,29 +111,34 @@ This is the recommended route if you only have a JRE, or if you want to pass ext
 java -Duser.language=en -jar jdbgen-<version>.jar
 ```
 
-### The working directory matters
+The directory you run this from does not matter — see below.
 
-Every path the application uses for its own data is **relative to the current working directory**, not to the jar:
+### The working directory does not matter
 
-| Path | Used for |
+Two directories are told apart, and neither of them is the directory you happen to start jdbgen from:
+
+| Directory | Holds |
 |---|---|
-| `config.json` | the entire configuration |
-| `config.json.<yyyyMMdd_HHmmss>.bak` | configuration backups |
-| `drivers/` | JDBC jars downloaded through the Maven Repository Explorer |
-| `resource/icon.png` | window/dock icon |
-| `resource/loading.gif` | busy indicator |
+| the **user data directory**, a per-user location of the operating system | `config.json`, its `.bak` backups, `drivers/`, the sample database copy — everything the application writes |
+| the **installation**, the directory of the running jar | `resource/icon.png`, `resource/loading.gif`, `templates/`, `sample_h2.db.mv.db` — the read-only files of the release |
 
-The launcher scripts take care of this by `cd`-ing into the installation directory first. When you run `java -jar` yourself, **`cd` into the installation directory first** — otherwise you get a fresh empty configuration in whatever directory you happened to be in, and the window icon and busy animation will be missing.
-
-If you want a desktop launcher or shell alias, make it change directory first:
+Starting the jar from an unrelated directory therefore no longer produces a second, empty configuration, and the window icon and busy animation are found either way. The launcher scripts still `cd` into the installation directory, but only because the jar and its `lib/` live there; a plain shell alias works just as well:
 
 ```bash
-alias jdbgen='(cd /opt/jdbgen-<version> && java -jar jdbgen-<version>.jar)'
+alias jdbgen='java -jar /opt/jdbgen-<version>/jdbgen-<version>.jar'
 ```
+
+Both locations can be overridden with a system property, which is how you get the old portable behaviour back — everything next to the application, nothing under your home directory:
+
+```bash
+java -Djdbgen.dataDir=/media/usb/jdbgen-data -jar jdbgen-<version>.jar
+```
+
+`-Djdbgen.resourceBase=<dir>` does the same for the read-only side, for the rare case that `templates/` and `resource/` do not sit next to the jar.
 
 ## First run
 
-1. **Update check.** On startup the application queries the GitHub Releases API for `xcomart/jdbgen`. If a newer tag than the running version is found, it offers to update; accepting opens the [releases page](https://github.com/xcomart/jdbgen/releases/latest) in your browser and exits so you can download the new archive. The update is not applied automatically. If the network is unreachable the check fails quietly and startup continues.
+1. **Update check.** On startup the application queries the GitHub Releases API for `xcomart/jdbgen`. If a newer tag than the running version is found and the installation directory is writable, it offers to update; accepting downloads the new archive, installs it over the current directory and restarts jdbgen. Cancelling the download simply continues the startup. If the installation cannot be written to — an MSI installation below `C:\Program Files`, or a directory owned by another user — jdbgen only reports the new version and tells you how to install it. If the network is unreachable the check fails quietly and startup continues. See [Updating](#updating) for what is replaced and what is kept.
 
 2. **Master password.** With no `config.json` present, the application asks you to choose a master password.
 
@@ -134,18 +156,36 @@ alias jdbgen='(cd /opt/jdbgen-<version> && java -jar jdbgen-<version>.jar)'
    |---|---|
    | Connection name | `Sample H2 Embedded` |
    | Driver | `H2 Embedded` |
-   | Connection URL | `jdbc:h2:./sample_h2.db` |
-   | Output directory | `output` |
-   | Templates | `Java Model`, `MyBatis mapper`, `PHP CI Model` (from `templates/`) |
+   | Connection URL | `jdbc:h2:<user data directory>/sample_h2.db` |
+   | Output directory | `<user data directory>/output` |
+   | Templates | `Java Model`, `MyBatis mapper`, `PHP CI Model`, as absolute paths into the installation's `templates/` |
    | Author | your OS login name |
 
-   The URL is relative, so it resolves to the bundled `sample_h2.db.mv.db` as long as the working directory is the installation directory. You still need the H2 driver jar — download it with the Maven Repository Explorer (search for `h2database`), then pick a schema, tick the templates and press **Generate**. Files land in `output/`. See [ui-guide.md](ui-guide.md) for a walkthrough of the windows.
+   The paths are absolute, so the sample works from anywhere. Building the default configuration copies the release's `sample_h2.db.mv.db` into the user data directory first, because an embedded H2 database has to be writable — the copy in the installation is left alone. You still need the H2 driver jar — download it with the Maven Repository Explorer (search for `h2database`), then pick a schema, tick the templates and press **Generate**. Files land in the output directory. See [ui-guide.md](ui-guide.md) for a walkthrough of the windows.
 
 ## Where jdbgen keeps its data
 
+Everything the application writes goes into a single per-user directory:
+
+| Platform | Location |
+|---|---|
+| Windows | `%APPDATA%\jdbgen` — normally `C:\Users\<you>\AppData\Roaming\jdbgen` |
+| macOS | `~/Library/Application Support/jdbgen` |
+| Linux and other Unix | `$XDG_CONFIG_HOME/jdbgen`, or `~/.config/jdbgen` when that variable is not set |
+
+It holds `config.json`, its `.bak` backups, `drivers/`, the default output directory `output/`, and the copy of the sample database. The directory is created on first use, and `-Djdbgen.dataDir=<dir>` moves it somewhere else — see [The working directory does not matter](#the-working-directory-does-not-matter).
+
+### Upgrading from 0.3.0 or older
+
+Releases up to and including 0.3.0 kept these files next to the application. On the first start of a newer build, if the user data directory has no `config.json` yet and the installation directory (or the directory jdbgen was started from) has one, the configuration, its backups and the whole `drivers/` directory are **copied** across. Nothing is moved or deleted: the old installation keeps working exactly as it did, but from that point on it is the copy in the user data directory that gets updated, so changes made with the new build will not show up in the old one.
+
+The copy happens once. Once the user data directory has a `config.json`, it is never overwritten.
+
+Relative paths inside a configuration — a driver jar as `drivers/h2.jar`, a template as `templates/java_model.java`, the output directory as `output` — are looked for in the user data directory first and in the installation afterwards, which is what keeps a carried-over configuration working. Absolute paths are used as they are. The directory a file chooser picks is stored back the same way: relative when it sits below one of the two directories, absolute otherwise, so it names the same place on the next start whatever directory jdbgen is started from.
+
 ### `config.json`
 
-All state — connections, drivers, template presets, abbreviation rules, the Maven search endpoints and the light/dark UI flag — lives in a single `config.json` in the working directory. It is written whenever you confirm a change in one of the manager windows.
+All state — connections, drivers, template presets, abbreviation rules, the Maven search endpoints and the light/dark UI flag — lives in a single `config.json` in the user data directory. It is written whenever you confirm a change in one of the manager windows.
 
 ### Backups
 
@@ -179,7 +219,7 @@ Configurations written by older releases used a weaker scheme: plain Base64 (no 
 
 ### `drivers/`
 
-JDBC jars fetched through the Maven Repository Explorer are saved under `drivers/`, again relative to the working directory. You can also point a driver at a jar anywhere on disk.
+JDBC jars fetched through the Maven Repository Explorer are saved under `drivers/` in the user data directory. You can also point a driver at a jar anywhere on disk.
 
 ## Bundled JDBC drivers
 
@@ -209,17 +249,51 @@ All ten are marked as *stock* items: they cannot be fully edited or deleted in t
 
 ## Updating
 
-jdbgen does not update itself. When the startup check reports a new release and you accept, it opens the releases page and exits.
+The startup check behaves differently depending on whether jdbgen can replace its own files. It finds out by actually creating a file in the installation directory, not by looking at permission bits — a directory below `C:\Program Files` reports itself as writable while every write is denied or redirected.
 
-To upgrade:
+### An MSI installation, or any read-only installation
+
+There is nothing to accept: the dialog reports the new version, explains that jdbgen is installed where it may not write, and — on Windows — gives you the command to run:
+
+```bat
+winget upgrade Xcomart.Jdbgen
+```
+
+It then offers to open the [releases page](https://github.com/xcomart/jdbgen/releases/latest), where the MSI of the new version can be downloaded and run by hand. Installing a newer MSI upgrades the existing installation; your configuration and drivers are untouched by it, because they live outside the installation directory.
+
+### An unpacked ZIP installation
+
+When the installation directory is writable and you accept the update, jdbgen updates itself in place:
+
+1. The release archive is downloaded into `<installation>/.update/`, with a progress window you can cancel at any time.
+2. The archive is unpacked and jdbgen exits, handing over to a small updater process that runs from a copy of the jar in `.update/`.
+3. The updater replaces the installed files, starts the new version and removes its working files. `.update/updater.jar` and `.update/update.log` are left behind and cleaned up the next time jdbgen starts; the log is where to look if an update went wrong.
+
+The update runs entirely inside the installation directory. Your data is not part of it: `config.json`, the backups and `drivers/` live in the user data directory and are never seen by the updater.
+
+What the updater does with each file:
+
+| Path | |
+|---|---|
+| `jdbgen-<version>.jar`, `lib/` | replaced — the old jar and the whole `lib/` are moved to `.update/backup/` first |
+| `jdbgen.cmd`, `jdbgen.sh`, `resource/` | overwritten, they belong to the release |
+| `templates/`, `sample_h2.db.mv.db` | kept; only files that are missing are added, so edited templates and the sample database survive |
+| anything else in the directory, including a `config.json` left behind by an older release | never touched |
+
+If anything fails halfway, the previous jar and `lib/` are moved back from `.update/backup/`, the new version is not started, and that backup is kept until the next start — should the restore have failed too, it is the only copy left. The old version keeps running in the meantime.
+
+**Updating by hand.** If the automatic update fails, jdbgen offers to open the releases page. To upgrade manually:
 
 1. Download and unpack the new `jdbgen-<version>.zip` next to the old one.
-2. Copy `config.json` (and `drivers/`, if you keep jars there) from the old directory into the new one.
-3. Start the new version and enter your master password. If your configuration was written by an older release, the encrypted fields are silently upgraded to the current format on first load.
-4. Once you are satisfied, delete the old directory.
+2. Start the new version and enter your master password. There is nothing to copy across: it reads the same `config.json` from the same user data directory. If your configuration was written by an older release, the encrypted fields are silently upgraded to the current format on first load.
+3. Once you are satisfied, delete the old directory.
 
 Keep a copy of `config.json` before upgrading — it is the only file that holds your work.
 
 ## Uninstalling
 
-Delete the unpacked `jdbgen-<version>/` directory. Nothing is installed elsewhere: no registry keys, no files under your home directory, no services. If you ran the jar from other working directories, remove the stray `config.json`, `config.json.*.bak` and `drivers/` those runs created.
+**MSI.** Remove *jdbgen* through Settings → Apps → Installed apps, or with `winget uninstall Xcomart.Jdbgen`. The installation directory goes away with it.
+
+**ZIP.** Delete the unpacked `jdbgen-<version>/` directory.
+
+Neither removes your data. `config.json`, its backups, `drivers/` and the generated files stay in the [user data directory](#where-jdbgen-keeps-its-data) — delete that directory too if you want nothing left. Reinstalling later picks the configuration back up. Beyond that directory nothing is installed anywhere: no registry keys beyond the installer's own entry, and no services.

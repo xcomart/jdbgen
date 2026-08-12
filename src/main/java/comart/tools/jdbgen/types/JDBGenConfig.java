@@ -26,6 +26,10 @@ package comart.tools.jdbgen.types;
 import comart.tools.jdbgen.types.maven.MavenConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import comart.utils.AppDirs;
+import comart.utils.I18n;
 import comart.utils.ObjUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
@@ -54,7 +58,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class JDBGenConfig {
-    private static final String CONF_PATH = "config.json";
+    /** name of the sample database shipped with the release. */
+    static final String SAMPLE_DB_FILE = "sample_h2.db.mv.db";
+    /** the H2 database name the sample connection opens, without a suffix. */
+    static final String SAMPLE_DB_NAME = "sample_h2.db";
     private static JDBGenConfig INSTANCE = null;
     private boolean isDarkUI = false;
     private List<JDBConnection> connections;
@@ -63,15 +70,76 @@ public class JDBGenConfig {
     private List<JDBAbbr> abbrs = new ArrayList<>();
     private MavenConfig maven;
     private boolean applyAbbr = false;
+    /**
+     * user interface language: <code>null</code>, an empty value or
+     * <code>"system"</code> keep the operating system locale, anything else is
+     * a language tag such as <code>"en"</code> or <code>"ko"</code>.
+     */
+    private String language = null;
 
     public static JDBGenConfig getInstance() {
         return getInstance(false);
     }
-    
+
+    /**
+     * The configuration file, below the user data directory of the operating
+     * system - the installation directory may well be read only.
+     *
+     * @see AppDirs#userDataDir()
+     */
+    public static File configFile() {
+        return AppDirs.userDataFile(AppDirs.CONFIG_NAME);
+    }
+
+    /**
+     * Read the <code>language</code> setting out of the configuration file,
+     * without asking for the master password.
+     *
+     * @see #peekLanguage(File)
+     */
+    public static String peekLanguage() {
+        return peekLanguage(configFile());
+    }
+
+    /**
+     * Read the <code>language</code> setting out of <code>f</code>.
+     *
+     * <p>The language has to be known before any dialog is shown, and the
+     * master password prompt is a dialog itself. Only the three connection
+     * fields of the configuration are encrypted, so the file parses as plain
+     * JSON and this single entry can be read without a password.</p>
+     *
+     * @return the stored language tag, or <code>null</code> when there is no
+     *         configuration, it cannot be parsed or it carries no language.
+     */
+    public static String peekLanguage(File f) {
+        if (f == null || !f.isFile())
+            return null;
+        try (FileReader fr = new FileReader(f, StandardCharsets.UTF_8)) {
+            JsonObject obj = new Gson().fromJson(fr, JsonObject.class);
+            if (obj == null)
+                return null;
+            JsonElement el = obj.get("language");
+            if (el == null || !el.isJsonPrimitive())
+                return null;
+            String lang = el.getAsString();
+            return StrUtils.isEmpty(lang) ? null : lang.trim();
+        } catch (Exception e) {
+            // a broken or unreadable configuration is reported later on, by
+            // the load that actually needs it; startup just keeps the system
+            // language here.
+            log.warn("cannot read the language setting of '{}': {}",
+                    f, e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+
     public static synchronized JDBGenConfig getInstance(boolean useDefault) {
         if (INSTANCE == null) {
-            log.info("config path: {}", CONF_PATH);
-            File f = new File(CONF_PATH);
+            File f = configFile();
+            String confPath = f.getAbsolutePath();
+            log.info("config path: {}", confPath);
             Gson gson = new Gson();
             if (!useDefault) {
                 // the password may be retried as often as the user wants: an
@@ -80,7 +148,9 @@ public class JDBGenConfig {
                 int cnt = 0;
                 while (true) {
                     boolean isNew = !(f.exists() && f.isFile());
-                    String message = isNew ? "Enter new master password": "Enter master password";
+                    String message = I18n.t(isNew
+                            ? "common.config.password.new"
+                            : "common.config.password.enter");
                     String master = UIUtils.password(message, isNew);
                     if (master == null)
                         System.exit(1);
@@ -91,36 +161,30 @@ public class JDBGenConfig {
                         INSTANCE = (JDBGenConfig)gson.fromJson(fr, JDBGenConfig.class);
                         if (INSTANCE != null)
                             break;
-                        throw new IOException("configuration '" + CONF_PATH + "' is empty");
+                        throw new IOException("configuration '" + confPath + "' is empty");
                     } catch (Exception e) {
-                        log.error("cannot load configuration '" + CONF_PATH + "'", e);
+                        log.error("cannot load configuration '" + confPath + "'", e);
                         cnt++;
                         if (cnt < 3) {
-                            UIUtils.error(null, "Password Incorrect!");
+                            UIUtils.error(null, I18n.t("common.config.password.incorrect"));
                             continue;
                         }
-                        boolean retry = UIUtils.confirm(null, "Configuration Error",
-                                "The configuration could not be opened after " + cnt +
-                                " attempts.\n\nLast error: " +
-                                e.getClass().getSimpleName() + ": " + e.getLocalizedMessage() +
-                                "\n\nThe most likely cause is a wrong master password." +
-                                " Your configuration file has NOT been changed." +
-                                "\n\n[OK] Try the password again" +
-                                "\n[Cancel] Start with a default configuration");
+                        boolean retry = UIUtils.confirm(null,
+                                I18n.t("common.config.error.title"),
+                                I18n.t("common.config.error.message", cnt,
+                                        describe(e)));
                         if (retry) {
                             cnt = 0;
                             continue;
                         }
                         // discarding the current configuration needs an explicit
                         // acknowledgement, it is the user's only copy of it.
-                        boolean isOk = UIUtils.confirm(null, "Start With Default Configuration",
-                                "A default configuration will be created and a new master" +
-                                " password will be asked for.\n\nYour current configuration is" +
-                                " not deleted: it is kept as a backup file next to '" +
-                                CONF_PATH + "'.\n\nDo you want to continue?");
+                        boolean isOk = UIUtils.confirm(null,
+                                I18n.t("common.config.default.title"),
+                                I18n.t("common.config.default.message", confPath));
                         if (!isOk)
                             System.exit(1);
-                        master = UIUtils.password("Enter new master password", true);
+                        master = UIUtils.password(I18n.t("common.config.password.new"), true);
                         if (master == null)
                             System.exit(1);
                         StrUtils.setMaster(master);
@@ -134,26 +198,9 @@ public class JDBGenConfig {
                 try (InputStreamReader ir = new InputStreamReader(
                         JDBGenConfig.class.getResourceAsStream("/defaultConfig.json"), StandardCharsets.UTF_8)) {
                     INSTANCE = (JDBGenConfig)gson.fromJson(ir, JDBGenConfig.class);
-
-                    // create sample connection with H2 Embedded
-                    JDBConnection jcon = new JDBConnection();
-                    jcon.setAuthor(ObjUtils.getLoginUserId());
-                    jcon.setConnectionProps(new HashMap<>());
-                    jcon.setConnectionUrl("jdbc:h2:./sample_h2.db");
-                    jcon.setDriverType("H2 Embedded");
-                    jcon.setIcon("stock:h2.png");
-                    jcon.setName("Sample H2 Embedded");
-                    jcon.setOutputDir("output");
-                    List<JDBTemplate> templates = new ArrayList<>(Arrays.asList(
-                        new JDBTemplate("Java Model", "templates/java_model.java", "${name.suffix.pascal}Model.java"),
-                        new JDBTemplate("MyBatis mapper", "templates/mybatis_mapper.xml", "${name.suffix.camel}-mapper.xml"),
-                        new JDBTemplate("PHP CI Model", "templates/php_ci.php", "${name.suffix.lower}_ci_model.php")
-                    ));
-                    jcon.setTemplates(templates);
-                    INSTANCE.connections = new ArrayList<>(Arrays.asList(jcon));
+                    INSTANCE.connections = new ArrayList<>(Arrays.asList(createSampleConnection()));
                 } catch (Exception e) {
-                    UIUtils.error(null, "Cannot load default configuration: " +
-                            e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
+                    UIUtils.error(null, I18n.t("common.config.default.loadFailed", describe(e)));
                     log.error("cannot recover previous error.", e);
                     System.exit(1);
                 }
@@ -175,6 +222,75 @@ public class JDBGenConfig {
     }
 
     /**
+     * the technical detail of a failure, appended to a translated message. It
+     * is not translated itself: the exception text comes from the JDK or from
+     * a driver.
+     */
+    private static String describe(Throwable t) {
+        return t.getClass().getSimpleName() + ": " + t.getLocalizedMessage();
+    }
+
+    /**
+     * The sample connection of a fresh configuration.
+     *
+     * <p>Every path it carries is absolute: the templates and the icons are
+     * read out of the installation, everything that is written - the sample
+     * database and the generated sources - lives below the user data
+     * directory, which is writable even when the application is installed
+     * below <code>C:\Program Files</code>.</p>
+     */
+    static JDBConnection createSampleConnection() {
+        JDBConnection jcon = new JDBConnection();
+        jcon.setAuthor(ObjUtils.getLoginUserId());
+        jcon.setConnectionProps(new HashMap<>());
+        jcon.setConnectionUrl("jdbc:h2:" + sampleDatabaseUrlPath());
+        jcon.setDriverType("H2 Embedded");
+        jcon.setIcon("stock:h2.png");
+        jcon.setName("Sample H2 Embedded");
+        jcon.setOutputDir(AppDirs.userDataFile("output").getAbsolutePath());
+        List<JDBTemplate> templates = new ArrayList<>(Arrays.asList(
+            new JDBTemplate("Java Model", templatePath("java_model.java"),
+                    "${name.suffix.pascal}Model.java"),
+            new JDBTemplate("MyBatis mapper", templatePath("mybatis_mapper.xml"),
+                    "${name.suffix.camel}-mapper.xml"),
+            new JDBTemplate("PHP CI Model", templatePath("php_ci.php"),
+                    "${name.suffix.lower}_ci_model.php")
+        ));
+        jcon.setTemplates(templates);
+        return jcon;
+    }
+
+    private static String templatePath(String name) {
+        return AppDirs.installResourceFile("templates/" + name).getAbsolutePath();
+    }
+
+    /**
+     * copy the sample database shipped with the release next to the
+     * configuration, so that the sample connection can write to it, and name
+     * the copy the way an H2 URL does - without the <code>.mv.db</code> suffix
+     * H2 appends itself, and with '/' separators, which H2 understands on
+     * every platform.
+     *
+     * <p>A release without the sample database - or a copy that fails - only
+     * means that the sample connection has nothing to open yet, which is
+     * reported when it is used.</p>
+     */
+    private static String sampleDatabaseUrlPath() {
+        File target = AppDirs.userDataFile(SAMPLE_DB_FILE);
+        File source = AppDirs.installResourceFile(SAMPLE_DB_FILE);
+        if (!target.exists() && source.isFile()) {
+            try {
+                Files.copy(source.toPath(), target.toPath());
+                log.info("copied the sample database to '{}'", target);
+            } catch (Exception e) {
+                log.warn("cannot copy the sample database '{}' to '{}': {}",
+                        source, target, e.getLocalizedMessage());
+            }
+        }
+        return AppDirs.userDataFile(SAMPLE_DB_NAME).getAbsolutePath().replace('\\', '/');
+    }
+
+    /**
      * write the freshly built default configuration over an existing one, in a
      * way that can never leave the user without a configuration file: the old
      * file is moved aside first and moved back when the write fails.
@@ -184,33 +300,28 @@ public class JDBGenConfig {
         if (f.exists() && f.isFile()) {
             backup = backupExistingConfig(f);
             if (backup == null) {
-                UIUtils.error(null, "The existing configuration '" + f.getAbsolutePath() +
-                        "' could not be backed up, so it was left untouched." +
-                        "\nCheck the file permissions of its directory and start again.");
+                UIUtils.error(null, I18n.t("common.config.backup.failed", f.getAbsolutePath()));
                 System.exit(1);
             }
         }
 
         if (saveInstance(null)) {
             if (backup != null) {
-                UIUtils.info(null, "Your existing configuration has been kept at:\n" +
-                        backup.toAbsolutePath() +
-                        "\n\nRestore it by renaming the file back to '" + f.getName() + "'.");
+                UIUtils.info(null, I18n.t("common.config.backup.kept",
+                        backup.toAbsolutePath().toString(), f.getName()));
             }
             return;
         }
 
         // the default configuration could not be written: put the user's file
         // back where it was rather than leaving no configuration at all.
-        String message = "The default configuration could not be written to '" +
-                f.getAbsolutePath() + "'.";
+        String message = I18n.t("common.config.write.failed", f.getAbsolutePath());
         if (backup != null) {
             if (restoreBackup(backup, f)) {
-                message += "\n\nYour previous configuration has been left in place, unchanged.";
+                message += I18n.t("common.config.write.restored");
             } else {
-                message += "\n\nYour previous configuration is kept at:\n" +
-                        backup.toAbsolutePath() +
-                        "\n\nRestore it by renaming the file back to '" + f.getName() + "'.";
+                message += I18n.t("common.config.write.keptBackup",
+                        backup.toAbsolutePath().toString(), f.getName());
             }
         }
         UIUtils.error(null, message);
@@ -283,18 +394,18 @@ public class JDBGenConfig {
     public static synchronized boolean saveInstance(Container parent) {
         Gson gson = (new GsonBuilder()).setPrettyPrinting().create();
 
+        File conf = configFile();
         try {
             String json = gson.toJson(INSTANCE);
-            try (FileWriter fw = new FileWriter(CONF_PATH, StandardCharsets.UTF_8)) {
+            try (FileWriter fw = new FileWriter(conf, StandardCharsets.UTF_8)) {
                 fw.write(json);
             }
             return true;
         } catch (Exception e) {
             // not only IOException: encryption of the stored passwords may fail
             // as well, and it must not escape into the caller's error handling.
-            log.error("cannot save configuration '" + CONF_PATH + "'", e);
-            UIUtils.error(null, "Cannot save configuration: " +
-                    e.getClass().getSimpleName() + ": " + e.getLocalizedMessage());
+            log.error("cannot save configuration '" + conf.getAbsolutePath() + "'", e);
+            UIUtils.error(null, I18n.t("common.config.save.failed", describe(e)));
         }
 
         return false;

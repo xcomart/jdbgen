@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Korean translation of i18n/presets.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- preset list -->
+  <entry key="presets.jLabel1.text">템플릿 프리셋</entry>
+
+  <!-- preset detail -->
+  <entry key="presets.jLabel2.text">프리셋 상세</entry>
+  <entry key="presets.jLabel3.text">프리셋 이름:</entry>
+  <entry key="presets.tabTemplates.column.templateName">템플릿 이름</entry>
+  <entry key="presets.tabTemplates.column.templateFile">템플릿 파일</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">출력 파일명</entry>
+  <entry key="presets.btnNewTemplate.text">새로 만들기</entry>
+  <entry key="presets.btnDelTemplate.text">삭제</entry>
+  <entry key="presets.btnSaveTemplate.text">적용</entry>
+  <entry key="presets.jLabel9.text">템플릿 이름:</entry>
+  <entry key="presets.jLabel8.text">템플릿 파일:</entry>
+  <entry key="presets.jLabel13.text">출력 파일명 템플릿:</entry>
+
+  <!-- bottom bar -->
+  <entry key="presets.btnNewFromConn.text">현재 연결로 프리셋 만들기</entry>
+  <entry key="presets.btnApply.text">현재 연결에 적용</entry>
+  <entry key="presets.btnSave.text">저장</entry>
+  <entry key="presets.btnCancel.text">취소</entry>
+
+  <!-- generated preset names -->
+  <entry key="presets.msg.newName">새 프리셋</entry>
+  <entry key="presets.msg.copyName">{0} 복사본</entry>
+
+  <!-- messages -->
+  <entry key="presets.msg.cloneFailed">프리셋을 복제할 수 없습니다: {0}</entry>
+  <entry key="presets.msg.delete.title">프리셋 삭제</entry>
+  <entry key="presets.msg.delete">프리셋 ''{0}''을(를) 삭제하시겠습니까?</entry>
+  <entry key="presets.msg.nameExists">{0} 이름은 이미 사용 중입니다.</entry>
+  <entry key="presets.msg.nameRequired">프리셋 이름을 입력하세요.</entry>
+</properties>

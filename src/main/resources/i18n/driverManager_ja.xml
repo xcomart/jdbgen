@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Japanese translation of i18n/driverManager.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window and buttons -->
+  <entry key="driverManager.title">ドライバーマネージャー</entry>
+  <entry key="driverManager.btnCancel.text">キャンセル</entry>
+  <entry key="driverManager.btnSave.text">OK</entry>
+
+  <!-- driver list -->
+  <entry key="driverManager.jLabel1.text">ドライバー</entry>
+
+  <!-- tabs -->
+  <entry key="driverManager.tab.general">一般</entry>
+  <entry key="driverManager.tab.customQueries">カスタムクエリ</entry>
+
+  <!-- general tab -->
+  <entry key="driverManager.jLabel3.text">ドライバー名:</entry>
+  <entry key="driverManager.jLabel4.text">JDBC Jar:</entry>
+  <entry key="driverManager.btnDownJdbc.text">Maven リポジトリから JDBC ドライバーをダウンロード</entry>
+  <entry key="driverManager.jLabel8.text">URL テンプレート:</entry>
+  <entry key="driverManager.jLabel9.text">ドライバークラス:</entry>
+  <entry key="driverManager.jLabel10.text">アイコン:</entry>
+  <entry key="driverManager.jLabel11.text">接続プロパティ:</entry>
+  <entry key="driverManager.tabProps.key">キー</entry>
+  <entry key="driverManager.tabProps.value">値</entry>
+  <entry key="driverManager.chkNoAuth.text">このドライバーは認証を必要としません。</entry>
+
+  <!-- custom queries tab -->
+  <entry key="driverManager.chkTableComments.text">テーブルコメントを取得</entry>
+  <entry key="driverManager.chkColumnComments.text">テーブルの列コメントを取得</entry>
+  <entry key="driverManager.chkTables.text">テーブル一覧を取得</entry>
+  <entry key="driverManager.chkColumns.text">テーブルの列一覧を取得</entry>
+
+  <!-- validation and messages -->
+  <entry key="driverManager.msg.nameExists">名前 ''{0}'' は既に使用されています。</entry>
+  <entry key="driverManager.msg.driverNameRequired">ドライバー名を入力してください。</entry>
+  <entry key="driverManager.msg.jarRequired">JDBC jar ファイルを指定してください。</entry>
+  <entry key="driverManager.msg.driverClassRequired">ドライバークラスを入力してください。</entry>
+  <entry key="driverManager.msg.tableCommentsRequired">テーブルコメント取得クエリを入力してください。</entry>
+  <entry key="driverManager.msg.columnCommentsRequired">列コメント取得クエリを入力してください。</entry>
+  <entry key="driverManager.msg.tablesRequired">テーブル一覧取得クエリを入力してください。</entry>
+  <entry key="driverManager.msg.columnsRequired">列一覧取得クエリを入力してください。</entry>
+  <entry key="driverManager.msg.newDriverName">新しいドライバー</entry>
+  <entry key="driverManager.msg.copyOfName">{0} のコピー</entry>
+  <entry key="driverManager.filechooser.jarFilter">Java ライブラリファイル</entry>
+</properties>

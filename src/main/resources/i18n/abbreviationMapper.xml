@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the abbreviation mapping dialog (JDBAbbreviationMapper). English original, i18n/abbreviationMapper_ko.xml is its Korean translation.</comment>
+
+  <entry key="abbreviationMapper.jLabel1.text">Abbreviation Mapping</entry>
+  <entry key="abbreviationMapper.tblMapping.toolTipText">Abbreviation Mapping Rules applied to object(table, column) name.</entry>
+  <entry key="abbreviationMapper.tblMapping.column.apply">Apply</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">Total Name</entry>
+  <entry key="abbreviationMapper.tblMapping.column.abbreviation">Abbreviation</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">Replace To</entry>
+  <entry key="abbreviationMapper.btnDel.toolTipText">Remove selected mapping</entry>
+  <entry key="abbreviationMapper.btnOk.text">Ok</entry>
+
+  <!-- messages -->
+  <entry key="abbreviationMapper.msg.duplicated">''{0}'' duplicated.</entry>
+  <entry key="abbreviationMapper.msg.delete.title">Confirm</entry>
+  <entry key="abbreviationMapper.msg.delete">Do you want to delete {0}?</entry>
+  <entry key="abbreviationMapper.msg.delete.row">this row</entry>
+  <entry key="abbreviationMapper.msg.delete.mapping">''{0}'' -&gt; ''{1}''</entry>
+</properties>

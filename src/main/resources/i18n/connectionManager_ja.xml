@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Japanese translation of i18n/connectionManager.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window -->
+  <entry key="connectionManager.title">接続マネージャー</entry>
+
+  <!-- dialog buttons -->
+  <entry key="connectionManager.btnSave.text">保存</entry>
+  <entry key="connectionManager.btnConnect.text">接続</entry>
+  <entry key="connectionManager.btnCancel.text">キャンセル</entry>
+
+  <!-- connection list -->
+  <entry key="connectionManager.jLabel1.text">接続一覧</entry>
+  <entry key="connectionManager.btnNewConn.toolTipText">新しい接続を作成</entry>
+  <entry key="connectionManager.btnCloneConn.toolTipText">現在の接続を複製</entry>
+  <entry key="connectionManager.btnDelConn.toolTipText">現在の接続を削除</entry>
+
+  <!-- tabs -->
+  <entry key="connectionManager.tab.general">一般</entry>
+  <entry key="connectionManager.tab.templates">テンプレート</entry>
+  <entry key="connectionManager.tab.options">オプション</entry>
+
+  <!-- general tab -->
+  <entry key="connectionManager.jLabel2.text">接続名:</entry>
+  <entry key="connectionManager.jLabel3.text">ドライバー:</entry>
+  <entry key="connectionManager.btnManage.text">管理</entry>
+  <entry key="connectionManager.btnManage.toolTipText">ドライバーの管理</entry>
+  <entry key="connectionManager.jLabel4.text">接続 URL:</entry>
+  <entry key="connectionManager.jLabel5.text">ユーザー名:</entry>
+  <entry key="connectionManager.jLabel6.text">ユーザーパスワード:</entry>
+  <entry key="connectionManager.jLabel12.text">アイコン:</entry>
+  <entry key="connectionManager.btnBrowseIcon.toolTipText">アイコンファイルを参照</entry>
+  <entry key="connectionManager.jLabel7.text">接続プロパティ:</entry>
+  <entry key="connectionManager.tabProps.col.key">キー</entry>
+  <entry key="connectionManager.tabProps.col.value">値</entry>
+  <entry key="connectionManager.chkKeepAlive.text">下の文を実行して接続を維持する。実行間隔</entry>
+  <entry key="connectionManager.jLabel15.text">秒。</entry>
+
+  <!-- templates tab -->
+  <entry key="connectionManager.tabTemplates.col.name">名前</entry>
+  <entry key="connectionManager.tabTemplates.col.templateFile">テンプレートファイル</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">出力テンプレート</entry>
+  <entry key="connectionManager.btnTemplateHelp.toolTipText">テンプレートのヘルプ</entry>
+  <entry key="connectionManager.btnPresets.text">プリセット</entry>
+  <entry key="connectionManager.btnPresets.toolTipText">テンプレートプリセットの管理</entry>
+  <entry key="connectionManager.btnNewTemplate.text">新規</entry>
+  <entry key="connectionManager.btnNewTemplate.toolTipText">新しいテンプレートを作成</entry>
+  <entry key="connectionManager.btnDelTemplate.text">削除</entry>
+  <entry key="connectionManager.btnDelTemplate.toolTipText">現在のテンプレートを削除</entry>
+  <entry key="connectionManager.btnSaveTemplate.text">適用</entry>
+  <entry key="connectionManager.btnSaveTemplate.toolTipText">選択したテンプレートの変更を適用</entry>
+  <entry key="connectionManager.jLabel9.text">テンプレート名:</entry>
+  <entry key="connectionManager.txtTemplateName.toolTipText">テンプレートの名前</entry>
+  <entry key="connectionManager.jLabel8.text">テンプレートファイル:</entry>
+  <entry key="connectionManager.txtTemplateFile.toolTipText">テンプレートファイルの場所</entry>
+  <entry key="connectionManager.btnBrowseTemplate.toolTipText">テンプレートファイルを参照</entry>
+  <entry key="connectionManager.jLabel13.text">出力ファイル名テンプレート:</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">出力ファイル名のテンプレート</entry>
+
+  <!-- options tab -->
+  <entry key="connectionManager.jLabel11.text">出力ディレクトリ:</entry>
+  <entry key="connectionManager.jLabel14.text">作成者名:</entry>
+  <entry key="connectionManager.jLabel16.text">カスタム変数:</entry>
+  <entry key="connectionManager.tabVars.col.name">名前</entry>
+  <entry key="connectionManager.tabVars.col.value">値</entry>
+
+  <!-- default names of newly created connections -->
+  <entry key="connectionManager.msg.newConnection">新しい接続</entry>
+  <entry key="connectionManager.msg.copyOf">{0} のコピー</entry>
+
+  <!-- validation of the edited connection -->
+  <entry key="connectionManager.msg.nameExists">名前 {0} は既に使用されています。</entry>
+  <entry key="connectionManager.msg.nameRequired">接続名を入力してください。</entry>
+  <entry key="connectionManager.msg.urlRequired">接続 URL を入力してください。</entry>
+  <entry key="connectionManager.msg.driverRequired">ドライバーを選択してください。</entry>
+  <entry key="connectionManager.msg.userRequired">データベースのユーザー名を入力してください。</entry>
+  <entry key="connectionManager.msg.passwordRequired">データベースのユーザーパスワードを入力してください。</entry>
+  <entry key="connectionManager.msg.keepAliveQueryRequired">接続維持用の SQL 文を入力してください。</entry>
+  <entry key="connectionManager.msg.keepAliveSecRequired">接続維持文の実行間隔を入力してください。</entry>
+  <entry key="connectionManager.msg.outputDirRequired">出力ディレクトリを入力してください。</entry>
+  <entry key="connectionManager.msg.driverIncomplete">ドライバーの情報が不完全です。</entry>
+
+  <!-- removing a connection -->
+  <entry key="connectionManager.msg.removeConfirm.title">接続の削除確認</entry>
+  <entry key="connectionManager.msg.removeConfirm.message">接続 ''{0}'' を本当に削除しますか?</entry>
+</properties>

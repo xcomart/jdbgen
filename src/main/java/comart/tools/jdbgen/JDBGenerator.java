@@ -25,6 +25,8 @@ package comart.tools.jdbgen;
 
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.ui.JDBGeneratorMain;
+import comart.utils.AppDirs;
+import comart.utils.I18n;
 import comart.utils.PlatformUtils;
 import comart.utils.UIUtils;
 import java.awt.Font;
@@ -36,6 +38,15 @@ import javax.swing.UIManager;
  */
 public class JDBGenerator {
     public static void main(final String[] args) {
+        // a release up to 0.3.0 kept the configuration and the driver jars next
+        // to the application; they are carried over into the user data
+        // directory before anything reads them.
+        AppDirs.migrateLegacyData();
+        // the language has to be settled before the first dialog can appear,
+        // and the master password prompt of JDBGenConfig is one. The setting is
+        // therefore read straight out of the configuration file, which parses
+        // without a password.
+        I18n.applyLanguage(JDBGenConfig.peekLanguage());
         PlatformUtils.setDockIcon();
         UIUtils.setFlatLightLaf();
         PlatformUtils.updateCheck();

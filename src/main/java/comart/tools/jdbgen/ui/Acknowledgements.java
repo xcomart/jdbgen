@@ -4,6 +4,7 @@
  */
 package comart.tools.jdbgen.ui;
 
+import comart.utils.I18n;
 import comart.utils.UIUtils;
 import java.awt.Frame;
 import java.io.InputStream;
@@ -78,7 +79,7 @@ public class Acknowledgements extends javax.swing.JDialog {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel1.setFont(new java.awt.Font("맑은 고딕", 1, 18)); // NOI18N
-        jLabel1.setText("Acknowledgements");
+        jLabel1.setText(I18n.t("acknowledgements.jLabel1.text"));
 
         txtContents.setEditable(false);
         txtContents.setColumns(20);
@@ -86,7 +87,7 @@ public class Acknowledgements extends javax.swing.JDialog {
         txtContents.setRows(5);
         jScrollPane1.setViewportView(txtContents);
 
-        btnOk.setText("Ok");
+        btnOk.setText(I18n.t("acknowledgements.btnOk.text"));
         btnOk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnOkActionPerformed(evt);

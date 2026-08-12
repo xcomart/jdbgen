@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Spanish translation of i18n/common.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- generic dialog chrome -->
+  <entry key="common.dialog.error.title">Error</entry>
+  <entry key="common.dialog.info.title">Información</entry>
+  <entry key="common.button.cancel">Cancelar</entry>
+
+  <!-- password prompt -->
+  <entry key="common.password.label">Contraseña:</entry>
+  <entry key="common.password.confirm.label">Confirmar:</entry>
+  <entry key="common.password.mismatch">La contraseña y su confirmación no coinciden.</entry>
+
+  <!-- shared UI helpers -->
+  <entry key="common.validation.required">''{0}'' es obligatorio</entry>
+  <entry key="common.filechooser.imageFilter">Archivos de imagen/icono</entry>
+  <entry key="common.template.tooltip">Nombre de plantilla : {0}&#10;Archivo de plantilla: {1}&#10;Plantilla de salida : {2}</entry>
+
+  <!-- update check and download -->
+  <entry key="common.update.title">Actualización disponible</entry>
+  <entry key="common.update.available">La nueva versión {0} está disponible.&#10;¿Desea actualizar ahora?</entry>
+  <entry key="common.update.failed">No se pudo instalar la actualización automáticamente.</entry>
+  <entry key="common.update.manual">La nueva versión {0} está disponible.&#10;jdbgen está instalado en un directorio en el que no tiene permiso de escritura, por lo que no puede actualizarse a sí mismo.</entry>
+  <entry key="common.update.manual.winget">Ejecute el siguiente comando en el símbolo del sistema para actualizarlo:&#10;    winget upgrade Xcomart.Jdbgen</entry>
+  <entry key="common.update.openReleasePage">¿Desea abrir la página de versiones para descargarla usted mismo?</entry>
+  <entry key="common.update.progress.title">Actualizando jdbgen</entry>
+  <entry key="common.update.progress.downloading">Descargando {0}</entry>
+
+  <!-- loading and saving the configuration -->
+  <entry key="common.config.password.enter">Introduzca la contraseña maestra</entry>
+  <entry key="common.config.password.new">Introduzca la nueva contraseña maestra</entry>
+  <entry key="common.config.password.incorrect">Contraseña incorrecta.</entry>
+  <entry key="common.config.error.title">Error de configuración</entry>
+  <entry key="common.config.error.message">No se pudo abrir la configuración después de {0} intentos.&#10;&#10;Último error: {1}&#10;&#10;La causa más probable es una contraseña maestra incorrecta. Su archivo de configuración NO se ha modificado.&#10;&#10;[Aceptar] Volver a introducir la contraseña&#10;[Cancelar] Empezar con una configuración predeterminada</entry>
+  <entry key="common.config.default.title">Empezar con la configuración predeterminada</entry>
+  <entry key="common.config.default.message">Se creará una configuración predeterminada y se le pedirá una nueva contraseña maestra.&#10;&#10;Su configuración actual no se elimina: se conserva como copia de seguridad junto a ''{0}''.&#10;&#10;¿Desea continuar?</entry>
+  <entry key="common.config.default.loadFailed">No se puede cargar la configuración predeterminada: {0}</entry>
+  <entry key="common.config.backup.failed">No se pudo crear una copia de seguridad de la configuración existente ''{0}'', por lo que se dejó intacta.&#10;Compruebe los permisos del directorio y vuelva a intentarlo.</entry>
+  <entry key="common.config.backup.kept">Su configuración existente se ha conservado en:&#10;{0}&#10;&#10;Para restaurarla, cambie el nombre del archivo de nuevo a ''{1}''.</entry>
+  <entry key="common.config.write.failed">No se pudo escribir la configuración predeterminada en ''{0}''.</entry>
+  <entry key="common.config.write.restored">&#10;&#10;Su configuración anterior se ha mantenido intacta.</entry>
+  <entry key="common.config.write.keptBackup">&#10;&#10;Su configuración anterior se conserva en:&#10;{0}&#10;&#10;Para restaurarla, cambie el nombre del archivo de nuevo a ''{1}''.</entry>
+  <entry key="common.config.save.failed">No se puede guardar la configuración: {0}</entry>
+
+  <!-- language selection in the main window -->
+  <entry key="common.language.system">Predeterminado del sistema</entry>
+  <entry key="common.language.tooltip">Idioma de la interfaz de usuario, se aplica tras reiniciar</entry>
+  <entry key="common.language.restartRequired">La configuración de idioma se aplicará la próxima vez que se inicie jdbgen.</entry>
+</properties>

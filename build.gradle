@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'comart.tools'
-version = '0.3.0'
+version = '0.3.1'
 description = 'jdbgen'
 
 ext {
@@ -125,10 +125,346 @@ tasks.register('distZip', Zip) {
 
 assemble.dependsOn tasks.named('distZip')
 
+// ---------------------------------------------------------------------------
+// Windows installer (jpackage / MSI)
+// ---------------------------------------------------------------------------
+// The zip distribution above stays the portable download. In addition to it,
+// 'gradlew jpackage' produces build/jpackage/jdbgen-<version>.msi, a Windows
+// installer that bundles its own Java runtime (jpackage runs jlink for us) so
+// end users do not need a JDK. That MSI is what gets published to winget.
+//
+// Requirements to run the task:
+//   * A JDK 14 or newer running Gradle - jpackage lives in <java.home>/bin.
+//     The application bytecode stays Java 11 (options.release = 11 above), so
+//     building with a newer JDK does not change what the app can run on.
+//   * WiX Toolset 3.x on PATH (candle.exe / light.exe). GitHub's windows-latest
+//     runners ship with it; locally install it from
+//     https://github.com/wixtoolset/wix3/releases (wix3xx.exe or the binaries
+//     zip added to PATH). Without it jpackage aborts and its own error message
+//     is what the task reports.
+//
+// The installer is built in two steps rather than one, because the executables
+// have to be signed before they are packed: 'jpackageImage' produces the
+// application image (build/jpackage-image/jdbgen) and signs the launcher in it,
+// 'jpackage' wraps that already signed image into the MSI and signs the MSI.
+// Signing is skipped - with a warning, not an error - when there is no signtool
+// or no certificate, so a machine or a CI runner without them still produces an
+// (unsigned) installer. '-Pcodesign=false' turns it off explicitly.
+
+// !!! DO NOT EVER CHANGE THIS UUID !!!
+// Windows Installer identifies "the same product across versions" by the
+// upgrade code. Changing it makes a new release install side by side with the
+// previous one instead of upgrading it, and orphans every already installed
+// copy. It is deliberately a hard coded literal, not a derived value.
+def windowsUpgradeUuid = '8d72ae64-426c-4194-a00a-bd2eaff8a23a'
+
+// MSI ProductVersion only accepts major.minor.build with major/minor <= 255 and
+// build <= 65535 - qualifiers such as '-SNAPSHOT' are rejected by jpackage.
+def msiVersionOf = { String v ->
+    def m = v =~ /^(\d{1,3})(?:\.(\d{1,3}))?(?:\.(\d{1,5}))?/
+    if (!m.find() || !m.group(1))
+        throw new GradleException("project version '${v}' does not start with a number, " +
+            "so no MSI ProductVersion can be derived from it.")
+    [m.group(1), m.group(2) ?: '0', m.group(3) ?: '0'].join('.')
+}
+
+// ---------------------------------------------------------------------------
+// Authenticode signing of the launcher and the installer
+// ---------------------------------------------------------------------------
+// Windows shows an unsigned installer as "unknown publisher", so both the
+// launcher inside the application image and the finished MSI are signed with
+// the code signing certificate of the 'CN=<codesignSubject>' subject in the
+// personal certificate store of the user running the build
+// (Cert:\CurrentUser\My). See docs/building.md for how to get one in there,
+// locally as well as on a CI runner.
+def codesignSubject = 'Xcomart'
+def codesignTimestampUrl = 'http://timestamp.digicert.com'
+// '-Pcodesign=false' builds unsigned on purpose. Anything else - including the
+// property being absent - means "sign when it is possible".
+def codesignRequested = !'false'.equalsIgnoreCase(
+        (project.findProperty('codesign') ?: 'true').toString().trim())
+
+// remove a directory tree; jpackage will not write into one that is there.
+def deleteTree
+deleteTree = { File f ->
+    if (!f.exists())
+        return
+    if (f.isDirectory())
+        f.listFiles()?.each { deleteTree(it) }
+    if (!f.delete() && f.exists())
+        throw new GradleException("cannot delete ${f}.")
+}
+
+// Run a command, with everything it printed captured. Deliberately a plain
+// ProcessBuilder: the helpers below run inside task actions, where the Gradle
+// process APIs are on their way out.
+def runCommand = { List<String> cmd ->
+    def process = new ProcessBuilder(cmd).redirectErrorStream(true).start()
+    process.outputStream.close()
+    String out = process.inputStream.getText('UTF-8')
+    [exit: process.waitFor(), output: out.trim()]
+}
+
+// signtool.exe: on PATH when a developer command prompt set one up, below the
+// Windows SDK otherwise. Of the SDK versions installed the newest is taken.
+def findSignTool = { ->
+    for (String dir: (System.getenv('PATH') ?: '').split(File.pathSeparator)) {
+        if (dir.trim().isEmpty())
+            continue
+        def onPath = new File(dir.trim(), 'signtool.exe')
+        if (onPath.isFile())
+            return onPath
+    }
+    def versionKey = { File f ->
+        def parts = f.name.split('\\.').collect { it.isInteger() ? it.toInteger() : 0 }
+        (parts + [0, 0, 0, 0]).subList(0, 4)
+    }
+    def candidates = []
+    ['C:/Program Files (x86)/Windows Kits/10/bin', 'C:/Program Files/Windows Kits/10/bin',
+     'C:/Program Files (x86)/Microsoft SDKs/ClickOnce/SignTool'].each { String base ->
+        def dir = new File(base)
+        if (!dir.isDirectory())
+            return
+        def direct = new File(dir, 'signtool.exe')
+        if (direct.isFile())
+            candidates << [key: [0, 0, 0, 0], tool: direct]
+        dir.listFiles({ File f -> f.isDirectory() } as FileFilter)?.each { File version ->
+            def tool = new File(version, 'x64/signtool.exe')
+            if (tool.isFile())
+                candidates << [key: versionKey(version), tool: tool]
+        }
+    }
+    if (candidates.isEmpty())
+        return null
+    // the SDK build directories are ordered by their version, not lexically:
+    // '10.0.26100.0' is newer than '10.0.9600.0'
+    return candidates.sort { a, b ->
+        [0, 1, 2, 3].collect { i -> a.key[i] <=> b.key[i] }.find { it != 0 } ?: 0
+    }.last().tool
+}
+
+// whether the certificate signtool is asked for is actually in the store. Asked
+// beforehand so that "no certificate here" can be told apart from "signing
+// failed", which is a broken build.
+def hasSigningCertificate = { ->
+    try {
+        return runCommand(['certutil', '-user', '-store', 'My', codesignSubject]).exit == 0
+    } catch (Exception e) {
+        logger.info("certutil is not available (${e.getLocalizedMessage()}), " +
+            'leaving it to signtool to find the certificate.')
+        return true
+    }
+}
+
+// Sign the given files, or explain why they are left unsigned. Only a signtool
+// that is there, with a certificate that is there, and that then fails, fails
+// the build - everything else is a warning, because an unsigned build is still
+// a usable build.
+def signFiles = { Task task, List<File> files ->
+    if (!files)
+        return
+    if (!codesignRequested) {
+        task.logger.lifecycle('code signing: disabled with -Pcodesign=false, leaving the ' +
+            'output unsigned.')
+        return
+    }
+    def signTool = findSignTool()
+    if (signTool == null) {
+        task.logger.warn('code signing: signtool.exe was not found (neither on PATH nor below ' +
+            'the Windows SDK) - the output stays unsigned. Install the Windows SDK signing ' +
+            'tools, or pass -Pcodesign=false to silence this.')
+        return
+    }
+    if (!hasSigningCertificate()) {
+        task.logger.warn("code signing: no certificate for '${codesignSubject}' in " +
+            'Cert:\\CurrentUser\\My - the output stays unsigned. See docs/building.md, or pass ' +
+            '-Pcodesign=false to silence this.')
+        return
+    }
+    files.each { File f ->
+        // jpackage leaves the launcher of the application image read only, and
+        // signtool writes the signature into the file it signs
+        boolean readOnly = !f.canWrite()
+        if (readOnly)
+            f.setWritable(true)
+        try {
+            def res = runCommand([signTool.absolutePath, 'sign', '/n', codesignSubject,
+                '/fd', 'SHA256', '/tr', codesignTimestampUrl, '/td', 'SHA256', f.absolutePath])
+            if (res.exit != 0)
+                throw new GradleException("signtool failed on ${f} (exit ${res.exit}):\n${res.output}")
+        } finally {
+            if (readOnly)
+                f.setWritable(false)
+        }
+        task.logger.lifecycle("code signing: signed ${f.name} as '${codesignSubject}'.")
+    }
+}
+
+// The staging directory handed to 'jpackage --input'. Its content mirrors the
+// zip distribution minus the jdbgen.cmd / jdbgen.sh launchers, which the native
+// launcher generated by jpackage replaces. Everything in here ends up next to
+// the jar inside the installed 'app' directory, so the jar manifest Class-Path
+// ('lib/<name>.jar') keeps resolving.
+tasks.register('jpackageInput', Sync) {
+    group = 'distribution'
+    description = 'Stages the jpackage input directory (jar, lib, templates, resource, sample DB).'
+
+    into layout.buildDirectory.dir('jpackage-input')
+
+    into('templates') {
+        from('templates')
+    }
+    into('resource') {
+        from('resource')
+    }
+    into('lib') {
+        from(configurations.runtimeClasspath)
+    }
+    from(tasks.named('jar'))
+    from('sample_h2.db.mv.db')
+}
+
+// the checks both jpackage steps share: the right platform, and a JDK that has
+// jpackage in it.
+def jpackageLauncher = { ->
+    if (!System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows'))
+        throw new GradleException('The jpackage tasks build a Windows MSI and must run on Windows.')
+
+    def javaHome = new File(System.getProperty('java.home'))
+    def launcher = new File(javaHome, 'bin/jpackage.exe')
+    if (!launcher.isFile())
+        launcher = new File(javaHome, 'bin/jpackage')
+    if (!launcher.isFile())
+        throw new GradleException("jpackage was not found in ${javaHome}/bin. It ships with JDK 14 " +
+            "and later, while this build runs on Java ${System.getProperty('java.version')}. Point " +
+            'Gradle at a JDK 14+ (for example via JAVA_HOME or org.gradle.java.home) and retry.')
+    return launcher
+}
+
+// Step one: the application image - the launcher, the bundled runtime and the
+// staged input directory - whose launcher is then signed. The MSI below packs
+// this image as it is, so the executable a user ends up running carries the
+// signature.
+tasks.register('jpackageImage', Exec) {
+    group = 'distribution'
+    description = 'Builds the jdbgen application image with jpackage and signs its launcher.'
+
+    dependsOn tasks.named('jpackageInput')
+
+    def inputDir = layout.buildDirectory.dir('jpackage-input')
+    def imageDir = layout.buildDirectory.dir('jpackage-image')
+    def mainJarName = tasks.named('jar').flatMap { it.archiveFileName }
+    def iconFile = layout.projectDirectory.file('resource/icon.ico')
+    def msiVersion = msiVersionOf(appVersion)
+    def appName = project.name
+    def appMainClass = mainClassName
+
+    inputs.dir(inputDir)
+    inputs.file(iconFile)
+    inputs.property('msiVersion', msiVersion)
+    // so that turning signing on or off actually reruns the task
+    inputs.property('codesign', codesignRequested)
+    outputs.dir(imageDir)
+
+    doFirst {
+        def launcher = jpackageLauncher()
+        def destination = imageDir.get().asFile
+        // jpackage refuses to write into an existing application image
+        destination.mkdirs()
+        deleteTree(new File(destination, appName))
+
+        commandLine([
+            launcher.absolutePath,
+            '--type', 'app-image',
+            '--name', appName,
+            '--app-version', msiVersion,
+            '--vendor', 'Dennis Park',
+            '--description', 'jdbgen - JDBC based source code generator',
+            '--copyright', 'Copyright (c) Dennis Park',
+            '--input', inputDir.get().asFile.absolutePath,
+            '--dest', destination.absolutePath,
+            '--main-jar', mainJarName.get(),
+            '--main-class', appMainClass,
+            '--icon', iconFile.asFile.absolutePath
+        ])
+        logger.lifecycle("jpackage: building the ${appName} application image in ${destination}")
+    }
+
+    doLast {
+        def exe = new File(imageDir.get().asFile, "${appName}/${appName}.exe")
+        if (!exe.isFile())
+            throw new GradleException("jpackage reported success but produced no ${exe}.")
+        signFiles(it, [exe])
+    }
+}
+
+tasks.register('jpackage', Exec) {
+    group = 'distribution'
+    description = 'Builds the signed Windows MSI installer with jpackage (needs JDK 14+ and WiX Toolset 3.x).'
+
+    dependsOn tasks.named('jpackageImage')
+
+    def imageDir = layout.buildDirectory.dir('jpackage-image')
+    def outputDir = layout.buildDirectory.dir('jpackage')
+    def msiVersion = msiVersionOf(appVersion)
+    def appName = project.name
+    def upgradeUuid = windowsUpgradeUuid
+
+    inputs.dir(imageDir)
+    inputs.property('msiVersion', msiVersion)
+    inputs.property('upgradeUuid', upgradeUuid)
+    inputs.property('codesign', codesignRequested)
+    outputs.dir(outputDir)
+
+    doFirst {
+        def launcher = jpackageLauncher()
+        def appImage = new File(imageDir.get().asFile, appName)
+        if (!appImage.isDirectory())
+            throw new GradleException("the application image ${appImage} is missing - run jpackageImage first.")
+
+        def destination = outputDir.get().asFile
+        // jpackage refuses to overwrite an existing installer.
+        destination.mkdirs()
+        destination.listFiles({ File f -> f.name.endsWith('.msi') } as FileFilter)?.each { it.delete() }
+
+        // '--app-image' packs an already built image, so the options describing
+        // how to build one - '--input', '--main-jar', '--main-class', '--icon' -
+        // must not be repeated here: jpackage rejects them outright. What stays
+        // are the MSI's own metadata and the Windows installer options.
+        commandLine([
+            launcher.absolutePath,
+            '--type', 'msi',
+            '--app-image', appImage.absolutePath,
+            '--name', appName,
+            '--app-version', msiVersion,
+            '--vendor', 'Dennis Park',
+            '--description', 'jdbgen - JDBC based source code generator',
+            '--copyright', 'Copyright (c) Dennis Park',
+            '--about-url', 'https://github.com/xcomart/jdbgen',
+            '--dest', destination.absolutePath,
+            '--win-menu',
+            '--win-menu-group', appName,
+            '--win-shortcut',
+            '--win-upgrade-uuid', upgradeUuid
+        ])
+        logger.lifecycle("jpackage: building ${appName}-${msiVersion}.msi in ${destination}")
+    }
+
+    doLast {
+        def msi = outputDir.get().asFile.listFiles({ File f -> f.name.endsWith('.msi') } as FileFilter)
+        if (!msi)
+            throw new GradleException("jpackage reported success but produced no .msi in ${outputDir.get().asFile}.")
+        signFiles(it, msi as List<File>)
+        msi.each { logger.lifecycle("jpackage: wrote ${it} (${(it.length() / (1024 * 1024)).round(1)} MiB)") }
+    }
+}
+
 tasks.register('run', JavaExec) {
     group = 'application'
     description = "Runs ${mainClassName}."
     mainClass = mainClassName
     classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = ['-Duser.language=en']
+    // the user interface language is the 'language' entry of config.json,
+    // applied by I18n at startup; forcing a locale here would hide the
+    // 'System Default' setting during a development run.
 }

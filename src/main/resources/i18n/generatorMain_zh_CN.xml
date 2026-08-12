@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/generatorMain.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window chrome -->
+  <entry key="generatorMain.title">JDBGen 主窗口</entry>
+
+  <!-- connection bar -->
+  <entry key="generatorMain.jLabel2.text">连接</entry>
+  <entry key="generatorMain.btnManageConn.text">管理</entry>
+  <entry key="generatorMain.btnMapper.text">缩写映射</entry>
+  <entry key="generatorMain.btnAck.toolTipText">关于本程序</entry>
+
+  <!-- catalog/schema pane -->
+  <entry key="generatorMain.jLabel1.text">目录/模式</entry>
+  <entry key="generatorMain.tree.database">数据库</entry>
+
+  <!-- table pane -->
+  <entry key="generatorMain.jLabel5.text">表</entry>
+  <entry key="generatorMain.chkShowView.text">显示视图</entry>
+
+  <!-- generation options -->
+  <entry key="generatorMain.jLabel4.text">生成选项</entry>
+  <entry key="generatorMain.jLabel6.text">模板</entry>
+  <entry key="generatorMain.tabTemplates.column.select">选择</entry>
+  <entry key="generatorMain.tabTemplates.column.name">名称</entry>
+  <entry key="generatorMain.tabTemplates.column.templateFile">模板文件</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">输出模板</entry>
+  <entry key="generatorMain.jLabel11.text">输出目录：</entry>
+  <entry key="generatorMain.jLabel14.text">作者名称：</entry>
+  <entry key="generatorMain.jLabel15.text">缩写：</entry>
+  <entry key="generatorMain.chkApplyAbbr.text">对所有名称字段应用缩写规则。</entry>
+  <entry key="generatorMain.jLabel16.text">自定义变量：</entry>
+  <entry key="generatorMain.tabVars.column.name">名称</entry>
+  <entry key="generatorMain.tabVars.column.value">值</entry>
+
+  <!-- bottom bar -->
+  <entry key="generatorMain.chkDarkUI.text">深色主题</entry>
+  <entry key="generatorMain.btnGenerate.text">生成</entry>
+  <entry key="generatorMain.btnClose.text">关闭</entry>
+
+  <!-- connecting and reading the metadata -->
+  <entry key="generatorMain.msg.connectFailed">无法连接到 ''{0}''：{1}</entry>
+  <entry key="generatorMain.msg.driverNotFound">找不到连接 ''{1}'' 所用的驱动 ''{0}''。</entry>
+  <entry key="generatorMain.msg.getTablesFailed">无法获取表列表：{0}</entry>
+  <entry key="generatorMain.msg.getColumnsFailed">无法获取列列表：{0}</entry>
+
+  <!-- generation -->
+  <entry key="generatorMain.msg.connectFirst">请先连接到数据库。</entry>
+  <entry key="generatorMain.msg.selectTable">请至少选择一个要生成的表。</entry>
+  <entry key="generatorMain.msg.selectTemplate">请至少选择一个要生成的模板。</entry>
+  <entry key="generatorMain.msg.complete.title">处理完成</entry>
+  <entry key="generatorMain.msg.complete">处理已成功完成！&#10;是否打开输出目录？</entry>
+  <entry key="generatorMain.msg.failed">处理失败！</entry>
+  <entry key="generatorMain.progress.readingColumns">正在读取表的列...</entry>
+  <entry key="generatorMain.progress.templateProcessing">正在处理模板 {0}...</entry>
+  <entry key="generatorMain.progress.applying">正在将 {0} 应用到 {1}...</entry>
+  <entry key="generatorMain.progress.complete">全部处理完成！</entry>
+  <entry key="generatorMain.progress.failed">处理失败！：{0}</entry>
+</properties>

@@ -26,6 +26,7 @@ package comart.tools.jdbgen.ui;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBPreset;
 import comart.tools.jdbgen.types.JDBTemplate;
+import comart.utils.I18n;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
@@ -40,6 +41,7 @@ import javax.swing.JDialog;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
 
@@ -68,7 +70,8 @@ public class JDBPresets extends JDialog {
         applyIcons();
         
         this.connTpls = connTpls;
-        
+        applyTemplateHeaders();
+
         templateModel = (DefaultTableModel)tabTemplates.getModel();
         presetModel = new DefaultListModel();
         presetMap = new HashMap<>();
@@ -113,6 +116,21 @@ public class JDBPresets extends JDialog {
         UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
     }
     
+    /**
+     * The column names of the generated table model are the untranslated
+     * placeholders of the form editor, the shown ones are set here.
+     */
+    private void applyTemplateHeaders() {
+        String[] keys = {
+            "presets.tabTemplates.column.templateName",
+            "presets.tabTemplates.column.templateFile",
+            "presets.tabTemplates.column.outTemplate"
+        };
+        TableColumnModel colModel = tabTemplates.getColumnModel();
+        for (int i=0; i<keys.length; i++)
+            colModel.getColumn(i).setHeaderValue(I18n.t(keys[i]));
+    }
+
     private void setTemplate(int row) {
         if (row > -1) {
             txtTemplateName.setText((String)tabTemplates.getValueAt(row, 0));
@@ -166,7 +184,7 @@ public class JDBPresets extends JDialog {
         btnNewFromConn = new javax.swing.JButton();
         btnSave = new javax.swing.JButton();
 
-        btnCancel.setText("Cancel");
+        btnCancel.setText(I18n.t("presets.btnCancel.text"));
         btnCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCancelActionPerformed(evt);
@@ -178,7 +196,7 @@ public class JDBPresets extends JDialog {
         splPreset.setResizeWeight(1.0);
 
         jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText("Template Presets");
+        jLabel1.setText(I18n.t("presets.jLabel1.text"));
 
         lstPresets.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         lstPresets.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
@@ -237,9 +255,9 @@ public class JDBPresets extends JDialog {
         splPreset.setLeftComponent(jPanel1);
 
         jLabel2.setFont(jLabel2.getFont().deriveFont(jLabel2.getFont().getStyle() | java.awt.Font.BOLD, jLabel2.getFont().getSize()+4));
-        jLabel2.setText("Preset Detail");
+        jLabel2.setText(I18n.t("presets.jLabel2.text"));
 
-        jLabel3.setText("Preset Name:");
+        jLabel3.setText(I18n.t("presets.jLabel3.text"));
 
         tabTemplates.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -274,21 +292,21 @@ public class JDBPresets extends JDialog {
 
         btnTemplateHelp.setText("?");
 
-        btnNewTemplate.setText("New");
+        btnNewTemplate.setText(I18n.t("presets.btnNewTemplate.text"));
         btnNewTemplate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNewTemplateActionPerformed(evt);
             }
         });
 
-        btnDelTemplate.setText("Delete");
+        btnDelTemplate.setText(I18n.t("presets.btnDelTemplate.text"));
         btnDelTemplate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDelTemplateActionPerformed(evt);
             }
         });
 
-        btnSaveTemplate.setText("Apply");
+        btnSaveTemplate.setText(I18n.t("presets.btnSaveTemplate.text"));
         btnSaveTemplate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveTemplateActionPerformed(evt);
@@ -296,15 +314,15 @@ public class JDBPresets extends JDialog {
         });
 
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel9.setText("Template Name:");
+        jLabel9.setText(I18n.t("presets.jLabel9.text"));
 
         jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel8.setText("Template File:");
+        jLabel8.setText(I18n.t("presets.jLabel8.text"));
 
         btnBrowseTemplate.setText("...");
 
         jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel13.setText("Output Name Template:");
+        jLabel13.setText(I18n.t("presets.jLabel13.text"));
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -388,21 +406,21 @@ public class JDBPresets extends JDialog {
 
         splPreset.setRightComponent(jPanel2);
 
-        btnApply.setText("Apply to Current Connection");
+        btnApply.setText(I18n.t("presets.btnApply.text"));
         btnApply.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnApplyActionPerformed(evt);
             }
         });
 
-        btnNewFromConn.setText("New Preset from Current Connection");
+        btnNewFromConn.setText(I18n.t("presets.btnNewFromConn.text"));
         btnNewFromConn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNewFromConnActionPerformed(evt);
             }
         });
 
-        btnSave.setText("Save");
+        btnSave.setText(I18n.t("presets.btnSave.text"));
         btnSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveActionPerformed(evt);
@@ -458,7 +476,7 @@ public class JDBPresets extends JDialog {
 
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
         JDBPreset preset = new JDBPreset();
-        preset.setName(NamingUtils.nextNameOf(presets, "New Preset"));
+        preset.setName(NamingUtils.nextNameOf(presets, I18n.t("presets.msg.newName")));
         preset.setTemplates(new ArrayList<>());
         presets.add(preset);
         presetMap.put(preset.getName(), preset);
@@ -472,14 +490,14 @@ public class JDBPresets extends JDialog {
             try {
                 JDBPreset npreset = (JDBPreset)presets.get(idx).clone();
                 npreset.setName(NamingUtils.nextNameOf(
-                        presets, "Copy of "+npreset.getName()));
+                        presets, I18n.t("presets.msg.copyName", npreset.getName())));
                 presets.add(npreset);
                 presetMap.put(npreset.getName(), npreset);
                 presetModel.addElement(npreset.getName());
                 lstPresets.setSelectedIndex(presets.size()-1);
             } catch(Exception e) {
                 log.error("cannot clone preset: " + e.getLocalizedMessage(), e);
-                UIUtils.error(this, "Cannot clone preset: " + e.getLocalizedMessage());
+                UIUtils.error(this, I18n.t("presets.msg.cloneFailed", e.getLocalizedMessage()));
             }
         }
     }//GEN-LAST:event_btnCloneActionPerformed
@@ -488,9 +506,8 @@ public class JDBPresets extends JDialog {
         int idx = lstPresets.getSelectedIndex();
         if (idx > -1) {
             JDBPreset target = presets.get(idx);
-            boolean isDel = UIUtils.confirm(this, "Delete Preset",
-                    "Do you want to delete '"+
-                            target.getName()+"' preset?");
+            boolean isDel = UIUtils.confirm(this, I18n.t("presets.msg.delete.title"),
+                    I18n.t("presets.msg.delete", target.getName()));
             if (isDel) {
                 presetMap.remove(target.getName());
                 presets.remove(idx);
@@ -591,10 +608,10 @@ public class JDBPresets extends JDialog {
         }
         
         if (isNameExists) {
-            UIUtils.error(this, "Name " + txtPresetName.getText() + " exists already.");
+            UIUtils.error(this, I18n.t("presets.msg.nameExists", txtPresetName.getText()));
             txtPresetName.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtPresetName.getText())) {
-            UIUtils.error(this, "Preset name required.");
+            UIUtils.error(this, I18n.t("presets.msg.nameRequired"));
             txtPresetName.requestFocusInWindow();
         } else {
             presetMap.remove(target.getName());

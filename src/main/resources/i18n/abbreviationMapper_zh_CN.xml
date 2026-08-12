@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/abbreviationMapper.xml. The key set has to stay identical to the English original.</comment>
+
+  <entry key="abbreviationMapper.jLabel1.text">缩写映射</entry>
+  <entry key="abbreviationMapper.tblMapping.toolTipText">应用于对象（表、列）名称的缩写映射规则。</entry>
+  <entry key="abbreviationMapper.tblMapping.column.apply">应用</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">全称</entry>
+  <entry key="abbreviationMapper.tblMapping.column.abbreviation">缩写</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">替换为</entry>
+  <entry key="abbreviationMapper.btnDel.toolTipText">删除所选映射</entry>
+  <entry key="abbreviationMapper.btnOk.text">确定</entry>
+
+  <!-- messages -->
+  <entry key="abbreviationMapper.msg.duplicated">''{0}'' 重复。</entry>
+  <entry key="abbreviationMapper.msg.delete.title">确认</entry>
+  <entry key="abbreviationMapper.msg.delete">确定要删除 {0} 吗？</entry>
+  <entry key="abbreviationMapper.msg.delete.row">此行</entry>
+  <entry key="abbreviationMapper.msg.delete.mapping">''{0}'' -&gt; ''{1}''</entry>
+</properties>

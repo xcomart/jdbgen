@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - 드라이버 관리 창(comart.tools.jdbgen.ui.JDBDriverManager)의 한국어 번역.</comment>
+
+  <!-- 창과 버튼 -->
+  <entry key="driverManager.title">드라이버 관리</entry>
+  <entry key="driverManager.btnCancel.text">취소</entry>
+  <entry key="driverManager.btnSave.text">확인</entry>
+
+  <!-- 드라이버 목록 -->
+  <entry key="driverManager.jLabel1.text">드라이버</entry>
+
+  <!-- 탭 -->
+  <entry key="driverManager.tab.general">일반</entry>
+  <entry key="driverManager.tab.customQueries">사용자 쿼리</entry>
+
+  <!-- 일반 탭 -->
+  <entry key="driverManager.jLabel3.text">드라이버 이름:</entry>
+  <entry key="driverManager.jLabel4.text">JDBC Jar:</entry>
+  <entry key="driverManager.btnDownJdbc.text">Maven 저장소에서 JDBC 드라이버 내려받기</entry>
+  <entry key="driverManager.jLabel8.text">URL 템플릿:</entry>
+  <entry key="driverManager.jLabel9.text">드라이버 클래스:</entry>
+  <entry key="driverManager.jLabel10.text">아이콘:</entry>
+  <entry key="driverManager.jLabel11.text">연결 속성:</entry>
+  <entry key="driverManager.tabProps.key">키</entry>
+  <entry key="driverManager.tabProps.value">값</entry>
+  <entry key="driverManager.chkNoAuth.text">이 드라이버는 인증이 필요하지 않습니다.</entry>
+
+  <!-- 사용자 쿼리 탭 -->
+  <entry key="driverManager.chkTableComments.text">테이블 주석 조회</entry>
+  <entry key="driverManager.chkColumnComments.text">테이블 컬럼 주석 조회</entry>
+  <entry key="driverManager.chkTables.text">테이블 목록 조회</entry>
+  <entry key="driverManager.chkColumns.text">테이블 컬럼 목록 조회</entry>
+
+  <!-- 검사 결과와 안내 문구 -->
+  <entry key="driverManager.msg.nameExists">''{0}'' 이름은 이미 사용 중입니다.</entry>
+  <entry key="driverManager.msg.driverNameRequired">드라이버 이름을 입력하세요.</entry>
+  <entry key="driverManager.msg.jarRequired">JDBC jar 파일을 지정하세요.</entry>
+  <entry key="driverManager.msg.driverClassRequired">드라이버 클래스를 입력하세요.</entry>
+  <entry key="driverManager.msg.tableCommentsRequired">테이블 주석 조회 쿼리를 입력하세요.</entry>
+  <entry key="driverManager.msg.columnCommentsRequired">컬럼 주석 조회 쿼리를 입력하세요.</entry>
+  <entry key="driverManager.msg.tablesRequired">테이블 목록 조회 쿼리를 입력하세요.</entry>
+  <entry key="driverManager.msg.columnsRequired">컬럼 목록 조회 쿼리를 입력하세요.</entry>
+  <entry key="driverManager.msg.newDriverName">새 드라이버</entry>
+  <entry key="driverManager.msg.copyOfName">{0} 복사본</entry>
+  <entry key="driverManager.filechooser.jarFilter">Java 라이브러리 파일</entry>
+</properties>

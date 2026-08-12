@@ -25,6 +25,7 @@
 package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.db.DBTable;
+import comart.utils.I18n;
 import comart.utils.UIUtils;
 import java.awt.Point;
 import java.util.ArrayList;
@@ -55,6 +56,11 @@ public class JDBTableView extends javax.swing.JDialog {
         tabColumns.getColumnModel().getColumn(1).setPreferredWidth(200);
         tabColumns.getColumnModel().getColumn(2).setPreferredWidth(150);
         tabColumns.getColumnModel().getColumn(3).setPreferredWidth(50);
+        // the column titles come from the form's design time table model, which
+        // cannot hold custom code, so they are translated here.
+        tabColumns.getColumnModel().getColumn(1).setHeaderValue(I18n.t("tableView.column.name"));
+        tabColumns.getColumnModel().getColumn(2).setHeaderValue(I18n.t("tableView.column.type"));
+        tabColumns.getColumnModel().getColumn(3).setHeaderValue(I18n.t("tableView.column.key"));
         
         DefaultTableModel model = (DefaultTableModel)tabColumns.getModel();
         while (model.getRowCount() > 0)
@@ -125,16 +131,16 @@ public class JDBTableView extends javax.swing.JDialog {
         jScrollPane1.setViewportView(tabColumns);
 
         lblTableName.setFont(lblTableName.getFont().deriveFont(lblTableName.getFont().getStyle() | java.awt.Font.BOLD, lblTableName.getFont().getSize()+7));
-        lblTableName.setText("Table name");
+        lblTableName.setText(I18n.t("tableView.lblTableName.text"));
 
-        btnClose.setText("Close");
+        btnClose.setText(I18n.t("tableView.btnClose.text"));
         btnClose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCloseActionPerformed(evt);
             }
         });
 
-        lblRemark.setText("Remarks");
+        lblRemark.setText(I18n.t("tableView.lblRemark.text"));
         lblRemark.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());

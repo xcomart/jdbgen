@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Maven 저장소 탐색 창(comart.tools.jdbgen.ui.MavenExplorer)의 한국어 번역.</comment>
+
+  <!-- 창과 검색 -->
+  <entry key="mavenExplorer.title">Maven 저장소 탐색기</entry>
+  <entry key="mavenExplorer.jLabel1.text">Maven 저장소에서 검색:</entry>
+
+  <!-- 결과 목록 -->
+  <entry key="mavenExplorer.jLabel3.text">검색 결과</entry>
+  <entry key="mavenExplorer.jLabel4.text">버전</entry>
+  <entry key="mavenExplorer.btnMore.text">더 보기</entry>
+  <entry key="mavenExplorer.btnMore1.text">더 보기</entry>
+
+  <!-- 버튼과 출처 -->
+  <entry key="mavenExplorer.btnDownload.text">내려받아 사용</entry>
+  <entry key="mavenExplorer.btnCancel.text">취소</entry>
+  <entry key="mavenExplorer.jLabel2.text">제공</entry>
+
+  <!-- 안내 문구 -->
+  <entry key="mavenExplorer.msg.noMoreResults">검색 결과가 더 없습니다.</entry>
+  <entry key="mavenExplorer.msg.noMoreVersions">버전이 더 없습니다.</entry>
+  <entry key="mavenExplorer.msg.selectVersion">내려받을 버전을 선택하세요.</entry>
+  <entry key="mavenExplorer.msg.downloadComplete">내려받기가 완료되었습니다!</entry>
+  <entry key="mavenExplorer.msg.downloadFailed">내려받기에 실패했습니다!</entry>
+
+  <!-- 내려받기 진행 로그 -->
+  <entry key="mavenExplorer.progress.saving">드라이버를 {0} 에 저장하는 중...</entry>
+  <entry key="mavenExplorer.progress.received">{0}/{1} 바이트를 받았습니다.</entry>
+  <entry key="mavenExplorer.progress.complete">내려받기를 마쳤습니다.</entry>
+  <entry key="mavenExplorer.progress.failed">내려받기 실패! : {0}</entry>
+</properties>

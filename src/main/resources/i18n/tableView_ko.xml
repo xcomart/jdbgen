@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - 테이블 상세 창(comart.tools.jdbgen.ui.JDBTableView)의 한국어 번역.</comment>
+
+  <!-- 실행 시 선택한 테이블 정보로 채워지는 머리말 -->
+  <entry key="tableView.lblTableName.text">테이블 이름</entry>
+  <entry key="tableView.lblRemark.text">설명</entry>
+
+  <!-- 컬럼 목록 -->
+  <entry key="tableView.column.name">이름</entry>
+  <entry key="tableView.column.type">타입</entry>
+  <entry key="tableView.column.key">키</entry>
+
+  <entry key="tableView.btnClose.text">닫기</entry>
+</properties>

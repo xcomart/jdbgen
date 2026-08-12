@@ -93,12 +93,16 @@
             <Font bold="true" component="lblTableName" property="font" relativeSize="true" size="7"/>
           </FontInfo>
         </Property>
-        <Property name="text" type="java.lang.String" value="Table name"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;tableView.lblTableName.text&quot;)" type="code"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="btnClose">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Close"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;tableView.btnClose.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCloseActionPerformed"/>
@@ -106,7 +110,9 @@
     </Component>
     <Component class="javax.swing.JLabel" name="lblRemark">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Remarks"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;tableView.lblRemark.text&quot;)" type="code"/>
+        </Property>
         <Property name="verticalAlignment" type="int" value="1"/>
       </Properties>
     </Component>

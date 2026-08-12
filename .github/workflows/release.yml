@@ -1,0 +1,226 @@
+name: Release
+
+# Cutting a release is "bump the version in build.gradle, then push a v<version>
+# tag". This workflow turns that tag into the published artifacts:
+#
+#   * jdbgen-<version>.zip - the portable distribution (built and tested on Linux)
+#   * jdbgen-<version>.msi - the Windows installer with a bundled Java runtime
+#
+# Both are attached to the GitHub Release for the tag, and the MSI is then
+# handed to winget. The zip job runs the full 'gradlew build', so a failing test
+# stops the release before anything is published.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+# The release job needs to create the GitHub Release and upload assets to it.
+permissions:
+  contents: write
+
+jobs:
+  build-zip:
+    name: Build distribution zip
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      zip-name: ${{ steps.zip.outputs.name }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The tag is the source of truth for the release name; build.gradle is the
+      # source of truth for what ends up inside the artifacts. If they disagree
+      # the release would be labelled with a version the binaries do not carry,
+      # so stop here instead of publishing something mislabelled.
+      - name: Check tag matches project version
+        id: version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          project_version="$(./gradlew -q properties --property version | awk '/^version:/ {print $2}')"
+          echo "tag=${tag_version} build.gradle=${project_version}"
+          if [ "${tag_version}" != "${project_version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match the version in build.gradle (${project_version}). Bump the version, or retag."
+            exit 1
+          fi
+          echo "version=${project_version}" >> "$GITHUB_OUTPUT"
+
+      # 'build' runs the test suite and, via assemble -> distZip, produces the
+      # distribution archive.
+      - name: Build and test
+        run: ./gradlew build
+
+      - name: Locate zip
+        id: zip
+        run: echo "name=$(basename build/distributions/jdbgen-*.zip)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload zip artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-zip
+          path: build/distributions/jdbgen-*.zip
+          if-no-files-found: error
+
+  build-msi:
+    name: Build Windows installer
+    runs-on: windows-latest
+    outputs:
+      msi-name: ${{ steps.msi.outputs.name }}
+    steps:
+      - uses: actions/checkout@v6
+
+      # jpackage needs a JDK 14+; the application bytecode stays at Java 11
+      # because build.gradle pins options.release. The WiX Toolset 3.x that
+      # jpackage shells out to for MSI creation is preinstalled on the
+      # windows-latest image, so there is nothing to set up for it here.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      # The MSI and the launcher inside it are Authenticode signed when a code
+      # signing certificate is available. Secrets cannot be read from a
+      # job-level 'if:', so - like the winget job below - the guard lives inside
+      # the step: without both secrets configured nothing is imported, and
+      # build.gradle then logs a warning and builds an unsigned installer.
+      #
+      # To prepare the secrets, on a machine that holds the certificate:
+      #
+      #   $c = Get-ChildItem Cert:\CurrentUser\My | ? { $_.Subject -eq 'CN=Xcomart' }
+      #   Export-PfxCertificate -Cert $c -FilePath codesign.pfx `
+      #       -Password (Read-Host -AsSecureString 'password')
+      #   [Convert]::ToBase64String([IO.File]::ReadAllBytes('codesign.pfx')) > codesign.b64
+      #
+      # then store the content of codesign.b64 as CODESIGN_PFX_BASE64 and the
+      # password as CODESIGN_PFX_PASSWORD, and delete both local files.
+      - name: Import the code signing certificate
+        shell: pwsh
+        env:
+          CODESIGN_PFX_BASE64: ${{ secrets.CODESIGN_PFX_BASE64 }}
+          CODESIGN_PFX_PASSWORD: ${{ secrets.CODESIGN_PFX_PASSWORD }}
+        run: |
+          if (-not $env:CODESIGN_PFX_BASE64 -or -not $env:CODESIGN_PFX_PASSWORD) {
+            Write-Host "CODESIGN_PFX_BASE64 / CODESIGN_PFX_PASSWORD are not both configured - building an unsigned MSI."
+            exit 0
+          }
+          $pfx = Join-Path $env:RUNNER_TEMP 'codesign.pfx'
+          try {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CODESIGN_PFX_BASE64))
+            $password = ConvertTo-SecureString -String $env:CODESIGN_PFX_PASSWORD -AsPlainText -Force
+            $cert = Import-PfxCertificate -FilePath $pfx -CertStoreLocation Cert:\CurrentUser\My -Password $password
+            Write-Host "Imported $($cert.Subject) ($($cert.Thumbprint))."
+          } finally {
+            # the private key lives in the certificate store now; the file it
+            # came from must not stay on the runner
+            if (Test-Path $pfx) { Remove-Item $pfx -Force }
+          }
+
+      - name: Build MSI
+        run: ./gradlew jpackage
+
+      - name: Locate MSI
+        id: msi
+        shell: bash
+        run: echo "name=$(basename build/jpackage/jdbgen-*.msi)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload MSI artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-msi
+          path: build/jpackage/*.msi
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-zip, build-msi]
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v7
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -l artifacts
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: jdbgen ${{ needs.build-zip.outputs.version }}
+          generate_release_notes: true
+          files: |
+            artifacts/${{ needs.build-zip.outputs.zip-name }}
+            artifacts/${{ needs.build-msi.outputs.msi-name }}
+
+  winget:
+    name: Submit to winget
+    runs-on: windows-latest
+    needs: [build-zip, build-msi, release]
+    steps:
+      # Secrets cannot be read from a job-level 'if:', so the guard lives in a
+      # step: without WINGET_TOKEN configured the rest of this job no-ops and
+      # the release itself still succeeds.
+      #
+      # WINGET_TOKEN is a classic personal access token with the 'public_repo'
+      # scope, belonging to an account that has a fork of microsoft/winget-pkgs.
+      # wingetcreate pushes the manifest to that fork and opens the pull request
+      # from it.
+      #
+      # 'wingetcreate update' only works once Xcomart.Jdbgen already exists in
+      # microsoft/winget-pkgs, because it starts from the published manifest.
+      # The very first submission has to be done by hand, once:
+      #
+      #   wingetcreate new <url of the released .msi>
+      #
+      # and the resulting pull request merged. Every release after that is
+      # handled by this job.
+      - name: Check for winget token
+        id: guard
+        shell: bash
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if [ -n "${WINGET_TOKEN}" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "WINGET_TOKEN is not configured - skipping the winget submission."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download wingetcreate
+        if: steps.guard.outputs.enabled == 'true'
+        shell: pwsh
+        run: Invoke-WebRequest -Uri https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+
+      # The manifest points at the release asset URL rather than at a local
+      # file; wingetcreate downloads it from there to compute the installer hash,
+      # which is why this job depends on 'release' having published it already.
+      - name: Update manifest and open pull request
+        if: steps.guard.outputs.enabled == 'true'
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          VERSION: ${{ needs.build-zip.outputs.version }}
+          MSI_NAME: ${{ needs.build-msi.outputs.msi-name }}
+        run: |
+          $url = "https://github.com/${env:GITHUB_REPOSITORY}/releases/download/${env:GITHUB_REF_NAME}/${env:MSI_NAME}"
+          Write-Host "Submitting Xcomart.Jdbgen $env:VERSION from $url"
+          .\wingetcreate.exe update Xcomart.Jdbgen `
+            --version $env:VERSION `
+            --urls $url `
+            --submit `
+            --token $env:WINGET_TOKEN

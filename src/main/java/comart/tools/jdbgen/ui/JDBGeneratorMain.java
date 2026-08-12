@@ -32,6 +32,8 @@ import comart.tools.jdbgen.types.JDBTemplate;
 import comart.tools.jdbgen.types.db.DBMeta;
 import comart.tools.jdbgen.types.db.DBSchema;
 import comart.tools.jdbgen.types.db.DBTable;
+import comart.utils.AppDirs;
+import comart.utils.I18n;
 import comart.utils.ObjUtils;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
@@ -90,6 +92,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         lblConnectionInfo.setAutoscrolls(true);
     }
 
+    /**
+     * the stored <code>language</code> value of every entry of
+     * <code>cboLanguage</code>, in the order the entries appear.
+     * <code>null</code> is the operating system locale.
+     */
+    private static final String[] LANGUAGES = { null, "en", "ko", "es", "ja", "zh-CN" };
+
     private final JDBGenConfig conf;
     private final Map<String, JDBConnection> connMap = new HashMap<>();
     private JDBConnection currConn = null;
@@ -116,6 +125,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jScrollPane1.setPreferredSize(jScrollPane1.getPreferredSize());
         conf = JDBGenConfig.getInstance();
         chkDarkUI.setSelected(conf.isDarkUI());
+        initLanguageCombo();
         chkApplyAbbr.setSelected(conf.isApplyAbbr());
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         UIUtils.setApplicationIcon(this);
@@ -161,6 +171,16 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         this.txtOutputDir.setText("");
     }
 
+    /**
+     * The column names of a generated table model are the untranslated
+     * placeholders of the form editor, the shown ones are set here.
+     */
+    private static void applyHeaders(JTable table, String... keys) {
+        TableColumnModel colModel = table.getColumnModel();
+        for (int i=0; i<keys.length && i<colModel.getColumnCount(); i++)
+            colModel.getColumn(i).setHeaderValue(I18n.t(keys[i]));
+    }
+
     private void initTemplates() {
         tabTemplates.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         TableColumnModel colModel = tabTemplates.getColumnModel();
@@ -168,6 +188,14 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         colModel.getColumn(1).setPreferredWidth(130);
         colModel.getColumn(2).setPreferredWidth(130);
         colModel.getColumn(3).setPreferredWidth(130);
+        applyHeaders(tabTemplates,
+                "generatorMain.tabTemplates.column.select",
+                "generatorMain.tabTemplates.column.name",
+                "generatorMain.tabTemplates.column.templateFile",
+                "generatorMain.tabTemplates.column.outTemplate");
+        applyHeaders(tabVars,
+                "generatorMain.tabVars.column.name",
+                "generatorMain.tabVars.column.value");
 
         DefaultTableModel tpls = (DefaultTableModel)this.tabTemplates.getModel();
         JTableHeader tplHeader = this.tabTemplates.getTableHeader();
@@ -252,7 +280,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         Map<String, List<DBSchema>> tree = meta.getSchemaTree();
         DefaultMutableTreeNode root = null;
         if (tree.size() > 1) {
-            root = new DefaultMutableTreeNode("Database");
+            root = new DefaultMutableTreeNode(I18n.t("generatorMain.tree.database"));
             for (String catalog:tree.keySet()) {
                 DefaultMutableTreeNode cat = new DefaultMutableTreeNode(catalog);
                 for (DBSchema schema:tree.get(catalog)) {
@@ -366,8 +394,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         suppressCboConnEvent = true;
         cboConnection.setSelectedIndex(-1);
         suppressCboConnEvent = back;
-        UIUtils.error(this, "Cannot connect to '" + jcc.getName()
-                + "': " + cause.getLocalizedMessage());
+        UIUtils.error(this, I18n.t("generatorMain.msg.connectFailed",
+                jcc.getName(), cause.getLocalizedMessage()));
     }
 
     /**
@@ -407,6 +435,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         chkApplyAbbr = new javax.swing.JCheckBox();
         jLabel15 = new javax.swing.JLabel();
         chkDarkUI = new javax.swing.JCheckBox();
+        cboLanguage = new javax.swing.JComboBox<>();
         btnGenerate = new javax.swing.JButton();
         cboConnection = new javax.swing.JComboBox<>();
         jLabel2 = new javax.swing.JLabel();
@@ -416,9 +445,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         btnMapper = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("JDBGen Main");
+        setTitle(I18n.t("generatorMain.title"));
 
-        btnClose.setText("Close");
+        btnClose.setText(I18n.t("generatorMain.btnClose.text"));
         btnClose.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCloseActionPerformed(evt);
@@ -426,7 +455,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
 
         jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText("Catalogs/Schemas");
+        jLabel1.setText(I18n.t("generatorMain.jLabel1.text"));
 
         javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
         treSchemas.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
@@ -470,7 +499,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(lstTables);
 
-        chkShowView.setText("Show Views");
+        chkShowView.setText(I18n.t("generatorMain.chkShowView.text"));
         chkShowView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkShowViewActionPerformed(evt);
@@ -478,7 +507,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
 
         jLabel5.setFont(jLabel5.getFont().deriveFont(jLabel5.getFont().getStyle() | java.awt.Font.BOLD, jLabel5.getFont().getSize()+4));
-        jLabel5.setText("Tables");
+        jLabel5.setText(I18n.t("generatorMain.jLabel5.text"));
 
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
@@ -503,7 +532,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         );
 
         jLabel4.setFont(jLabel4.getFont().deriveFont(jLabel4.getFont().getStyle() | java.awt.Font.BOLD, jLabel4.getFont().getSize()+4));
-        jLabel4.setText("Generation Options");
+        jLabel4.setText(I18n.t("generatorMain.jLabel4.text"));
 
         tabTemplates.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -542,7 +571,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         txtOutputDir.setText("output");
 
         jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel11.setText("Output Directory:");
+        jLabel11.setText(I18n.t("generatorMain.jLabel11.text"));
 
         btnBrowseOutput.setText("...");
         btnBrowseOutput.addActionListener(new java.awt.event.ActionListener() {
@@ -552,10 +581,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
 
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel14.setText("Author Name:");
+        jLabel14.setText(I18n.t("generatorMain.jLabel14.text"));
 
         jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel16.setText("Custom Variables:");
+        jLabel16.setText(I18n.t("generatorMain.jLabel16.text"));
 
         tabVars.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -575,11 +604,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
         jScrollPane4.setViewportView(tabVars);
 
-        jLabel6.setText("Templates");
+        jLabel6.setText(I18n.t("generatorMain.jLabel6.text"));
 
         btnDelVar.setText("-");
 
-        chkApplyAbbr.setText("Apply abbreviation rule to all name fields.");
+        chkApplyAbbr.setText(I18n.t("generatorMain.chkApplyAbbr.text"));
         chkApplyAbbr.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkApplyAbbrActionPerformed(evt);
@@ -587,7 +616,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
 
         jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel15.setText("Abbreviation:");
+        jLabel15.setText(I18n.t("generatorMain.jLabel15.text"));
 
         javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
         jPanel4.setLayout(jPanel4Layout);
@@ -677,14 +706,21 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
 
-        chkDarkUI.setText("Dark UI");
+        chkDarkUI.setText(I18n.t("generatorMain.chkDarkUI.text"));
         chkDarkUI.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkDarkUIActionPerformed(evt);
             }
         });
 
-        btnGenerate.setText("Generate");
+        cboLanguage.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3" }));
+        cboLanguage.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboLanguageActionPerformed(evt);
+            }
+        });
+
+        btnGenerate.setText(I18n.t("generatorMain.btnGenerate.text"));
         btnGenerate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnGenerateActionPerformed(evt);
@@ -698,9 +734,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         });
 
-        jLabel2.setText("Connection");
+        jLabel2.setText(I18n.t("generatorMain.jLabel2.text"));
 
-        btnManageConn.setText("Manage");
+        btnManageConn.setText(I18n.t("generatorMain.btnManageConn.text"));
         btnManageConn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnManageConnActionPerformed(evt);
@@ -711,14 +747,14 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         lblConnectionInfo.setText("Connection Information Placeholder");
 
         btnAck.setText("A");
-        btnAck.setToolTipText("About of this program");
+        btnAck.setToolTipText(I18n.t("generatorMain.btnAck.toolTipText"));
         btnAck.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAckActionPerformed(evt);
             }
         });
 
-        btnMapper.setText("Abbreviation Mapper");
+        btnMapper.setText(I18n.t("generatorMain.btnMapper.text"));
         btnMapper.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnMapperActionPerformed(evt);
@@ -735,6 +771,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(chkDarkUI)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboLanguage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnGenerate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -770,6 +808,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnClose)
                     .addComponent(chkDarkUI)
+                    .addComponent(cboLanguage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnGenerate))
                 .addContainerGap())
         );
@@ -790,6 +829,47 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         JDBGenConfig.saveInstance(this);
     }//GEN-LAST:event_chkDarkUIActionPerformed
 
+    /**
+     * the entry of <code>cboLanguage</code> a stored language setting selects.
+     * Anything unknown falls back to the system default entry.
+     */
+    static int languageIndex(String language) {
+        if (language != null) {
+            String lang = language.trim();
+            for (int i=1; i<LANGUAGES.length; i++) {
+                if (LANGUAGES[i].equalsIgnoreCase(lang))
+                    return i;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Fill the language combo. Only the system entry is translated - a
+     * language is named in itself, so that it can be found whatever the user
+     * interface currently speaks.
+     */
+    private void initLanguageCombo() {
+        cboLanguage.setModel(new DefaultComboBoxModel<>(new String[] {
+            I18n.t("common.language.system"), "English",
+            "한국어", "Español", "日本語", "简体中文" }));
+        cboLanguage.setToolTipText(I18n.t("common.language.tooltip"));
+        cboLanguage.setSelectedIndex(languageIndex(conf.getLanguage()));
+    }
+
+    private void cboLanguageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLanguageActionPerformed
+        int idx = cboLanguage.getSelectedIndex();
+        // filling the combo in the constructor selects the stored entry, and
+        // re-selecting the current one is not a change either
+        if (idx < 0 || idx == languageIndex(conf.getLanguage()))
+            return;
+        conf.setLanguage(LANGUAGES[idx]);
+        JDBGenConfig.saveInstance(this);
+        // switching the language live would have to rebuild every open window,
+        // so it is left to the next start.
+        UIUtils.info(this, I18n.t("common.language.restartRequired"));
+    }//GEN-LAST:event_cboLanguageActionPerformed
+
     private void cboConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboConnectionActionPerformed
         // ignore while a connection is already being opened - the combo is
         // disabled meanwhile, this is just a second line of defense.
@@ -807,8 +887,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         }
         if (jdr == null) {
-            UIUtils.error(this, "Driver '" + jcc.getDriverType()
-                    + "' of connection '" + jcc.getName() + "' not found.");
+            UIUtils.error(this, I18n.t("generatorMain.msg.driverNotFound",
+                    jcc.getDriverType(), jcc.getName()));
             return;
         }
         connectAsync(jdr, jcc);
@@ -849,7 +929,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                                 .findFirst().orElse(null)));
                 } catch (Exception ex) {
                     log.error("cannot get tables", ex);
-                    UIUtils.error(this, "Cannot get tables: "+ ex.getLocalizedMessage());
+                    UIUtils.error(this, I18n.t("generatorMain.msg.getTablesFailed",
+                            ex.getLocalizedMessage()));
                 }
             }
         }
@@ -871,6 +952,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         final Map<String, String> customVars;
         final List<DBTable> tables;
         final List<JDBTemplate> templates;
+        /** already resolved, see {@link AppDirs#resolveOutputDir(String)}. */
         final String outputDir;
 
         GenerateRequest(DBMeta meta, Map<String, String> customVars,
@@ -891,21 +973,23 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 // value it needs was snapshotted into 'req' on the EDT.
                 try {
                     JDBAbbr.buildMap();
-                    publish("reading table columns...");
+                    publish(I18n.t("generatorMain.progress.readingColumns"));
                     for (DBTable t: req.tables)
                         req.meta.getTableColumns(t);
                     int totalProcs = req.tables.size() * req.templates.size();
                     int progress = 0;
                     for (JDBTemplate tpl:req.templates) {
-                        publish(tpl.getName() + " template processing...");
-                        String tplStr = ObjUtils.getFileContents(tpl.getTemplateFile());
+                        publish(I18n.t("generatorMain.progress.templateProcessing", tpl.getName()));
+                        String tplStr = ObjUtils.getFileContents(
+                                AppDirs.resolvePath(tpl.getTemplateFile()));
                         TemplateManager tplCont = new TemplateManager(tplStr, req.customVars);
                         TemplateManager tplOut = new TemplateManager(tpl.getOutTemplate(), req.customVars);
                         for (DBTable t:req.tables) {
                             progress++;
                             if (totalProcs > 0)
                                 setProgress(Math.min(100, progress * 100 / totalProcs));
-                            publish(tpl.getName() + " applyng to " + t.getTable() + "...");
+                            publish(I18n.t("generatorMain.progress.applying",
+                                    tpl.getName(), t.getTable()));
                             String result = tplCont.applyMapper(t);
                             String outFname = tplOut.applyMapper(t);
                             if (!StrUtils.isEmpty(req.outputDir))
@@ -914,11 +998,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                         }
                     }
                     setProgress(100);
-                    publish("all process complete!");
+                    publish(I18n.t("generatorMain.progress.complete"));
                     return true;
                 } catch(Exception e) {
                     log.error(e.getLocalizedMessage(), e);
-                    publish("process failed! : " + e.getLocalizedMessage());
+                    publish(I18n.t("generatorMain.progress.failed", e.getLocalizedMessage()));
                     return false;
                 }
             }
@@ -927,7 +1011,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
     private void btnGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateActionPerformed
         if (dbmeta == null) {
-            UIUtils.error(this, "Please connect to a database first.");
+            UIUtils.error(this, I18n.t("generatorMain.msg.connectFirst"));
             return;
         }
         // snapshot every UI value here, on the EDT - the worker below runs on a
@@ -941,7 +1025,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         }
         if (selTables.isEmpty()) {
-            UIUtils.error(this, "Please select at least one table to generate.");
+            UIUtils.error(this, I18n.t("generatorMain.msg.selectTable"));
             return;
         }
         DefaultTableModel tplModel = (DefaultTableModel)tabTemplates.getModel();
@@ -957,12 +1041,15 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         }
         if (tpls.isEmpty()) {
-            UIUtils.error(this, "Please select at least one template to generate.");
+            UIUtils.error(this, I18n.t("generatorMain.msg.selectTemplate"));
             return;
         }
         Map<String, String> custVars = UIUtils.applyTableToMap(tabVars.getModel());
         custVars.put("author", txtAuthor.getText());
-        String outputDir = txtOutputDir.getText();
+        // the configured value names a directory relative to the user data
+        // directory or the installation, not to the working directory - the
+        // browse button stores it that way, see AppDirs.relativize()
+        String outputDir = AppDirs.resolveOutputDir(txtOutputDir.getText());
 
         GenerateRequest req = new GenerateRequest(
                 dbmeta, custVars, selTables, tpls, outputDir);
@@ -971,13 +1058,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         // modal - returns once the worker's done() hides the dialog
         pp.setVisible(true);
         if (pp.result) {
-            if (UIUtils.confirm(this, "Process Complete",
-                    "Process complete successfully!\nDo you want open output directory?")) {
+            if (UIUtils.confirm(this, I18n.t("generatorMain.msg.complete.title"),
+                    I18n.t("generatorMain.msg.complete"))) {
                 // must match the directory actually written to above
                 PlatformUtils.openFile(StrUtils.isEmpty(outputDir) ? "." : outputDir);
             }
         } else {
-            UIUtils.info(this, "Process failed!");
+            UIUtils.info(this, I18n.t("generatorMain.msg.failed"));
         }
     }//GEN-LAST:event_btnGenerateActionPerformed
 
@@ -995,7 +1082,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     tview.setVisible(true);
                 } catch(Throwable t) {
                     log.error("cannot get columns", t);
-                    UIUtils.error(this, "Cannot get columns: "+ t.getLocalizedMessage());
+                    UIUtils.error(this, I18n.t("generatorMain.msg.getColumnsFailed",
+                            t.getLocalizedMessage()));
                 }
             }
         }
@@ -1056,6 +1144,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private javax.swing.JButton btnManageConn;
     private javax.swing.JButton btnMapper;
     private javax.swing.JComboBox<String> cboConnection;
+    private javax.swing.JComboBox<String> cboLanguage;
     private javax.swing.JCheckBox chkApplyAbbr;
     private javax.swing.JCheckBox chkDarkUI;
     private javax.swing.JCheckBox chkShowView;

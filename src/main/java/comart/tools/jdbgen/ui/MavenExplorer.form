@@ -2,7 +2,9 @@
 
 <Form version="1.5" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JDialogFormInfo">
   <Properties>
-    <Property name="title" type="java.lang.String" value="Maven Repository Explorer"/>
+    <Property name="title" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+      <Connection code="I18n.t(&quot;mavenExplorer.title&quot;)" type="code"/>
+    </Property>
   </Properties>
   <SyntheticProperties>
     <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
@@ -81,7 +83,9 @@
   <SubComponents>
     <Component class="javax.swing.JLabel" name="jLabel1">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Search in Maven Repositories:"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;mavenExplorer.jLabel1.text&quot;)" type="code"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="txtSearch">
@@ -102,7 +106,9 @@
     </Component>
     <Component class="javax.swing.JButton" name="btnCancel">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Cancel"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;mavenExplorer.btnCancel.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCancelActionPerformed"/>
@@ -110,7 +116,9 @@
     </Component>
     <Component class="javax.swing.JButton" name="btnDownload">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Download &amp; Use"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;mavenExplorer.btnDownload.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDownloadActionPerformed"/>
@@ -150,7 +158,9 @@
                 <Font bold="true" component="jLabel3" property="font" relativeSize="true" size="3"/>
               </FontInfo>
             </Property>
-            <Property name="text" type="java.lang.String" value="Search Results"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="I18n.t(&quot;mavenExplorer.jLabel3.text&quot;)" type="code"/>
+            </Property>
           </Properties>
         </Component>
         <Container class="javax.swing.JScrollPane" name="jScrollPane5">
@@ -178,7 +188,9 @@
         </Container>
         <Component class="javax.swing.JButton" name="btnMore">
           <Properties>
-            <Property name="text" type="java.lang.String" value="More"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="I18n.t(&quot;mavenExplorer.btnMore.text&quot;)" type="code"/>
+            </Property>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnMoreActionPerformed"/>
@@ -220,7 +232,9 @@
                 <Font bold="true" component="jLabel4" property="font" relativeSize="true" size="3"/>
               </FontInfo>
             </Property>
-            <Property name="text" type="java.lang.String" value="Versions"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="I18n.t(&quot;mavenExplorer.jLabel4.text&quot;)" type="code"/>
+            </Property>
           </Properties>
         </Component>
         <Container class="javax.swing.JScrollPane" name="jScrollPane6">
@@ -244,7 +258,9 @@
         </Container>
         <Component class="javax.swing.JButton" name="btnMore1">
           <Properties>
-            <Property name="text" type="java.lang.String" value="More"/>
+            <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+              <Connection code="I18n.t(&quot;mavenExplorer.btnMore1.text&quot;)" type="code"/>
+            </Property>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnMore1ActionPerformed"/>
@@ -254,7 +270,9 @@
     </Container>
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Powered by"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;mavenExplorer.jLabel2.text&quot;)" type="code"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="lblMvnLink">

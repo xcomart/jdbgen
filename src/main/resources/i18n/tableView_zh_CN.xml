@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/tableView.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- header, filled with the selected table at runtime -->
+  <entry key="tableView.lblTableName.text">表名</entry>
+  <entry key="tableView.lblRemark.text">说明</entry>
+
+  <!-- column table -->
+  <entry key="tableView.column.name">名称</entry>
+  <entry key="tableView.column.type">类型</entry>
+  <entry key="tableView.column.key">键</entry>
+
+  <entry key="tableView.btnClose.text">关闭</entry>
+</properties>

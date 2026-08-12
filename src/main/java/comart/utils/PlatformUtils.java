@@ -25,6 +25,9 @@
 package comart.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import comart.tools.jdbgen.update.UpdateManager;
 import java.awt.desktop.AboutHandler;
 import java.awt.desktop.PreferencesHandler;
 import java.awt.desktop.PrintFilesHandler;
@@ -38,7 +41,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Properties;
 import lombok.extern.slf4j.Slf4j;
@@ -180,7 +182,7 @@ public class PlatformUtils {
     public static void setDockIcon() {
         try {
             final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
-            final URL imageResource = new File("resource/icon.png").toURI().toURL();
+            final URL imageResource = AppDirs.installResourceFile("resource/icon.png").toURI().toURL();
             final Image image = defaultToolkit.getImage(imageResource);
             final Taskbar taskbar = Taskbar.getTaskbar();
             taskbar.setIconImage(image);
@@ -216,7 +218,12 @@ public class PlatformUtils {
         return res;
     }
 
+    private static final String RELEASE_PAGE =
+            "https://github.com/xcomart/jdbgen/releases/latest";
+
     public static void updateCheck() {
+        // whatever an earlier update left behind is of no use anymore
+        UpdateManager.cleanupStaging();
         String curVersion = getVersion();
         if (UNKNOWN_VERSION.equals(curVersion)) {
             log.warn("current version is unknown, skipping update check.");
@@ -224,26 +231,70 @@ public class PlatformUtils {
         }
         String url = "https://api.github.com/repos/xcomart/jdbgen/releases/latest";
         Request req = new Request.Builder().url(url).build();
+        JsonObject release;
+        String tagName;
+        // the response is read and closed before anything is downloaded from it
         try (Response response = HttpUtils.getClient().newCall(req).execute()) {
             Gson gson = new Gson();
-            HashMap map = gson.fromJson(response.body().charStream(), HashMap.class);
-            Object tag = map == null ? null : map.get("tag_name");
-            if (tag == null) {
+            release = gson.fromJson(response.body().charStream(), JsonObject.class);
+            JsonElement tag = release == null ? null : release.get("tag_name");
+            if (tag == null || !tag.isJsonPrimitive()) {
                 log.warn("no 'tag_name' in the latest release response, skipping update check.");
                 return;
             }
-            String tagName = tag.toString();
-            if (compareVersions(curVersion, tagName) < 0) {
-                // updates available
-                if (UIUtils.confirm(null, "Update Available", "New version "+tagName+
-                        " is available.\nDo you want to update now?")) {
-                    // TODO: do update automatically
-                    openURL("https://github.com/xcomart/jdbgen/releases/latest");
-                    System.exit(0);
-                }
-            }
+            tagName = tag.getAsString();
         } catch(Exception e) {
             log.error(e.getLocalizedMessage(), e);
+            return;
+        }
+        if (compareVersions(curVersion, tagName) < 0) {
+            // updates available
+            if (!AppDirs.isInstallWritable()) {
+                // an installed build - below C:\Program Files, or owned by the
+                // package manager it was installed with - cannot replace its
+                // own files, so the user is told how to update instead.
+                announceManualUpdate(tagName);
+                return;
+            }
+            if (UIUtils.confirm(null, I18n.t("common.update.title"),
+                    I18n.t("common.update.available", tagName))) {
+                applyUpdate(release);
+            }
+        }
+    }
+
+    /**
+     * tell the user about a new version that cannot be installed by the
+     * application itself, and offer the release page.
+     */
+    private static void announceManualUpdate(String tagName) {
+        log.info("'{}' is not writable, the update has to be installed by the user.",
+                AppDirs.installResourceBase());
+        StringBuilder msg = new StringBuilder(I18n.t("common.update.manual", tagName));
+        if (isWindows())
+            msg.append("\n\n").append(I18n.t("common.update.manual.winget"));
+        msg.append("\n\n").append(I18n.t("common.update.openReleasePage"));
+        if (UIUtils.confirm(null, I18n.t("common.update.title"), msg.toString()))
+            openURL(RELEASE_PAGE);
+    }
+
+    /**
+     * download and install <code>release</code>, restarting the application
+     * when it worked. A cancelled download just continues the startup, a
+     * failed one falls back to the release page in the browser.
+     */
+    private static void applyUpdate(JsonObject release) {
+        UpdateManager.Result res = UpdateManager.performUpdate(release);
+        if (res == UpdateManager.Result.LAUNCHED) {
+            // the installed files are replaced as soon as this process is gone
+            System.exit(0);
+        } else if (res == UpdateManager.Result.FAILED) {
+            UIUtils.error(null, I18n.t("common.update.failed"));
+            if (UIUtils.confirm(null, I18n.t("common.update.title"),
+                    I18n.t("common.update.openReleasePage"))) {
+                openURL(RELEASE_PAGE);
+                System.exit(0);
+            }
         }
     }
 }

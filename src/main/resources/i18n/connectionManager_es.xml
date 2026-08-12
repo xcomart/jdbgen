@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Spanish translation of i18n/connectionManager.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window -->
+  <entry key="connectionManager.title">Administrador de conexiones</entry>
+
+  <!-- dialog buttons -->
+  <entry key="connectionManager.btnSave.text">Guardar</entry>
+  <entry key="connectionManager.btnConnect.text">Conectar</entry>
+  <entry key="connectionManager.btnCancel.text">Cancelar</entry>
+
+  <!-- connection list -->
+  <entry key="connectionManager.jLabel1.text">Conexiones</entry>
+  <entry key="connectionManager.btnNewConn.toolTipText">Crear una conexión nueva</entry>
+  <entry key="connectionManager.btnCloneConn.toolTipText">Clonar la conexión actual</entry>
+  <entry key="connectionManager.btnDelConn.toolTipText">Eliminar la conexión actual</entry>
+
+  <!-- tabs -->
+  <entry key="connectionManager.tab.general">General</entry>
+  <entry key="connectionManager.tab.templates">Plantillas</entry>
+  <entry key="connectionManager.tab.options">Opciones</entry>
+
+  <!-- general tab -->
+  <entry key="connectionManager.jLabel2.text">Nombre de la conexión:</entry>
+  <entry key="connectionManager.jLabel3.text">Controlador:</entry>
+  <entry key="connectionManager.btnManage.text">Administrar</entry>
+  <entry key="connectionManager.btnManage.toolTipText">Administrar controladores</entry>
+  <entry key="connectionManager.jLabel4.text">URL de conexión:</entry>
+  <entry key="connectionManager.jLabel5.text">Nombre de usuario:</entry>
+  <entry key="connectionManager.jLabel6.text">Contraseña del usuario:</entry>
+  <entry key="connectionManager.jLabel12.text">Icono:</entry>
+  <entry key="connectionManager.btnBrowseIcon.toolTipText">Examinar archivo de icono</entry>
+  <entry key="connectionManager.jLabel7.text">Propiedades de conexión:</entry>
+  <entry key="connectionManager.tabProps.col.key">Clave</entry>
+  <entry key="connectionManager.tabProps.col.value">Valor</entry>
+  <entry key="connectionManager.chkKeepAlive.text">Mantener la conexión activa con la siguiente sentencia cada</entry>
+  <entry key="connectionManager.jLabel15.text">segundos.</entry>
+
+  <!-- templates tab -->
+  <entry key="connectionManager.tabTemplates.col.name">Nombre</entry>
+  <entry key="connectionManager.tabTemplates.col.templateFile">Archivo de plantilla</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">Plantilla de salida</entry>
+  <entry key="connectionManager.btnTemplateHelp.toolTipText">Ayuda sobre plantillas</entry>
+  <entry key="connectionManager.btnPresets.text">Preajustes</entry>
+  <entry key="connectionManager.btnPresets.toolTipText">Administrar preajustes de plantillas</entry>
+  <entry key="connectionManager.btnNewTemplate.text">Nueva</entry>
+  <entry key="connectionManager.btnNewTemplate.toolTipText">Crear una plantilla nueva</entry>
+  <entry key="connectionManager.btnDelTemplate.text">Eliminar</entry>
+  <entry key="connectionManager.btnDelTemplate.toolTipText">Eliminar la plantilla actual</entry>
+  <entry key="connectionManager.btnSaveTemplate.text">Aplicar</entry>
+  <entry key="connectionManager.btnSaveTemplate.toolTipText">Aplicar los cambios de la plantilla seleccionada</entry>
+  <entry key="connectionManager.jLabel9.text">Nombre de la plantilla:</entry>
+  <entry key="connectionManager.txtTemplateName.toolTipText">Nombre de la plantilla</entry>
+  <entry key="connectionManager.jLabel8.text">Archivo de plantilla:</entry>
+  <entry key="connectionManager.txtTemplateFile.toolTipText">Ubicación del archivo de plantilla</entry>
+  <entry key="connectionManager.btnBrowseTemplate.toolTipText">Examinar archivo de plantilla</entry>
+  <entry key="connectionManager.jLabel13.text">Plantilla del nombre de salida:</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">Plantilla del nombre del archivo de salida</entry>
+
+  <!-- options tab -->
+  <entry key="connectionManager.jLabel11.text">Directorio de salida:</entry>
+  <entry key="connectionManager.jLabel14.text">Nombre del autor:</entry>
+  <entry key="connectionManager.jLabel16.text">Variables personalizadas:</entry>
+  <entry key="connectionManager.tabVars.col.name">Nombre</entry>
+  <entry key="connectionManager.tabVars.col.value">Valor</entry>
+
+  <!-- default names of newly created connections -->
+  <entry key="connectionManager.msg.newConnection">Conexión nueva</entry>
+  <entry key="connectionManager.msg.copyOf">Copia de {0}</entry>
+
+  <!-- validation of the edited connection -->
+  <entry key="connectionManager.msg.nameExists">El nombre {0} ya existe.</entry>
+  <entry key="connectionManager.msg.nameRequired">Se requiere el nombre de la conexión.</entry>
+  <entry key="connectionManager.msg.urlRequired">Se requiere la URL de conexión.</entry>
+  <entry key="connectionManager.msg.driverRequired">Se requiere un controlador.</entry>
+  <entry key="connectionManager.msg.userRequired">Se requiere el nombre de usuario de la base de datos.</entry>
+  <entry key="connectionManager.msg.passwordRequired">Se requiere la contraseña del usuario de la base de datos.</entry>
+  <entry key="connectionManager.msg.keepAliveQueryRequired">Se requiere la sentencia SQL de mantenimiento de conexión.</entry>
+  <entry key="connectionManager.msg.keepAliveSecRequired">Se requiere el intervalo de ejecución de la sentencia de mantenimiento de conexión.</entry>
+  <entry key="connectionManager.msg.outputDirRequired">Se requiere el directorio de salida.</entry>
+  <entry key="connectionManager.msg.driverIncomplete">La información del controlador está incompleta.</entry>
+
+  <!-- removing a connection -->
+  <entry key="connectionManager.msg.removeConfirm.title">Confirmar eliminación de la conexión</entry>
+  <entry key="connectionManager.msg.removeConfirm.message">¿Está seguro de que desea eliminar la conexión ''{0}''?</entry>
+</properties>

@@ -3,7 +3,9 @@
 <Form version="1.7" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JFrameFormInfo">
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
-    <Property name="title" type="java.lang.String" value="JDBGen Main"/>
+    <Property name="title" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+      <Connection code="I18n.t(&quot;generatorMain.title&quot;)" type="code"/>
+    </Property>
   </Properties>
   <SyntheticProperties>
     <SyntheticProperty name="formSizePolicy" type="int" value="1"/>
@@ -30,6 +32,8 @@
                   <Component id="jPanel1" alignment="1" max="32767" attributes="0"/>
                   <Group type="102" alignment="1" attributes="0">
                       <Component id="chkDarkUI" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Component id="cboLanguage" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="32767" attributes="0"/>
                       <Component id="btnGenerate" min="-2" max="-2" attributes="0"/>
                       <EmptySpace max="-2" attributes="0"/>
@@ -71,6 +75,7 @@
               <Group type="103" groupAlignment="3" attributes="0">
                   <Component id="btnClose" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="chkDarkUI" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="cboLanguage" alignment="3" min="-2" max="-2" attributes="0"/>
                   <Component id="btnGenerate" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
@@ -81,7 +86,9 @@
   <SubComponents>
     <Component class="javax.swing.JButton" name="btnClose">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Close"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;generatorMain.btnClose.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnCloseActionPerformed"/>
@@ -146,7 +153,9 @@
                     <Font bold="true" component="jLabel1" property="font" relativeSize="true" size="4"/>
                   </FontInfo>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Catalogs/Schemas"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel1.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
             <Container class="javax.swing.JScrollPane" name="jScrollPane1">
@@ -224,7 +233,9 @@
             </Container>
             <Component class="javax.swing.JCheckBox" name="chkShowView">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Show Views"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.chkShowView.text&quot;)" type="code"/>
+                </Property>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="chkShowViewActionPerformed"/>
@@ -237,7 +248,9 @@
                     <Font bold="true" component="jLabel5" property="font" relativeSize="true" size="4"/>
                   </FontInfo>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Tables"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel5.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
           </SubComponents>
@@ -334,7 +347,9 @@
                     <Font bold="true" component="jLabel4" property="font" relativeSize="true" size="4"/>
                   </FontInfo>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Generation Options"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel4.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
             <Container class="javax.swing.JScrollPane" name="jScrollPane3">
@@ -372,7 +387,9 @@
             <Component class="javax.swing.JLabel" name="jLabel11">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Output Directory:"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel11.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
             <Component class="javax.swing.JButton" name="btnBrowseOutput">
@@ -386,7 +403,9 @@
             <Component class="javax.swing.JLabel" name="jLabel14">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Author Name:"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel14.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
             <Component class="javax.swing.JTextField" name="txtAuthor">
@@ -394,7 +413,9 @@
             <Component class="javax.swing.JLabel" name="jLabel16">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Custom Variables:"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel16.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
             <Container class="javax.swing.JScrollPane" name="jScrollPane4">
@@ -418,7 +439,9 @@
             </Container>
             <Component class="javax.swing.JLabel" name="jLabel6">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Templates"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel6.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
             <Component class="javax.swing.JButton" name="btnDelVar">
@@ -428,7 +451,9 @@
             </Component>
             <Component class="javax.swing.JCheckBox" name="chkApplyAbbr">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Apply abbreviation rule to all name fields."/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.chkApplyAbbr.text&quot;)" type="code"/>
+                </Property>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="chkApplyAbbrActionPerformed"/>
@@ -437,7 +462,9 @@
             <Component class="javax.swing.JLabel" name="jLabel15">
               <Properties>
                 <Property name="horizontalAlignment" type="int" value="11"/>
-                <Property name="text" type="java.lang.String" value="Abbreviation:"/>
+                <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+                  <Connection code="I18n.t(&quot;generatorMain.jLabel15.text&quot;)" type="code"/>
+                </Property>
               </Properties>
             </Component>
           </SubComponents>
@@ -446,15 +473,36 @@
     </Container>
     <Component class="javax.swing.JCheckBox" name="chkDarkUI">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Dark UI"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;generatorMain.chkDarkUI.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="chkDarkUIActionPerformed"/>
       </Events>
     </Component>
+    <Component class="javax.swing.JComboBox" name="cboLanguage">
+      <Properties>
+        <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
+          <StringArray count="3">
+            <StringItem index="0" value="Item 1"/>
+            <StringItem index="1" value="Item 2"/>
+            <StringItem index="2" value="Item 3"/>
+          </StringArray>
+        </Property>
+      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="cboLanguageActionPerformed"/>
+      </Events>
+      <AuxValues>
+        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
+      </AuxValues>
+    </Component>
     <Component class="javax.swing.JButton" name="btnGenerate">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Generate"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;generatorMain.btnGenerate.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnGenerateActionPerformed"/>
@@ -480,12 +528,16 @@
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel2">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Connection"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;generatorMain.jLabel2.text&quot;)" type="code"/>
+        </Property>
       </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="btnManageConn">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Manage"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;generatorMain.btnManageConn.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnManageConnActionPerformed"/>
@@ -502,7 +554,9 @@
     <Component class="javax.swing.JButton" name="btnAck">
       <Properties>
         <Property name="text" type="java.lang.String" value="A"/>
-        <Property name="toolTipText" type="java.lang.String" value="About of this program"/>
+        <Property name="toolTipText" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;generatorMain.btnAck.toolTipText&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnAckActionPerformed"/>
@@ -510,7 +564,9 @@
     </Component>
     <Component class="javax.swing.JButton" name="btnMapper">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Abbreviation Mapper"/>
+        <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
+          <Connection code="I18n.t(&quot;generatorMain.btnMapper.text&quot;)" type="code"/>
+        </Property>
       </Properties>
       <Events>
         <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnMapperActionPerformed"/>

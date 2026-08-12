@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Spanish translation of i18n/tableView.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- header, filled with the selected table at runtime -->
+  <entry key="tableView.lblTableName.text">Nombre de la tabla</entry>
+  <entry key="tableView.lblRemark.text">Observaciones</entry>
+
+  <!-- column table -->
+  <entry key="tableView.column.name">Nombre</entry>
+  <entry key="tableView.column.type">Tipo</entry>
+  <entry key="tableView.column.key">Clave</entry>
+
+  <entry key="tableView.btnClose.text">Cerrar</entry>
+</properties>

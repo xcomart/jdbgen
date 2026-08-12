@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Simplified Chinese translation of i18n/driverManager.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window and buttons -->
+  <entry key="driverManager.title">驱动管理器</entry>
+  <entry key="driverManager.btnCancel.text">取消</entry>
+  <entry key="driverManager.btnSave.text">确定</entry>
+
+  <!-- driver list -->
+  <entry key="driverManager.jLabel1.text">驱动</entry>
+
+  <!-- tabs -->
+  <entry key="driverManager.tab.general">常规</entry>
+  <entry key="driverManager.tab.customQueries">自定义查询</entry>
+
+  <!-- general tab -->
+  <entry key="driverManager.jLabel3.text">驱动名称：</entry>
+  <entry key="driverManager.jLabel4.text">JDBC Jar：</entry>
+  <entry key="driverManager.btnDownJdbc.text">从 Maven 仓库下载 JDBC 驱动</entry>
+  <entry key="driverManager.jLabel8.text">URL 模板：</entry>
+  <entry key="driverManager.jLabel9.text">驱动类：</entry>
+  <entry key="driverManager.jLabel10.text">图标：</entry>
+  <entry key="driverManager.jLabel11.text">连接属性：</entry>
+  <entry key="driverManager.tabProps.key">键</entry>
+  <entry key="driverManager.tabProps.value">值</entry>
+  <entry key="driverManager.chkNoAuth.text">此驱动不需要身份验证。</entry>
+
+  <!-- custom queries tab -->
+  <entry key="driverManager.chkTableComments.text">获取表注释</entry>
+  <entry key="driverManager.chkColumnComments.text">获取表列注释</entry>
+  <entry key="driverManager.chkTables.text">获取表列表</entry>
+  <entry key="driverManager.chkColumns.text">获取表列列表</entry>
+
+  <!-- validation and messages -->
+  <entry key="driverManager.msg.nameExists">名称 ''{0}'' 已存在。</entry>
+  <entry key="driverManager.msg.driverNameRequired">请输入驱动名称。</entry>
+  <entry key="driverManager.msg.jarRequired">请指定 JDBC jar 文件。</entry>
+  <entry key="driverManager.msg.driverClassRequired">请输入驱动类。</entry>
+  <entry key="driverManager.msg.tableCommentsRequired">请输入表注释查询语句。</entry>
+  <entry key="driverManager.msg.columnCommentsRequired">请输入列注释查询语句。</entry>
+  <entry key="driverManager.msg.tablesRequired">请输入表列表查询语句。</entry>
+  <entry key="driverManager.msg.columnsRequired">请输入列列表查询语句。</entry>
+  <entry key="driverManager.msg.newDriverName">新建驱动</entry>
+  <entry key="driverManager.msg.copyOfName">{0} 的副本</entry>
+  <entry key="driverManager.filechooser.jarFilter">Java 库文件</entry>
+</properties>

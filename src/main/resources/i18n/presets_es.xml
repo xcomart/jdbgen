@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Spanish translation of i18n/presets.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- preset list -->
+  <entry key="presets.jLabel1.text">Preajustes de plantillas</entry>
+
+  <!-- preset detail -->
+  <entry key="presets.jLabel2.text">Detalle del preajuste</entry>
+  <entry key="presets.jLabel3.text">Nombre del preajuste:</entry>
+  <entry key="presets.tabTemplates.column.templateName">Nombre de la plantilla</entry>
+  <entry key="presets.tabTemplates.column.templateFile">Archivo de plantilla</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">Plantilla de salida</entry>
+  <entry key="presets.btnNewTemplate.text">Nueva</entry>
+  <entry key="presets.btnDelTemplate.text">Eliminar</entry>
+  <entry key="presets.btnSaveTemplate.text">Aplicar</entry>
+  <entry key="presets.jLabel9.text">Nombre de la plantilla:</entry>
+  <entry key="presets.jLabel8.text">Archivo de plantilla:</entry>
+  <entry key="presets.jLabel13.text">Plantilla del nombre de salida:</entry>
+
+  <!-- bottom bar -->
+  <entry key="presets.btnNewFromConn.text">Nuevo preajuste a partir de la conexión actual</entry>
+  <entry key="presets.btnApply.text">Aplicar a la conexión actual</entry>
+  <entry key="presets.btnSave.text">Guardar</entry>
+  <entry key="presets.btnCancel.text">Cancelar</entry>
+
+  <!-- generated preset names -->
+  <entry key="presets.msg.newName">Preajuste nuevo</entry>
+  <entry key="presets.msg.copyName">Copia de {0}</entry>
+
+  <!-- messages -->
+  <entry key="presets.msg.cloneFailed">No se puede clonar el preajuste: {0}</entry>
+  <entry key="presets.msg.delete.title">Eliminar preajuste</entry>
+  <entry key="presets.msg.delete">¿Desea eliminar el preajuste ''{0}''?</entry>
+  <entry key="presets.msg.nameExists">El nombre {0} ya existe.</entry>
+  <entry key="presets.msg.nameRequired">Se requiere el nombre del preajuste.</entry>
+</properties>

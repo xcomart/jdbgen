@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Korean translation of i18n/about.xml. The key set has to stay identical to the English original.</comment>
+
+  <entry key="about.lblVersion.text">버전 v{0}</entry>
+  <entry key="about.jLabel2.text">제작자: Dennis Park</entry>
+  <entry key="about.btnAck.text">감사의 글</entry>
+  <entry key="about.btnOk.text">확인</entry>
+</properties>

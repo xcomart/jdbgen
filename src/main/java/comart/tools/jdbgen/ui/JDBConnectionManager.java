@@ -27,6 +27,7 @@ import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBTemplate;
+import comart.utils.I18n;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.EventQueue;
@@ -92,6 +93,7 @@ public class JDBConnectionManager extends JDialog {
         
         conf = JDBGenConfig.getInstance();
         applyIcons();
+        applyColumnHeaders();
         eventSetup();
         propsModel = (DefaultTableModel)tabProps.getModel();
         tplModel = (DefaultTableModel)tabTemplates.getModel();
@@ -187,6 +189,28 @@ public class JDBConnectionManager extends JDialog {
         UIUtils.addIcon(btnDelTemplate, FontAwesome.MINUS);
         UIUtils.addIcon(btnSaveTemplate, FontAwesome.ARROW_UP);
         UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
+    }
+
+    /**
+     * The column titles come from the form designer, which cannot hold a
+     * translated string: name them here instead.
+     */
+    private void applyColumnHeaders() {
+        setColumnHeaders(tabProps,
+                "connectionManager.tabProps.col.key",
+                "connectionManager.tabProps.col.value");
+        setColumnHeaders(tabTemplates,
+                "connectionManager.tabTemplates.col.name",
+                "connectionManager.tabTemplates.col.templateFile",
+                "connectionManager.tabTemplates.col.outTemplate");
+        setColumnHeaders(tabVars,
+                "connectionManager.tabVars.col.name",
+                "connectionManager.tabVars.col.value");
+    }
+
+    private static void setColumnHeaders(javax.swing.JTable table, String... keys) {
+        for (int i = 0; i < keys.length; i++)
+            table.getColumnModel().getColumn(i).setHeaderValue(I18n.t(keys[i]));
     }
 
     private void eventSetup() {
@@ -327,23 +351,23 @@ public class JDBConnectionManager extends JDialog {
         tabVars = new javax.swing.JTable();
         btnDelVar = new javax.swing.JButton();
 
-        setTitle("Connection Manager");
+        setTitle(I18n.t("connectionManager.title"));
 
-        btnCancel.setText("Cancel");
+        btnCancel.setText(I18n.t("connectionManager.btnCancel.text"));
         btnCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCancelActionPerformed(evt);
             }
         });
 
-        btnConnect.setText("Connect");
+        btnConnect.setText(I18n.t("connectionManager.btnConnect.text"));
         btnConnect.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnConnectActionPerformed(evt);
             }
         });
 
-        btnSave.setText("Save");
+        btnSave.setText(I18n.t("connectionManager.btnSave.text"));
         btnSave.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveActionPerformed(evt);
@@ -353,7 +377,7 @@ public class JDBConnectionManager extends JDialog {
         jSplitPane1.setDividerLocation(200);
 
         jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText("Connections");
+        jLabel1.setText(I18n.t("connectionManager.jLabel1.text"));
 
         lstConnections.setModel(new javax.swing.AbstractListModel<String>() {
             String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
@@ -375,7 +399,7 @@ public class JDBConnectionManager extends JDialog {
         jPanel3.setLayout(new java.awt.GridLayout(1, 0));
 
         btnNewConn.setText("+");
-        btnNewConn.setToolTipText("Create New Connection");
+        btnNewConn.setToolTipText(I18n.t("connectionManager.btnNewConn.toolTipText"));
         btnNewConn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNewConnActionPerformed(evt);
@@ -384,7 +408,7 @@ public class JDBConnectionManager extends JDialog {
         jPanel3.add(btnNewConn);
 
         btnCloneConn.setText("c");
-        btnCloneConn.setToolTipText("Clone Current Connection");
+        btnCloneConn.setToolTipText(I18n.t("connectionManager.btnCloneConn.toolTipText"));
         btnCloneConn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCloneConnActionPerformed(evt);
@@ -393,7 +417,7 @@ public class JDBConnectionManager extends JDialog {
         jPanel3.add(btnCloneConn);
 
         btnDelConn.setText("-");
-        btnDelConn.setToolTipText("Remove Current Connection");
+        btnDelConn.setToolTipText(I18n.t("connectionManager.btnDelConn.toolTipText"));
         btnDelConn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDelConnActionPerformed(evt);
@@ -445,7 +469,7 @@ public class JDBConnectionManager extends JDialog {
         jScrollPane1.setViewportView(tabProps);
 
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel2.setText("Connection Name:");
+        jLabel2.setText(I18n.t("connectionManager.jLabel2.text"));
 
         cboDriver.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -459,10 +483,10 @@ public class JDBConnectionManager extends JDialog {
         });
 
         jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel3.setText("Driver:");
+        jLabel3.setText(I18n.t("connectionManager.jLabel3.text"));
 
-        btnManage.setText("Manage");
-        btnManage.setToolTipText("Manage Drivers");
+        btnManage.setText(I18n.t("connectionManager.btnManage.text"));
+        btnManage.setToolTipText(I18n.t("connectionManager.btnManage.toolTipText"));
         btnManage.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnManageActionPerformed(evt);
@@ -470,16 +494,16 @@ public class JDBConnectionManager extends JDialog {
         });
 
         jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel4.setText("Connection URL:");
+        jLabel4.setText(I18n.t("connectionManager.jLabel4.text"));
 
         jLabel5.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel5.setText("User Name:");
+        jLabel5.setText(I18n.t("connectionManager.jLabel5.text"));
 
         jLabel6.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel6.setText("User Password:");
+        jLabel6.setText(I18n.t("connectionManager.jLabel6.text"));
 
         jLabel7.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel7.setText("Connection Props:");
+        jLabel7.setText(I18n.t("connectionManager.jLabel7.text"));
 
         btnDelProp.setText("-");
         btnDelProp.addActionListener(new java.awt.event.ActionListener() {
@@ -488,7 +512,7 @@ public class JDBConnectionManager extends JDialog {
             }
         });
 
-        chkKeepAlive.setText("Keep connection alive using below statement every");
+        chkKeepAlive.setText(I18n.t("connectionManager.chkKeepAlive.text"));
         chkKeepAlive.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 chkKeepAliveActionPerformed(evt);
@@ -496,7 +520,7 @@ public class JDBConnectionManager extends JDialog {
         });
 
         btnBrowseIcon.setText("...");
-        btnBrowseIcon.setToolTipText("Browse Icon File");
+        btnBrowseIcon.setToolTipText(I18n.t("connectionManager.btnBrowseIcon.toolTipText"));
         btnBrowseIcon.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnBrowseIconActionPerformed(evt);
@@ -504,7 +528,7 @@ public class JDBConnectionManager extends JDialog {
         });
 
         jLabel12.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel12.setText("Icon:");
+        jLabel12.setText(I18n.t("connectionManager.jLabel12.text"));
 
         txtKeepAliveQuery.setColumns(20);
         txtKeepAliveQuery.setRows(5);
@@ -512,7 +536,7 @@ public class JDBConnectionManager extends JDialog {
 
         txtKeepAliveSec.setHorizontalAlignment(javax.swing.JTextField.TRAILING);
 
-        jLabel15.setText("seconds.");
+        jLabel15.setText(I18n.t("connectionManager.jLabel15.text"));
 
         btnIconHelp.setText("?");
 
@@ -621,7 +645,7 @@ public class JDBConnectionManager extends JDialog {
 
         jPanel4Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {btnBrowseIcon, btnDelProp, btnIconHelp, txtIcon});
 
-        jTabbedPane1.addTab("General", jPanel4);
+        jTabbedPane1.addTab(I18n.t("connectionManager.tab.general"), jPanel4);
 
         tabTemplates.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -648,57 +672,57 @@ public class JDBConnectionManager extends JDialog {
         jScrollPane2.setViewportView(tabTemplates);
 
         btnTemplateHelp.setText("?");
-        btnTemplateHelp.setToolTipText("Template Help");
+        btnTemplateHelp.setToolTipText(I18n.t("connectionManager.btnTemplateHelp.toolTipText"));
 
-        btnSaveTemplate.setText("Apply");
-        btnSaveTemplate.setToolTipText("Apply Selected Template Modification");
+        btnSaveTemplate.setText(I18n.t("connectionManager.btnSaveTemplate.text"));
+        btnSaveTemplate.setToolTipText(I18n.t("connectionManager.btnSaveTemplate.toolTipText"));
         btnSaveTemplate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnSaveTemplateActionPerformed(evt);
             }
         });
 
-        btnDelTemplate.setText("Delete");
-        btnDelTemplate.setToolTipText("Remove Current Template");
+        btnDelTemplate.setText(I18n.t("connectionManager.btnDelTemplate.text"));
+        btnDelTemplate.setToolTipText(I18n.t("connectionManager.btnDelTemplate.toolTipText"));
         btnDelTemplate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDelTemplateActionPerformed(evt);
             }
         });
 
-        btnNewTemplate.setText("New");
-        btnNewTemplate.setToolTipText("Create New Template");
+        btnNewTemplate.setText(I18n.t("connectionManager.btnNewTemplate.text"));
+        btnNewTemplate.setToolTipText(I18n.t("connectionManager.btnNewTemplate.toolTipText"));
         btnNewTemplate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnNewTemplateActionPerformed(evt);
             }
         });
 
-        txtTemplateName.setToolTipText("Name of Template");
+        txtTemplateName.setToolTipText(I18n.t("connectionManager.txtTemplateName.toolTipText"));
 
         btnBrowseTemplate.setText("...");
-        btnBrowseTemplate.setToolTipText("Browse Template File");
+        btnBrowseTemplate.setToolTipText(I18n.t("connectionManager.btnBrowseTemplate.toolTipText"));
         btnBrowseTemplate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnBrowseTemplateActionPerformed(evt);
             }
         });
 
-        txtTemplateFile.setToolTipText("Template File Location");
+        txtTemplateFile.setToolTipText(I18n.t("connectionManager.txtTemplateFile.toolTipText"));
 
         jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel8.setText("Template File:");
+        jLabel8.setText(I18n.t("connectionManager.jLabel8.text"));
 
         jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel9.setText("Template Name:");
+        jLabel9.setText(I18n.t("connectionManager.jLabel9.text"));
 
         jLabel13.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel13.setText("Output Name Template:");
+        jLabel13.setText(I18n.t("connectionManager.jLabel13.text"));
 
-        txtOutTemplate.setToolTipText("Output File Name Template");
+        txtOutTemplate.setToolTipText(I18n.t("connectionManager.txtOutTemplate.toolTipText"));
 
-        btnPresets.setText("Presets");
-        btnPresets.setToolTipText("Manage Template Presets");
+        btnPresets.setText(I18n.t("connectionManager.btnPresets.text"));
+        btnPresets.setToolTipText(I18n.t("connectionManager.btnPresets.toolTipText"));
         btnPresets.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnPresetsActionPerformed(evt);
@@ -769,12 +793,12 @@ public class JDBConnectionManager extends JDialog {
                 .addGap(3, 3, 3))
         );
 
-        jTabbedPane1.addTab("Templates", jPanel5);
+        jTabbedPane1.addTab(I18n.t("connectionManager.tab.templates"), jPanel5);
 
         txtOutputDir.setText("output");
 
         jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel11.setText("Output Directory:");
+        jLabel11.setText(I18n.t("connectionManager.jLabel11.text"));
 
         btnBrowseOutput.setText("...");
         btnBrowseOutput.addActionListener(new java.awt.event.ActionListener() {
@@ -784,10 +808,10 @@ public class JDBConnectionManager extends JDialog {
         });
 
         jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel14.setText("Author Name:");
+        jLabel14.setText(I18n.t("connectionManager.jLabel14.text"));
 
         jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel16.setText("Custom Variables:");
+        jLabel16.setText(I18n.t("connectionManager.jLabel16.text"));
 
         tabVars.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -864,7 +888,7 @@ public class JDBConnectionManager extends JDialog {
                         .addGap(0, 0, Short.MAX_VALUE))))
         );
 
-        jTabbedPane1.addTab("Options", jPanel6);
+        jTabbedPane1.addTab(I18n.t("connectionManager.tab.options"), jPanel6);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -941,7 +965,8 @@ public class JDBConnectionManager extends JDialog {
         if (idx > -1) {
             JDBConnection conn = connections.get(idx);
             JDBConnection newOne = conn.toBuilder()
-                    .name(NamingUtils.nextNameOf(connections, "Copy of " + conn.getName()))
+                    .name(NamingUtils.nextNameOf(connections,
+                            I18n.t("connectionManager.msg.copyOf", conn.getName())))
                     .build();
             if (ObjectUtils.isNotEmpty(conn.getConnectionProps()))
                 newOne.setConnectionProps(new LinkedHashMap(conn.getConnectionProps()));
@@ -1016,7 +1041,8 @@ public class JDBConnectionManager extends JDialog {
     private void btnNewConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewConnActionPerformed
         resetControls();
         JDBConnection newConn = new JDBConnection();
-        newConn.setName(NamingUtils.nextNameOf(connections, "New Connection"));
+        newConn.setName(NamingUtils.nextNameOf(connections,
+                I18n.t("connectionManager.msg.newConnection")));
         newConn.setConnectionProps(new HashMap<>());
         newConn.setCustomVars(new HashMap<>());
         newConn.setTemplates(new ArrayList<>());
@@ -1062,35 +1088,35 @@ public class JDBConnectionManager extends JDialog {
         JDBDriver driver = driverMap.get((String)cboDriver.getSelectedItem());
 
         if (isNameExists) {
-            UIUtils.error(this, "Name " + txtName.getText() + " exists already.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.nameExists", txtName.getText()));
             txtName.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtName.getText())) {
-            UIUtils.error(this, "Connection name required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.nameRequired"));
             txtName.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtConnUrl.getText())) {
-            UIUtils.error(this, "Connection url required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.urlRequired"));
             txtConnUrl.requestFocusInWindow();
         } else if (driver == null) {
             // no driver selected: every branch below dereferences it
-            UIUtils.error(this, "Driver required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.driverRequired"));
             cboDriver.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtUser.getText()) && !driver.isNoAuth()) {
-            UIUtils.error(this, "Database user name required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.userRequired"));
             txtUser.requestFocusInWindow();
         } else if (StrUtils.isEmpty(new String(txtPassword.getPassword())) && !driver.isNoAuth()) {
-            UIUtils.error(this, "Database user password required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.passwordRequired"));
             txtPassword.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtKeepAliveQuery.getText()) && chkKeepAlive.isSelected()) {
-            UIUtils.error(this, "Keep alive SQL statement required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.keepAliveQueryRequired"));
             txtKeepAliveQuery.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtKeepAliveSec.getText()) && chkKeepAlive.isSelected()) {
-            UIUtils.error(this, "Keep alive statement execution interval required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.keepAliveSecRequired"));
             txtKeepAliveSec.requestFocusInWindow();
         } else if (StrUtils.isEmpty(txtOutputDir.getText())) {
-            UIUtils.error(this, "Output directory required.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.outputDirRequired"));
             txtOutputDir.requestFocusInWindow();
         } else if (!driver.validate()) {
-            UIUtils.error(this, "Driver information is not fulfilled.");
+            UIUtils.error(this, I18n.t("connectionManager.msg.driverIncomplete"));
             manageDrivers(cboDriver.getSelectedIndex());
         } else {
             connMap.remove(target.getName());
@@ -1265,8 +1291,8 @@ public class JDBConnectionManager extends JDialog {
         if (idx > -1) {
             // use the stored name: the name field may hold unsaved edits
             JDBConnection obj = connections.get(idx);
-            if (UIUtils.confirm(this, "Remove Connection Confirm",
-                    "You realy want to delete '" + obj.getName() + "' connection?")) {
+            if (UIUtils.confirm(this, I18n.t("connectionManager.msg.removeConfirm.title"),
+                    I18n.t("connectionManager.msg.removeConfirm.message", obj.getName()))) {
                 listModel.remove(idx);
                 connections.remove(idx);
                 connMap.remove(obj.getName());

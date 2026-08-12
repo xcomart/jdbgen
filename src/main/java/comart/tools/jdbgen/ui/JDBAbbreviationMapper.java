@@ -26,6 +26,7 @@ package comart.tools.jdbgen.ui;
 import comart.tools.jdbgen.types.JDBAbbr;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.db.DBTable;
+import comart.utils.I18n;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 import java.awt.Frame;
@@ -83,7 +84,17 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         colModel.getColumn(1).setPreferredWidth(50);
         colModel.getColumn(2).setPreferredWidth(110);
         colModel.getColumn(3).setPreferredWidth(110);
-        
+        // the column names of the generated model are the untranslated
+        // placeholders of the form editor, the shown ones are set here.
+        String[] headerKeys = {
+            "abbreviationMapper.tblMapping.column.apply",
+            "abbreviationMapper.tblMapping.column.totalName",
+            "abbreviationMapper.tblMapping.column.abbreviation",
+            "abbreviationMapper.tblMapping.column.replaceTo"
+        };
+        for (int i=0; i<headerKeys.length; i++)
+            colModel.getColumn(i).setHeaderValue(I18n.t(headerKeys[i]));
+
         applyIcons();
         
         pack();
@@ -115,7 +126,7 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
             String v = (String)model.getValueAt(i, 3);
             if (check && !StrUtils.isEmpty(k) && !StrUtils.isEmpty(v)) {
                 if (map.containsKey(k)) {
-                    UIUtils.error(this, "'"+k+"' duplicated.");
+                    UIUtils.error(this, I18n.t("abbreviationMapper.msg.duplicated", k));
                     return false;
                 } else {
                     map.put(k, v);
@@ -161,7 +172,7 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText("Abbreviation Mapping");
+        jLabel1.setText(I18n.t("abbreviationMapper.jLabel1.text"));
 
         tblMapping.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -179,7 +190,7 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
                 return types [columnIndex];
             }
         });
-        tblMapping.setToolTipText("Abbreviation Mapping Rules applied to object(table, column) name.");
+        tblMapping.setToolTipText(I18n.t("abbreviationMapper.tblMapping.toolTipText"));
         tblMapping.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblMappingMouseClicked(evt);
@@ -187,7 +198,7 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         });
         jScrollPane1.setViewportView(tblMapping);
 
-        btnOk.setText("Ok");
+        btnOk.setText(I18n.t("abbreviationMapper.btnOk.text"));
         btnOk.setToolTipText("");
         btnOk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -196,7 +207,7 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         });
 
         btnDel.setText("-");
-        btnDel.setToolTipText("Remove selected mapping");
+        btnDel.setToolTipText(I18n.t("abbreviationMapper.btnDel.toolTipText"));
         btnDel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDelActionPerformed(evt);
@@ -251,8 +262,10 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
             String k = (String)mdl.getValueAt(idx, 2);
             String v = (String)mdl.getValueAt(idx, 3);
             String desc = StrUtils.isEmpty(k) && StrUtils.isEmpty(v) ?
-                    "this row" : "'"+k+"' -> '"+v+"'";
-            if (UIUtils.confirm(this, "Confirm", "Do you want to delete "+desc+"?")) {
+                    I18n.t("abbreviationMapper.msg.delete.row") :
+                    I18n.t("abbreviationMapper.msg.delete.mapping", k, v);
+            if (UIUtils.confirm(this, I18n.t("abbreviationMapper.msg.delete.title"),
+                    I18n.t("abbreviationMapper.msg.delete", desc))) {
                 mdl.removeRow(idx);
                 conf.setAbbrs(applyTableToList(mdl));
                 UIUtils.tableSetLastEmpty(mdl, 2);

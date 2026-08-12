@@ -23,6 +23,7 @@
  */
 package comart.tools.jdbgen.ui;
 
+import comart.utils.I18n;
 import comart.utils.PlatformUtils;
 import comart.utils.UIUtils;
 import java.awt.Frame;
@@ -73,7 +74,7 @@ public class JDBAbout extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
         
-        lblVersion.setText("Version v"+PlatformUtils.getVersion());
+        lblVersion.setText(I18n.t("about.lblVersion.text", PlatformUtils.getVersion()));
         loadAppIcon();
         pack();
     }
@@ -123,7 +124,7 @@ public class JDBAbout extends javax.swing.JDialog {
         lblVersion.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         lblVersion.setText("Version v0.1.4");
 
-        jLabel2.setText("Author: Dennis Park");
+        jLabel2.setText(I18n.t("about.jLabel2.text"));
 
         lblEmail.setForeground(javax.swing.UIManager.getDefaults().getColor("Component.accentColor"));
         lblEmail.setText("<xcomart@gmail.com>");
@@ -207,14 +208,14 @@ public class JDBAbout extends javax.swing.JDialog {
                 .addContainerGap())
         );
 
-        btnOk.setText("Ok");
+        btnOk.setText(I18n.t("about.btnOk.text"));
         btnOk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnOkActionPerformed(evt);
             }
         });
 
-        btnAck.setText("Acknowledgements");
+        btnAck.setText(I18n.t("about.btnAck.text"));
         btnAck.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAckActionPerformed(evt);

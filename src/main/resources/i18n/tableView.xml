@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the table detail dialog (comart.tools.jdbgen.ui.JDBTableView). English original, every other i18n/tableView_*.xml falls back to this one.</comment>
+
+  <!-- header, filled with the selected table at runtime -->
+  <entry key="tableView.lblTableName.text">Table name</entry>
+  <entry key="tableView.lblRemark.text">Remarks</entry>
+
+  <!-- column table -->
+  <entry key="tableView.column.name">Name</entry>
+  <entry key="tableView.column.type">Type</entry>
+  <entry key="tableView.column.key">Key</entry>
+
+  <entry key="tableView.btnClose.text">Close</entry>
+</properties>

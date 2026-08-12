@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the acknowledgements dialog (Acknowledgements). English original, i18n/acknowledgements_ko.xml is its Korean translation. The listed third party notices themselves are shown verbatim and are not translated.</comment>
+
+  <entry key="acknowledgements.jLabel1.text">Acknowledgements</entry>
+  <entry key="acknowledgements.btnOk.text">Ok</entry>
+</properties>

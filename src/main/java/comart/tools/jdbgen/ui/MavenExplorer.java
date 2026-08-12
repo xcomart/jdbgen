@@ -26,6 +26,7 @@ package comart.tools.jdbgen.ui;
 import comart.tools.jdbgen.types.maven.SearchResponseItem;
 import comart.tools.jdbgen.types.maven.SearchResult;
 import comart.utils.HttpUtils;
+import comart.utils.I18n;
 import comart.utils.MavenREST;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
@@ -189,9 +190,9 @@ public class MavenExplorer extends JDialog {
         jLabel2 = new javax.swing.JLabel();
         lblMvnLink = new javax.swing.JLabel();
 
-        setTitle("Maven Repository Explorer");
+        setTitle(I18n.t("mavenExplorer.title"));
 
-        jLabel1.setText("Search in Maven Repositories:");
+        jLabel1.setText(I18n.t("mavenExplorer.jLabel1.text"));
 
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
             public void keyPressed(java.awt.event.KeyEvent evt) {
@@ -207,14 +208,14 @@ public class MavenExplorer extends JDialog {
             }
         });
 
-        btnCancel.setText("Cancel");
+        btnCancel.setText(I18n.t("mavenExplorer.btnCancel.text"));
         btnCancel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnCancelActionPerformed(evt);
             }
         });
 
-        btnDownload.setText("Download & Use");
+        btnDownload.setText(I18n.t("mavenExplorer.btnDownload.text"));
         btnDownload.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDownloadActionPerformed(evt);
@@ -222,7 +223,7 @@ public class MavenExplorer extends JDialog {
         });
 
         jLabel3.setFont(jLabel3.getFont().deriveFont(jLabel3.getFont().getStyle() | java.awt.Font.BOLD, jLabel3.getFont().getSize()+3));
-        jLabel3.setText("Search Results");
+        jLabel3.setText(I18n.t("mavenExplorer.jLabel3.text"));
 
         lstSearchResult.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             public void mouseMoved(java.awt.event.MouseEvent evt) {
@@ -236,7 +237,7 @@ public class MavenExplorer extends JDialog {
         });
         jScrollPane5.setViewportView(lstSearchResult);
 
-        btnMore.setText("More");
+        btnMore.setText(I18n.t("mavenExplorer.btnMore.text"));
         btnMore.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnMoreActionPerformed(evt);
@@ -265,11 +266,11 @@ public class MavenExplorer extends JDialog {
         );
 
         jLabel4.setFont(jLabel4.getFont().deriveFont(jLabel4.getFont().getStyle() | java.awt.Font.BOLD, jLabel4.getFont().getSize()+3));
-        jLabel4.setText("Versions");
+        jLabel4.setText(I18n.t("mavenExplorer.jLabel4.text"));
 
         jScrollPane6.setViewportView(lstVersion);
 
-        btnMore1.setText("More");
+        btnMore1.setText(I18n.t("mavenExplorer.btnMore1.text"));
         btnMore1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnMore1ActionPerformed(evt);
@@ -297,7 +298,7 @@ public class MavenExplorer extends JDialog {
                 .addComponent(btnMore1))
         );
 
-        jLabel2.setText("Powered by");
+        jLabel2.setText(I18n.t("mavenExplorer.jLabel2.text"));
 
         lblMvnLink.setForeground(javax.swing.UIManager.getDefaults().getColor("Component.accentColor"));
         lblMvnLink.setText("Apache Maven");
@@ -391,7 +392,7 @@ public class MavenExplorer extends JDialog {
             searchPageNo++;
             searchMaven();
         } else {
-            UIUtils.info(this, "No more results");
+            UIUtils.info(this, I18n.t("mavenExplorer.msg.noMoreResults"));
         }
     }//GEN-LAST:event_btnMoreActionPerformed
 
@@ -424,7 +425,7 @@ public class MavenExplorer extends JDialog {
                     String url = MavenREST.downloadLink(sitem);
                     String fname = "drivers/" + url.substring(url.lastIndexOf('/') + 1);
                     File f = new File(fname);
-                    publish("driver saving to " + f.getAbsolutePath() + "...");
+                    publish(I18n.t("mavenExplorer.progress.saving", f.getAbsolutePath()));
                     FileUtils.forceMkdirParent(f);
                     OkHttpClient client = HttpUtils.getClient();
                     Request req = new Request.Builder().url(url).build();
@@ -442,18 +443,18 @@ public class MavenExplorer extends JDialog {
                                 // contentLength() is -1 for chunked responses
                                 if (totallen > 0)
                                     setProgress((int)Math.min(100, curlen * 100 / totallen));
-                                publish("" + curlen + "/" + totallen + " bytes received.");
+                                publish(I18n.t("mavenExplorer.progress.received", curlen, totallen));
                             }
                         }
                         saveLocation = fname;
                         changed = true;
-                        publish("Download complete.");
+                        publish(I18n.t("mavenExplorer.progress.complete"));
                         return true;
                     }
                 } catch(Exception e) {
                     log.error(e.getLocalizedMessage(), e);
                     errHolder[0] = e.getLocalizedMessage();
-                    publish("download failed! : " + e.getLocalizedMessage());
+                    publish(I18n.t("mavenExplorer.progress.failed", e.getLocalizedMessage()));
                 }
                 return false;
             }
@@ -464,7 +465,7 @@ public class MavenExplorer extends JDialog {
     private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
         int vidx = lstVersion.getSelectedIndex();
         if (vidx < 0 || vidx >= versionItems.size()) {
-            UIUtils.error(this, "Please select a version to download.");
+            UIUtils.error(this, I18n.t("mavenExplorer.msg.selectVersion"));
             return;
         }
         SearchResponseItem sitem = versionItems.get(vidx);
@@ -478,10 +479,11 @@ public class MavenExplorer extends JDialog {
         // modal - returns once the worker's done() hides the dialog
         pp.setVisible(true);
         if (pp.result) {
-            UIUtils.info(this, "Download complete!");
+            UIUtils.info(this, I18n.t("mavenExplorer.msg.downloadComplete"));
             setVisible(false);
         } else {
-            UIUtils.error(this, err[0] == null ? "Download failed!" : err[0]);
+            UIUtils.error(this, err[0] == null
+                    ? I18n.t("mavenExplorer.msg.downloadFailed") : err[0]);
         }
     }//GEN-LAST:event_btnDownloadActionPerformed
 
@@ -490,7 +492,7 @@ public class MavenExplorer extends JDialog {
             versionPageNo++;
             searchVersion();
         } else {
-            UIUtils.info(this, "No more versions");
+            UIUtils.info(this, I18n.t("mavenExplorer.msg.noMoreVersions"));
         }
     }//GEN-LAST:event_btnMore1ActionPerformed
 

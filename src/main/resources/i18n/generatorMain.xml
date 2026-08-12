@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the main window (JDBGeneratorMain) and its schema tree. English original, i18n/generatorMain_ko.xml is its Korean translation.</comment>
+
+  <!-- window chrome -->
+  <entry key="generatorMain.title">JDBGen Main</entry>
+
+  <!-- connection bar -->
+  <entry key="generatorMain.jLabel2.text">Connection</entry>
+  <entry key="generatorMain.btnManageConn.text">Manage</entry>
+  <entry key="generatorMain.btnMapper.text">Abbreviation Mapper</entry>
+  <entry key="generatorMain.btnAck.toolTipText">About of this program</entry>
+
+  <!-- catalog/schema pane -->
+  <entry key="generatorMain.jLabel1.text">Catalogs/Schemas</entry>
+  <entry key="generatorMain.tree.database">Database</entry>
+
+  <!-- table pane -->
+  <entry key="generatorMain.jLabel5.text">Tables</entry>
+  <entry key="generatorMain.chkShowView.text">Show Views</entry>
+
+  <!-- generation options -->
+  <entry key="generatorMain.jLabel4.text">Generation Options</entry>
+  <entry key="generatorMain.jLabel6.text">Templates</entry>
+  <entry key="generatorMain.tabTemplates.column.select">Select</entry>
+  <entry key="generatorMain.tabTemplates.column.name">Name</entry>
+  <entry key="generatorMain.tabTemplates.column.templateFile">Template File</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">Out Template</entry>
+  <entry key="generatorMain.jLabel11.text">Output Directory:</entry>
+  <entry key="generatorMain.jLabel14.text">Author Name:</entry>
+  <entry key="generatorMain.jLabel15.text">Abbreviation:</entry>
+  <entry key="generatorMain.chkApplyAbbr.text">Apply abbreviation rule to all name fields.</entry>
+  <entry key="generatorMain.jLabel16.text">Custom Variables:</entry>
+  <entry key="generatorMain.tabVars.column.name">Name</entry>
+  <entry key="generatorMain.tabVars.column.value">Value</entry>
+
+  <!-- bottom bar -->
+  <entry key="generatorMain.chkDarkUI.text">Dark UI</entry>
+  <entry key="generatorMain.btnGenerate.text">Generate</entry>
+  <entry key="generatorMain.btnClose.text">Close</entry>
+
+  <!-- connecting and reading the metadata -->
+  <entry key="generatorMain.msg.connectFailed">Cannot connect to ''{0}'': {1}</entry>
+  <entry key="generatorMain.msg.driverNotFound">Driver ''{0}'' of connection ''{1}'' not found.</entry>
+  <entry key="generatorMain.msg.getTablesFailed">Cannot get tables: {0}</entry>
+  <entry key="generatorMain.msg.getColumnsFailed">Cannot get columns: {0}</entry>
+
+  <!-- generation -->
+  <entry key="generatorMain.msg.connectFirst">Please connect to a database first.</entry>
+  <entry key="generatorMain.msg.selectTable">Please select at least one table to generate.</entry>
+  <entry key="generatorMain.msg.selectTemplate">Please select at least one template to generate.</entry>
+  <entry key="generatorMain.msg.complete.title">Process Complete</entry>
+  <entry key="generatorMain.msg.complete">Process complete successfully!&#10;Do you want open output directory?</entry>
+  <entry key="generatorMain.msg.failed">Process failed!</entry>
+  <entry key="generatorMain.progress.readingColumns">reading table columns...</entry>
+  <entry key="generatorMain.progress.templateProcessing">{0} template processing...</entry>
+  <entry key="generatorMain.progress.applying">{0} applying to {1}...</entry>
+  <entry key="generatorMain.progress.complete">all process complete!</entry>
+  <entry key="generatorMain.progress.failed">process failed! : {0}</entry>
+</properties>

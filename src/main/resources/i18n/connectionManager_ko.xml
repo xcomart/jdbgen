@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Korean translation of i18n/connectionManager.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window -->
+  <entry key="connectionManager.title">연결 관리자</entry>
+
+  <!-- dialog buttons -->
+  <entry key="connectionManager.btnSave.text">저장</entry>
+  <entry key="connectionManager.btnConnect.text">연결</entry>
+  <entry key="connectionManager.btnCancel.text">취소</entry>
+
+  <!-- connection list -->
+  <entry key="connectionManager.jLabel1.text">연결 목록</entry>
+  <entry key="connectionManager.btnNewConn.toolTipText">새 연결 만들기</entry>
+  <entry key="connectionManager.btnCloneConn.toolTipText">현재 연결 복제</entry>
+  <entry key="connectionManager.btnDelConn.toolTipText">현재 연결 삭제</entry>
+
+  <!-- tabs -->
+  <entry key="connectionManager.tab.general">일반</entry>
+  <entry key="connectionManager.tab.templates">템플릿</entry>
+  <entry key="connectionManager.tab.options">옵션</entry>
+
+  <!-- general tab -->
+  <entry key="connectionManager.jLabel2.text">연결 이름:</entry>
+  <entry key="connectionManager.jLabel3.text">드라이버:</entry>
+  <entry key="connectionManager.btnManage.text">관리</entry>
+  <entry key="connectionManager.btnManage.toolTipText">드라이버 관리</entry>
+  <entry key="connectionManager.jLabel4.text">접속 URL:</entry>
+  <entry key="connectionManager.jLabel5.text">사용자 이름:</entry>
+  <entry key="connectionManager.jLabel6.text">사용자 비밀번호:</entry>
+  <entry key="connectionManager.jLabel12.text">아이콘:</entry>
+  <entry key="connectionManager.btnBrowseIcon.toolTipText">아이콘 파일 찾아보기</entry>
+  <entry key="connectionManager.jLabel7.text">접속 속성:</entry>
+  <entry key="connectionManager.tabProps.col.key">키</entry>
+  <entry key="connectionManager.tabProps.col.value">값</entry>
+  <entry key="connectionManager.chkKeepAlive.text">아래 구문으로 연결 유지, 실행 간격</entry>
+  <entry key="connectionManager.jLabel15.text">초.</entry>
+
+  <!-- templates tab -->
+  <entry key="connectionManager.tabTemplates.col.name">이름</entry>
+  <entry key="connectionManager.tabTemplates.col.templateFile">템플릿 파일</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">출력 템플릿</entry>
+  <entry key="connectionManager.btnTemplateHelp.toolTipText">템플릿 도움말</entry>
+  <entry key="connectionManager.btnPresets.text">프리셋</entry>
+  <entry key="connectionManager.btnPresets.toolTipText">템플릿 프리셋 관리</entry>
+  <entry key="connectionManager.btnNewTemplate.text">새로 만들기</entry>
+  <entry key="connectionManager.btnNewTemplate.toolTipText">새 템플릿 만들기</entry>
+  <entry key="connectionManager.btnDelTemplate.text">삭제</entry>
+  <entry key="connectionManager.btnDelTemplate.toolTipText">현재 템플릿 삭제</entry>
+  <entry key="connectionManager.btnSaveTemplate.text">적용</entry>
+  <entry key="connectionManager.btnSaveTemplate.toolTipText">선택한 템플릿의 변경 내용 적용</entry>
+  <entry key="connectionManager.jLabel9.text">템플릿 이름:</entry>
+  <entry key="connectionManager.txtTemplateName.toolTipText">템플릿의 이름</entry>
+  <entry key="connectionManager.jLabel8.text">템플릿 파일:</entry>
+  <entry key="connectionManager.txtTemplateFile.toolTipText">템플릿 파일 위치</entry>
+  <entry key="connectionManager.btnBrowseTemplate.toolTipText">템플릿 파일 찾아보기</entry>
+  <entry key="connectionManager.jLabel13.text">출력 파일명 템플릿:</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">출력 파일 이름 템플릿</entry>
+
+  <!-- options tab -->
+  <entry key="connectionManager.jLabel11.text">출력 디렉터리:</entry>
+  <entry key="connectionManager.jLabel14.text">작성자 이름:</entry>
+  <entry key="connectionManager.jLabel16.text">사용자 변수:</entry>
+  <entry key="connectionManager.tabVars.col.name">이름</entry>
+  <entry key="connectionManager.tabVars.col.value">값</entry>
+
+  <!-- default names of newly created connections -->
+  <entry key="connectionManager.msg.newConnection">새 연결</entry>
+  <entry key="connectionManager.msg.copyOf">{0}의 복사본</entry>
+
+  <!-- validation of the edited connection -->
+  <entry key="connectionManager.msg.nameExists">{0} 이름은 이미 사용 중입니다.</entry>
+  <entry key="connectionManager.msg.nameRequired">연결 이름을 입력하세요.</entry>
+  <entry key="connectionManager.msg.urlRequired">접속 URL을 입력하세요.</entry>
+  <entry key="connectionManager.msg.driverRequired">드라이버를 선택하세요.</entry>
+  <entry key="connectionManager.msg.userRequired">데이터베이스 사용자 이름을 입력하세요.</entry>
+  <entry key="connectionManager.msg.passwordRequired">데이터베이스 사용자 비밀번호를 입력하세요.</entry>
+  <entry key="connectionManager.msg.keepAliveQueryRequired">연결 유지에 사용할 SQL 구문을 입력하세요.</entry>
+  <entry key="connectionManager.msg.keepAliveSecRequired">연결 유지 구문의 실행 간격을 입력하세요.</entry>
+  <entry key="connectionManager.msg.outputDirRequired">출력 디렉터리를 입력하세요.</entry>
+  <entry key="connectionManager.msg.driverIncomplete">드라이버 정보가 완전하지 않습니다.</entry>
+
+  <!-- removing a connection -->
+  <entry key="connectionManager.msg.removeConfirm.title">연결 삭제 확인</entry>
+  <entry key="connectionManager.msg.removeConfirm.message">''{0}'' 연결을 정말 삭제하시겠습니까?</entry>
+</properties>

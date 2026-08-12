@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the Maven repository explorer dialog (comart.tools.jdbgen.ui.MavenExplorer). English original, every other i18n/mavenExplorer_*.xml falls back to this one.</comment>
+
+  <!-- window and search -->
+  <entry key="mavenExplorer.title">Maven Repository Explorer</entry>
+  <entry key="mavenExplorer.jLabel1.text">Search in Maven Repositories:</entry>
+
+  <!-- result lists -->
+  <entry key="mavenExplorer.jLabel3.text">Search Results</entry>
+  <entry key="mavenExplorer.jLabel4.text">Versions</entry>
+  <entry key="mavenExplorer.btnMore.text">More</entry>
+  <entry key="mavenExplorer.btnMore1.text">More</entry>
+
+  <!-- buttons and credit -->
+  <entry key="mavenExplorer.btnDownload.text">Download &amp; Use</entry>
+  <entry key="mavenExplorer.btnCancel.text">Cancel</entry>
+  <entry key="mavenExplorer.jLabel2.text">Powered by</entry>
+
+  <!-- messages -->
+  <entry key="mavenExplorer.msg.noMoreResults">No more results</entry>
+  <entry key="mavenExplorer.msg.noMoreVersions">No more versions</entry>
+  <entry key="mavenExplorer.msg.selectVersion">Please select a version to download.</entry>
+  <entry key="mavenExplorer.msg.downloadComplete">Download complete!</entry>
+  <entry key="mavenExplorer.msg.downloadFailed">Download failed!</entry>
+
+  <!-- download progress log -->
+  <entry key="mavenExplorer.progress.saving">driver saving to {0}...</entry>
+  <entry key="mavenExplorer.progress.received">{0}/{1} bytes received.</entry>
+  <entry key="mavenExplorer.progress.complete">Download complete.</entry>
+  <entry key="mavenExplorer.progress.failed">download failed! : {0}</entry>
+</properties>

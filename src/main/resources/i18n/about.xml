@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - the about dialog (JDBAbout). English original, i18n/about_ko.xml is its Korean translation. The product name, the version number, the author name, the e-mail address and the repository url are data, not translations.</comment>
+
+  <entry key="about.lblVersion.text">Version v{0}</entry>
+  <entry key="about.jLabel2.text">Author: Dennis Park</entry>
+  <entry key="about.btnAck.text">Acknowledgements</entry>
+  <entry key="about.btnOk.text">Ok</entry>
+</properties>

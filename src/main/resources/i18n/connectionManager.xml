@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - strings of the connection manager window. English original, every other i18n/connectionManager_*.xml falls back to this one.</comment>
+
+  <!-- window -->
+  <entry key="connectionManager.title">Connection Manager</entry>
+
+  <!-- dialog buttons -->
+  <entry key="connectionManager.btnSave.text">Save</entry>
+  <entry key="connectionManager.btnConnect.text">Connect</entry>
+  <entry key="connectionManager.btnCancel.text">Cancel</entry>
+
+  <!-- connection list -->
+  <entry key="connectionManager.jLabel1.text">Connections</entry>
+  <entry key="connectionManager.btnNewConn.toolTipText">Create New Connection</entry>
+  <entry key="connectionManager.btnCloneConn.toolTipText">Clone Current Connection</entry>
+  <entry key="connectionManager.btnDelConn.toolTipText">Remove Current Connection</entry>
+
+  <!-- tabs -->
+  <entry key="connectionManager.tab.general">General</entry>
+  <entry key="connectionManager.tab.templates">Templates</entry>
+  <entry key="connectionManager.tab.options">Options</entry>
+
+  <!-- general tab -->
+  <entry key="connectionManager.jLabel2.text">Connection Name:</entry>
+  <entry key="connectionManager.jLabel3.text">Driver:</entry>
+  <entry key="connectionManager.btnManage.text">Manage</entry>
+  <entry key="connectionManager.btnManage.toolTipText">Manage Drivers</entry>
+  <entry key="connectionManager.jLabel4.text">Connection URL:</entry>
+  <entry key="connectionManager.jLabel5.text">User Name:</entry>
+  <entry key="connectionManager.jLabel6.text">User Password:</entry>
+  <entry key="connectionManager.jLabel12.text">Icon:</entry>
+  <entry key="connectionManager.btnBrowseIcon.toolTipText">Browse Icon File</entry>
+  <entry key="connectionManager.jLabel7.text">Connection Props:</entry>
+  <entry key="connectionManager.tabProps.col.key">Key</entry>
+  <entry key="connectionManager.tabProps.col.value">Value</entry>
+  <entry key="connectionManager.chkKeepAlive.text">Keep connection alive using below statement every</entry>
+  <entry key="connectionManager.jLabel15.text">seconds.</entry>
+
+  <!-- templates tab -->
+  <entry key="connectionManager.tabTemplates.col.name">Name</entry>
+  <entry key="connectionManager.tabTemplates.col.templateFile">Template File</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">Out Template</entry>
+  <entry key="connectionManager.btnTemplateHelp.toolTipText">Template Help</entry>
+  <entry key="connectionManager.btnPresets.text">Presets</entry>
+  <entry key="connectionManager.btnPresets.toolTipText">Manage Template Presets</entry>
+  <entry key="connectionManager.btnNewTemplate.text">New</entry>
+  <entry key="connectionManager.btnNewTemplate.toolTipText">Create New Template</entry>
+  <entry key="connectionManager.btnDelTemplate.text">Delete</entry>
+  <entry key="connectionManager.btnDelTemplate.toolTipText">Remove Current Template</entry>
+  <entry key="connectionManager.btnSaveTemplate.text">Apply</entry>
+  <entry key="connectionManager.btnSaveTemplate.toolTipText">Apply Selected Template Modification</entry>
+  <entry key="connectionManager.jLabel9.text">Template Name:</entry>
+  <entry key="connectionManager.txtTemplateName.toolTipText">Name of Template</entry>
+  <entry key="connectionManager.jLabel8.text">Template File:</entry>
+  <entry key="connectionManager.txtTemplateFile.toolTipText">Template File Location</entry>
+  <entry key="connectionManager.btnBrowseTemplate.toolTipText">Browse Template File</entry>
+  <entry key="connectionManager.jLabel13.text">Output Name Template:</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">Output File Name Template</entry>
+
+  <!-- options tab -->
+  <entry key="connectionManager.jLabel11.text">Output Directory:</entry>
+  <entry key="connectionManager.jLabel14.text">Author Name:</entry>
+  <entry key="connectionManager.jLabel16.text">Custom Variables:</entry>
+  <entry key="connectionManager.tabVars.col.name">Name</entry>
+  <entry key="connectionManager.tabVars.col.value">Value</entry>
+
+  <!-- default names of newly created connections -->
+  <entry key="connectionManager.msg.newConnection">New Connection</entry>
+  <entry key="connectionManager.msg.copyOf">Copy of {0}</entry>
+
+  <!-- validation of the edited connection -->
+  <entry key="connectionManager.msg.nameExists">Name {0} exists already.</entry>
+  <entry key="connectionManager.msg.nameRequired">Connection name required.</entry>
+  <entry key="connectionManager.msg.urlRequired">Connection url required.</entry>
+  <entry key="connectionManager.msg.driverRequired">Driver required.</entry>
+  <entry key="connectionManager.msg.userRequired">Database user name required.</entry>
+  <entry key="connectionManager.msg.passwordRequired">Database user password required.</entry>
+  <entry key="connectionManager.msg.keepAliveQueryRequired">Keep alive SQL statement required.</entry>
+  <entry key="connectionManager.msg.keepAliveSecRequired">Keep alive statement execution interval required.</entry>
+  <entry key="connectionManager.msg.outputDirRequired">Output directory required.</entry>
+  <entry key="connectionManager.msg.driverIncomplete">Driver information is not fulfilled.</entry>
+
+  <!-- removing a connection -->
+  <entry key="connectionManager.msg.removeConfirm.title">Remove Connection Confirm</entry>
+  <entry key="connectionManager.msg.removeConfirm.message">Do you really want to delete the connection ''{0}''?</entry>
+</properties>

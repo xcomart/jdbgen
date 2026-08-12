@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>jdbgen - Korean translation of i18n/generatorMain.xml. The key set has to stay identical to the English original.</comment>
+
+  <!-- window chrome -->
+  <entry key="generatorMain.title">JDBGen 메인</entry>
+
+  <!-- connection bar -->
+  <entry key="generatorMain.jLabel2.text">연결</entry>
+  <entry key="generatorMain.btnManageConn.text">관리</entry>
+  <entry key="generatorMain.btnMapper.text">약어 매퍼</entry>
+  <entry key="generatorMain.btnAck.toolTipText">이 프로그램 정보</entry>
+
+  <!-- catalog/schema pane -->
+  <entry key="generatorMain.jLabel1.text">카탈로그/스키마</entry>
+  <entry key="generatorMain.tree.database">데이터베이스</entry>
+
+  <!-- table pane -->
+  <entry key="generatorMain.jLabel5.text">테이블</entry>
+  <entry key="generatorMain.chkShowView.text">뷰 표시</entry>
+
+  <!-- generation options -->
+  <entry key="generatorMain.jLabel4.text">생성 옵션</entry>
+  <entry key="generatorMain.jLabel6.text">템플릿</entry>
+  <entry key="generatorMain.tabTemplates.column.select">선택</entry>
+  <entry key="generatorMain.tabTemplates.column.name">이름</entry>
+  <entry key="generatorMain.tabTemplates.column.templateFile">템플릿 파일</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">출력 파일명</entry>
+  <entry key="generatorMain.jLabel11.text">출력 디렉터리:</entry>
+  <entry key="generatorMain.jLabel14.text">작성자 이름:</entry>
+  <entry key="generatorMain.jLabel15.text">약어:</entry>
+  <entry key="generatorMain.chkApplyAbbr.text">모든 이름 항목에 약어 규칙을 적용합니다.</entry>
+  <entry key="generatorMain.jLabel16.text">사용자 변수:</entry>
+  <entry key="generatorMain.tabVars.column.name">이름</entry>
+  <entry key="generatorMain.tabVars.column.value">값</entry>
+
+  <!-- bottom bar -->
+  <entry key="generatorMain.chkDarkUI.text">어두운 테마</entry>
+  <entry key="generatorMain.btnGenerate.text">생성</entry>
+  <entry key="generatorMain.btnClose.text">닫기</entry>
+
+  <!-- connecting and reading the metadata -->
+  <entry key="generatorMain.msg.connectFailed">''{0}''에 연결할 수 없습니다: {1}</entry>
+  <entry key="generatorMain.msg.driverNotFound">연결 ''{1}''에 지정된 드라이버 ''{0}''을(를) 찾을 수 없습니다.</entry>
+  <entry key="generatorMain.msg.getTablesFailed">테이블 목록을 가져올 수 없습니다: {0}</entry>
+  <entry key="generatorMain.msg.getColumnsFailed">컬럼 목록을 가져올 수 없습니다: {0}</entry>
+
+  <!-- generation -->
+  <entry key="generatorMain.msg.connectFirst">먼저 데이터베이스에 연결하세요.</entry>
+  <entry key="generatorMain.msg.selectTable">생성할 테이블을 하나 이상 선택하세요.</entry>
+  <entry key="generatorMain.msg.selectTemplate">생성할 템플릿을 하나 이상 선택하세요.</entry>
+  <entry key="generatorMain.msg.complete.title">처리 완료</entry>
+  <entry key="generatorMain.msg.complete">처리가 정상적으로 완료되었습니다!&#10;출력 디렉터리를 여시겠습니까?</entry>
+  <entry key="generatorMain.msg.failed">처리에 실패했습니다!</entry>
+  <entry key="generatorMain.progress.readingColumns">테이블 컬럼을 읽는 중...</entry>
+  <entry key="generatorMain.progress.templateProcessing">{0} 템플릿을 처리하는 중...</entry>
+  <entry key="generatorMain.progress.applying">{0}을(를) {1}에 적용하는 중...</entry>
+  <entry key="generatorMain.progress.complete">모든 처리가 완료되었습니다!</entry>
+  <entry key="generatorMain.progress.failed">처리 실패! : {0}</entry>
+</properties>

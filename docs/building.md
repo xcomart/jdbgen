@@ -32,7 +32,7 @@ On Windows use `gradlew.bat` in place of `./gradlew`.
 | `./gradlew distZip` | `build/distributions/jdbgen-<version>.zip` — the release archive. |
 | `./gradlew jar` | `build/libs/jdbgen-<version>.jar`. The manifest sets `Main-Class: comart.tools.jdbgen.JDBGenerator` and a `Class-Path` listing all 22 runtime jars as `lib/<name>.jar`, so the jar **cannot run on its own** — it needs a sibling `lib/` directory. |
 | `./gradlew test` | Runs the JUnit 5 (Jupiter 5.10.2) suite. HTML report at `build/reports/tests/test/index.html`. |
-| `./gradlew run` | Launches the application straight from the source class path with `-Duser.language=en`. |
+| `./gradlew run` | Launches the application straight from the source class path. The user interface language comes from `config.json`, see [Translations](#translations). |
 | `./gradlew javadoc` | API documentation in `build/docs/javadoc/`. |
 | `./gradlew clean` | Deletes `build/`. |
 
@@ -72,7 +72,7 @@ jdbgen/
 ├── gradle/wrapper/                       pins Gradle 8.14.3
 ├── src/main/java/comart/
 │   ├── tools/jdbgen/
-│   │   ├── JDBGenerator.java             main(): look and feel, update check, main window
+│   │   ├── JDBGenerator.java             main(): language, look and feel, update check, main window
 │   │   ├── template/                     the template engine
 │   │   ├── types/                        configuration and database model types
 │   │   ├── ui/                           Swing windows (NetBeans .form + .java pairs)
@@ -81,6 +81,7 @@ jdbgen/
 ├── src/main/configs/version.properties   token-filtered into the resources
 ├── src/main/resources/
 │   ├── defaultConfig.json                stock drivers and Maven endpoints
+│   ├── i18n/                             translation bundles (XML properties)
 │   └── icons/                            stock icons
 ├── src/test/java/                        JUnit 5 tests
 ├── templates/                            sample templates shipped in the zip
@@ -99,7 +100,7 @@ jdbgen/
 
 The serialisable configuration model and the database metadata model.
 
-- `JDBGenConfig` — the singleton root object. Loads and saves `config.json`, builds the default configuration (including the `Sample H2 Embedded` connection) when none exists, backs up an unreadable configuration, and triggers re-encryption when legacy-format values are found.
+- `JDBGenConfig` — the singleton root object. Loads and saves `config.json`, builds the default configuration (including the `Sample H2 Embedded` connection) when none exists, backs up an unreadable configuration, and triggers re-encryption when legacy-format values are found. Its `peekLanguage()` reads the `language` entry out of the file as plain JSON, without the master password, because the language has to be known before the password prompt appears.
 - `JDBConnection`, `JDBDriver`, `JDBTemplate`, `JDBPreset`, `JDBAbbr`, `JDBListBase` — connections, driver definitions, template entries, presets and abbreviation rules. `JDBConnection` annotates `connectionUrl`, `userName` and `userPassword` with the encrypting Gson type adapter.
 - `HasIcon`, `HasTitle` — small interfaces the list renderers use to display any configuration item.
 - `db/` — `DBMeta`, `DBMetaModel`, `DBSchema`, `DBTable`, `DBColumn`, `SqlTypes`: the JDBC metadata reader and the table/column objects that templates iterate over.
@@ -122,12 +123,53 @@ The self-update, split in two because the second half has to run while `lib/` is
 
 - `StrUtils` — string casing and padding helpers used by the template decorators, plus all password-based encryption (v2 AES-256-GCM with PBKDF2, and the legacy AES-128/CBC reader).
 - `UIUtils` — look-and-feel setup, dialogs, list/table renderers, and `getIcon()`, the resolver behind every icon string ([icons.md](icons.md)).
+- `I18n` — the translation lookup behind every user-visible string, see [Translations](#translations).
 - `PlatformUtils` — OS detection, dock icon, opening URLs, version lookup and the GitHub release update check, which hands a newer release over to `comart.tools.jdbgen.update`.
 - `EncryptionAdapter` — the Gson `TypeAdapter` that encrypts on write and decrypts on read.
 - `HttpUtils` — the shared OkHttp client.
 - `MavenREST` — Maven Central search and download.
 - `ClassUtils` — finds `java.sql.Driver` implementations inside a driver jar so the Driver Manager can offer a class list.
 - `ObjUtils`, `tuple/Pair` — reflection-based property access and a small tuple type.
+
+## Translations
+
+The user interface is English by default and ships a Korean translation. The language is stored as the `language` entry of `config.json` (`null`/absent or `"system"` = operating system locale, otherwise a language tag such as `"en"` or `"ko"`) and is picked in the combo box next to `Dark UI` in the main window. `JDBGenerator.main()` reads it with `JDBGenConfig.peekLanguage()` before anything else can open a dialog and hands it to `I18n.applyLanguage()`, which also sets the JVM default locale. A change only takes effect on the next start.
+
+### Bundle files
+
+Bundles are [Java properties XML](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html#loadFromXML-java.io.InputStream-) documents in UTF-8, on the class path below `i18n/`:
+
+```
+src/main/resources/i18n/common.xml      English, the fallback of every locale
+src/main/resources/i18n/common_ko.xml   Korean
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <entry key="common.update.title">Update Available</entry>
+  <entry key="common.update.available">New version {0} is available.&#10;Do you want to update now?</entry>
+</properties>
+```
+
+Write line breaks as `&#10;` rather than as real newlines — the indentation of a multi-line element would end up in the value.
+
+`I18n` loads them through a `ResourceBundle.Control` subclass that knows the `xml` format. The usual locale chain applies (`ko_KR` → `ko` → the file without a suffix), except that the JVM default locale is *not* used as a last fallback, so an explicitly selected language stays what it is.
+
+### Key naming
+
+A key reads `<bundle>.<rest>`: the first segment names the file it lives in, and the whole key is what is looked up inside that file. `common.update.title` is the entry `common.update.title` of `i18n/common.xml`. Keys are therefore unique across the application, and the file to edit is obvious from the key.
+
+- **Non-form strings go into `common`** — everything built in code: `PlatformUtils`, `UpdateManager`, `JDBGenConfig`, the shared `UIUtils` dialogs.
+- **Form strings go into a bundle of their own, named after the window** — the texts the NetBeans GUI Builder writes into `initComponents()` and the messages of that window's own code.
+
+Nothing in `I18n` ever throws: a missing bundle, a missing key or a broken `{0}` pattern is logged and the key is returned instead, so a partially translated build still runs.
+
+- `I18n.t(key)` returns the entry unchanged.
+- `I18n.t(key, args…)` runs it through `MessageFormat`. In those entries a literal apostrophe has to be doubled (`''{0}'' is required`), otherwise `MessageFormat` reads the quotes as an escape and prints `{0}` verbatim.
+
+Log messages and exception messages stay English and are never translated. `comart.tools.jdbgen.update.UpdateApplier` is excluded as well: it runs in a JVM with nothing but the jdbgen jar on its class path.
 
 ## Tests
 
@@ -139,7 +181,10 @@ The suite runs on JUnit 5 (Jupiter 5.10.2) via `useJUnitPlatform()`.
 | `comart/utils/StrUtilsTest` | Case conversion, padding and the other string helpers the decorators build on. |
 | `comart/utils/ObjUtilsTest` | Reflection-based property lookup. |
 | `comart/utils/EncryptionTest` | v2 round trips, non-deterministic ciphertext, rejection of a wrong master password, reading legacy-format values, null/empty pass-through, and malformed input. |
+| `comart/utils/I18nTest` | The bundle loader: the English default, a Korean locale, a regional locale falling back to its language, an untranslated key falling back to the original, unknown keys and unknown bundles returning the key instead of throwing, `MessageFormat` substitution, and the language setting to locale mapping. Its fixtures are `src/test/resources/i18n/testonly*.xml`. |
+| `comart/utils/I18nBundleTest` | The shipped bundles: `common.xml` and `common_ko.xml` carry the same key set and the same `{0}` placeholders, every key is prefixed with its bundle name, and every entry parses as a message pattern. |
 | `comart/tools/jdbgen/types/JDBGenConfigBackupTest` | Configuration backup and restore: moving an unreadable file aside, reporting a failed backup, and putting it back. |
+| `comart/tools/jdbgen/types/JDBGenConfigLanguageTest` | Reading the `language` entry out of `config.json` without the master password: a stored value, no entry, an empty entry, a broken file and a missing file. |
 | `comart/tools/jdbgen/types/ConfigRoundTripTest` | Configuration serialisation, including that encrypted fields survive a save/load cycle and that the bundled `defaultConfig.json` serialises cleanly. |
 | `comart/tools/jdbgen/update/UpdateManagerTest` | Picking the distribution archive out of a release description, stripping the top-level directory while unpacking, and refusing archive entries that point outside the target directory. |
 | `comart/tools/jdbgen/update/UpdateApplierTest` | Applying a release to an installation: jar and `lib/` replaced, launcher scripts and resources overwritten, configuration, drivers, output, edited templates and the sample database kept, and the previous version put back when the update fails. |

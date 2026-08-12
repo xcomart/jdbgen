@@ -249,8 +249,8 @@ public class PlatformUtils {
         }
         if (compareVersions(curVersion, tagName) < 0) {
             // updates available
-            if (UIUtils.confirm(null, "Update Available", "New version "+tagName+
-                    " is available.\nDo you want to update now?")) {
+            if (UIUtils.confirm(null, I18n.t("common.update.title"),
+                    I18n.t("common.update.available", tagName))) {
                 applyUpdate(release);
             }
         }
@@ -267,9 +267,9 @@ public class PlatformUtils {
             // the installed files are replaced as soon as this process is gone
             System.exit(0);
         } else if (res == UpdateManager.Result.FAILED) {
-            UIUtils.error(null, "The update could not be installed automatically.");
-            if (UIUtils.confirm(null, "Update Available",
-                    "Do you want to open the release page to download it yourself?")) {
+            UIUtils.error(null, I18n.t("common.update.failed"));
+            if (UIUtils.confirm(null, I18n.t("common.update.title"),
+                    I18n.t("common.update.openReleasePage"))) {
                 openURL(RELEASE_PAGE);
                 System.exit(0);
             }

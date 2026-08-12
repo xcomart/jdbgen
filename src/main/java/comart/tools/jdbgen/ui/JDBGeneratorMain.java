@@ -32,6 +32,7 @@ import comart.tools.jdbgen.types.JDBTemplate;
 import comart.tools.jdbgen.types.db.DBMeta;
 import comart.tools.jdbgen.types.db.DBSchema;
 import comart.tools.jdbgen.types.db.DBTable;
+import comart.utils.I18n;
 import comart.utils.ObjUtils;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
@@ -90,6 +91,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         lblConnectionInfo.setAutoscrolls(true);
     }
 
+    /**
+     * the stored <code>language</code> value of every entry of
+     * <code>cboLanguage</code>, in the order the entries appear.
+     * <code>null</code> is the operating system locale.
+     */
+    private static final String[] LANGUAGES = { null, "en", "ko" };
+
     private final JDBGenConfig conf;
     private final Map<String, JDBConnection> connMap = new HashMap<>();
     private JDBConnection currConn = null;
@@ -116,6 +124,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         jScrollPane1.setPreferredSize(jScrollPane1.getPreferredSize());
         conf = JDBGenConfig.getInstance();
         chkDarkUI.setSelected(conf.isDarkUI());
+        initLanguageCombo();
         chkApplyAbbr.setSelected(conf.isApplyAbbr());
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         UIUtils.setApplicationIcon(this);
@@ -407,6 +416,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         chkApplyAbbr = new javax.swing.JCheckBox();
         jLabel15 = new javax.swing.JLabel();
         chkDarkUI = new javax.swing.JCheckBox();
+        cboLanguage = new javax.swing.JComboBox<>();
         btnGenerate = new javax.swing.JButton();
         cboConnection = new javax.swing.JComboBox<>();
         jLabel2 = new javax.swing.JLabel();
@@ -684,6 +694,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         });
 
+        cboLanguage.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3" }));
+        cboLanguage.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cboLanguageActionPerformed(evt);
+            }
+        });
+
         btnGenerate.setText("Generate");
         btnGenerate.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -735,6 +752,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addComponent(chkDarkUI)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cboLanguage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(btnGenerate)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -770,6 +789,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnClose)
                     .addComponent(chkDarkUI)
+                    .addComponent(cboLanguage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnGenerate))
                 .addContainerGap())
         );
@@ -789,6 +809,47 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         conf.setDarkUI(this.chkDarkUI.isSelected());
         JDBGenConfig.saveInstance(this);
     }//GEN-LAST:event_chkDarkUIActionPerformed
+
+    /**
+     * the entry of <code>cboLanguage</code> a stored language setting selects.
+     * Anything unknown falls back to the system default entry.
+     */
+    static int languageIndex(String language) {
+        if (language != null) {
+            String lang = language.trim();
+            for (int i=1; i<LANGUAGES.length; i++) {
+                if (LANGUAGES[i].equalsIgnoreCase(lang))
+                    return i;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Fill the language combo. Only the system entry is translated - a
+     * language is named in itself, so that it can be found whatever the user
+     * interface currently speaks.
+     */
+    private void initLanguageCombo() {
+        cboLanguage.setModel(new DefaultComboBoxModel<>(new String[] {
+            I18n.t("common.language.system"), "English",
+            "한국어" }));
+        cboLanguage.setToolTipText(I18n.t("common.language.tooltip"));
+        cboLanguage.setSelectedIndex(languageIndex(conf.getLanguage()));
+    }
+
+    private void cboLanguageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLanguageActionPerformed
+        int idx = cboLanguage.getSelectedIndex();
+        // filling the combo in the constructor selects the stored entry, and
+        // re-selecting the current one is not a change either
+        if (idx < 0 || idx == languageIndex(conf.getLanguage()))
+            return;
+        conf.setLanguage(LANGUAGES[idx]);
+        JDBGenConfig.saveInstance(this);
+        // switching the language live would have to rebuild every open window,
+        // so it is left to the next start.
+        UIUtils.info(this, I18n.t("common.language.restartRequired"));
+    }//GEN-LAST:event_cboLanguageActionPerformed
 
     private void cboConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboConnectionActionPerformed
         // ignore while a connection is already being opened - the combo is
@@ -1056,6 +1117,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private javax.swing.JButton btnManageConn;
     private javax.swing.JButton btnMapper;
     private javax.swing.JComboBox<String> cboConnection;
+    private javax.swing.JComboBox<String> cboLanguage;
     private javax.swing.JCheckBox chkApplyAbbr;
     private javax.swing.JCheckBox chkDarkUI;
     private javax.swing.JCheckBox chkShowView;

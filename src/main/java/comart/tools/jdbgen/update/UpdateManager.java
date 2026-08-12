@@ -27,6 +27,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import comart.utils.HttpUtils;
+import comart.utils.I18n;
 import java.awt.BorderLayout;
 import java.awt.Dialog;
 import java.awt.event.WindowAdapter;
@@ -329,7 +330,8 @@ public class UpdateManager {
         final AtomicBoolean cancelled = new AtomicBoolean(false);
         final AtomicReference<Exception> failure = new AtomicReference<>();
         final ProgressDialog dlg = new ProgressDialog(
-                "Downloading " + asset.getName(), asset.getSize(), cancelled);
+                I18n.t("common.update.progress.downloading", asset.getName()),
+                asset.getSize(), cancelled);
         Thread worker = new Thread(() -> {
             try {
                 download(asset, dest, cancelled, dlg);
@@ -441,7 +443,8 @@ public class UpdateManager {
         }
 
         private void build(String title) {
-            dialog = new JDialog((java.awt.Frame)null, "Updating jdbgen", true);
+            dialog = new JDialog((java.awt.Frame)null,
+                    I18n.t("common.update.progress.title"), true);
             dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
             dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
             dialog.addWindowListener(new WindowAdapter() {
@@ -460,7 +463,7 @@ public class UpdateManager {
             content.add(Box.createVerticalStrut(10));
             content.add(bar);
             content.add(Box.createVerticalStrut(10));
-            JButton cancelBtn = new JButton("Cancel");
+            JButton cancelBtn = new JButton(I18n.t("common.button.cancel"));
             cancelBtn.addActionListener(e -> cancel());
             JPanel buttons = new JPanel(new BorderLayout());
             buttons.add(cancelBtn, BorderLayout.EAST);

@@ -130,5 +130,7 @@ tasks.register('run', JavaExec) {
     description = "Runs ${mainClassName}."
     mainClass = mainClassName
     classpath = sourceSets.main.runtimeClasspath
-    jvmArgs = ['-Duser.language=en']
+    // the user interface language is the 'language' entry of config.json,
+    // applied by I18n at startup; forcing a locale here would hide the
+    // 'System Default' setting during a development run.
 }

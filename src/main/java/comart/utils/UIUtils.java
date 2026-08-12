@@ -345,8 +345,8 @@ public class UIUtils {
     
     public static void error(Component parent, String message) {
         onEdt(() -> {
-            JOptionPane.showMessageDialog(
-                    parent, message, "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(parent, message,
+                    I18n.t("common.dialog.error.title"), JOptionPane.ERROR_MESSAGE);
             return null;
         });
         log.warn(message);
@@ -354,8 +354,8 @@ public class UIUtils {
 
     public static void info(Component parent, String message) {
         onEdt(() -> {
-            JOptionPane.showMessageDialog(
-                    parent, message, "Information", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(parent, message,
+                    I18n.t("common.dialog.info.title"), JOptionPane.INFORMATION_MESSAGE);
             return null;
         });
         log.info(message);
@@ -374,11 +374,11 @@ public class UIUtils {
         private PasswordPanel(String prompt, boolean isFirst) {
             super(new FlowLayout());
             JPasswordField pwdField = new JPasswordField(20);
-            add(new JLabel("Password:", null, JLabel.LEADING));
+            add(new JLabel(I18n.t("common.password.label"), null, JLabel.LEADING));
             add(pwdField);
             JPasswordField confirmField = null;
             if (isFirst){
-                add(new JLabel("Confirm:", null, JLabel.LEADING));
+                add(new JLabel(I18n.t("common.password.confirm.label"), null, JLabel.LEADING));
                 confirmField = new JPasswordField(20);
                 add(confirmField);
             }
@@ -395,7 +395,7 @@ public class UIUtils {
                     String conf = String.valueOf(confirmField.getPassword());
                     isSame = pass.equals(conf);
                     if (!isSame)
-                        UIUtils.error(null, "Password/Confirm does not match.");
+                        UIUtils.error(null, I18n.t("common.password.mismatch"));
                 }
             } while (responseOK && !isSame);
             this.password = responseOK ? String.valueOf(pwdField.getPassword()) : null;
@@ -494,7 +494,8 @@ public class UIUtils {
     }
     
     public static String openIconDlg(Component parent, String startPath) {
-        return openFileDlg(parent, startPath, true, "Image/Icon Files", new String[]{"jpg", "jpeg", "tiff", "tif", "gif", "png", "ico"});
+        return openFileDlg(parent, startPath, true, I18n.t("common.filechooser.imageFilter"),
+                new String[]{"jpg", "jpeg", "tiff", "tif", "gif", "png", "ico"});
     }
     
     public static String openDirDlg(Component parent) {
@@ -562,7 +563,7 @@ public class UIUtils {
             String name = target.getToolTipText();
             if (name == null)
                 name = target.getName();
-            UIUtils.error(parent, "'"+name+"' is required");
+            UIUtils.error(parent, I18n.t("common.validation.required", name));
         }
         return isOk;
     }
@@ -585,11 +586,7 @@ public class UIUtils {
         String name = (String)tabTemplates.getValueAt(row, baseidx);
         String tfile = (String)tabTemplates.getValueAt(row, baseidx+1);
         String tout = (String)tabTemplates.getValueAt(row, baseidx+2);
-        StringBuilder sb = new StringBuilder();
-        sb.append("Template Name  : ").append(name).append("\n");
-        sb.append("Template File  : ").append(tfile).append("\n");
-        sb.append("Output Template: ").append(tout);
-        tabTemplates.setToolTipText(sb.toString());
+        tabTemplates.setToolTipText(I18n.t("common.template.tooltip", name, tfile, tout));
     }
     
     public static void iconHelpAction(JButton btn) {

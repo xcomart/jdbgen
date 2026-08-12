@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>Fixture of I18nTest. Not part of the application.</comment>
+  <entry key="testonly.greeting">Hello</entry>
+  <entry key="testonly.welcome">Welcome, {0}, you have {1} messages.</entry>
+  <entry key="testonly.quoted">''{0}'' is required</entry>
+  <entry key="testonly.multiline">first&#10;second</entry>
+  <entry key="testonly.untranslated">only in the original</entry>
+</properties>

@@ -133,6 +133,13 @@ abbreviation rules and custom variables. See the
 
 ## Installation
 
+**On Windows**, download `jdbgen-<version>.msi` from the
+[latest release](https://github.com/xcomart/jdbgen/releases/latest) and run it —
+or, once the package is available in winget, `winget install Xcomart.Jdbgen`.
+The installer carries its own Java runtime, so nothing else is needed.
+
+**On every platform**, the ZIP archive works too:
+
 > **Requirements** — a Java runtime, version 11 or above. Make sure its `bin`
 > directory is on `PATH`, or that `JAVA_HOME` points at the installation. See
 > [Installation](docs/installation.md) for the details.
@@ -140,19 +147,21 @@ abbreviation rules and custom variables. See the
 1. Download the archive from the [latest release](https://github.com/xcomart/jdbgen/releases/latest).
 2. Unzip it wherever you like. It expands into a `jdbgen-<version>/` directory.
 3. Run `jdbgen.sh` (Linux/macOS) or `jdbgen.cmd` (Windows). You can also run
-   `java -jar jdbgen-<version>.jar` directly, as long as that directory is your
-   current working directory.
+   `java -jar jdbgen-<version>.jar` directly, from any directory.
 
-jdbgen keeps itself up to date: when a newer release is published it offers to
-install it on the next start, downloads it and restarts itself. Your
-`config.json`, the drivers you downloaded and the templates you edited are kept
-— see [Updating](docs/installation.md#updating).
+Your configuration and the JDBC drivers you download are kept in a per-user
+directory (`%APPDATA%\jdbgen`, `~/Library/Application Support/jdbgen`, or
+`~/.config/jdbgen`), not in the installation. An unpacked archive keeps itself up
+to date: when a newer release is published it offers to install it on the next
+start, downloads it and restarts itself. An installation that may not write to
+its own directory instead tells you how to update it — with `winget upgrade` on
+Windows. See [Updating](docs/installation.md#updating).
 
 The user interface follows your operating system language and can be switched
 by hand in the main window: English, 한국어, Español, 日本語 and 简体中文 are
 included.
 
-The archive ships with a small H2 sample database and three example templates,
+Both downloads ship with a small H2 sample database and three example templates,
 and the default configuration includes a `Sample H2 Embedded` connection that
 uses them, so you can generate something on the first run without setting up a
 database.

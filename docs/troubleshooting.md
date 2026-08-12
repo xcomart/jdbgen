@@ -60,8 +60,9 @@ pointing at `lib/<dependency>.jar` — relative entries that are resolved next t
 jar.
 
 **Fix.** Keep the whole extracted distribution together (`jdbgen-<version>.jar`
-alongside `lib/`, `templates/` and `resource/`). If you want a launcher elsewhere,
-make it `cd` into the installation directory first, as the bundled scripts do.
+alongside `lib/`, `templates/` and `resource/`). A launcher elsewhere may point at
+the jar directly — the working directory is not relevant, only the jar's own
+neighbours are.
 
 ### Icons are missing, or settings reset every time
 
@@ -69,15 +70,35 @@ make it `cd` into the installation directory first, as the bundled scripts do.
 templates cannot be found, or the app asks to create a new master password on every
 start even though you already have a configuration.
 
-**Cause.** `config.json`, the `drivers/` download directory and the `resource/`
-directory are all resolved as **relative paths against the current working
-directory**, not against the location of the jar. Started from the wrong directory,
-the application simply looks for them somewhere else — and finding no
-`config.json`, it treats the run as a first run.
+**Cause.** On releases up to and including 0.3.0, `config.json`, the `drivers/`
+download directory and the `resource/` directory were all resolved as **relative
+paths against the current working directory**, not against the location of the jar.
+Started from the wrong directory, the application looked for them somewhere else —
+and finding no `config.json`, treated the run as a first run.
 
-**Fix.** Always launch with the installation directory as the working directory.
-The bundled `jdbgen.sh` and `jdbgen.cmd` do this for you; if you invoke
-`java -jar` yourself, `cd` there first.
+**Fix.** Upgrade. Newer releases keep everything they write in a per-user directory
+and read the release files next to the jar, so neither depends on where you start
+them from — see [Where jdbgen keeps its data](installation.md#where-jdbgen-keeps-its-data).
+On an affected release, launch with the installation directory as the working
+directory; the bundled `jdbgen.sh` and `jdbgen.cmd` do that for you.
+
+If a current release asks for a new master password, check instead whether
+`jdbgen.dataDir` is set — it moves the whole user data directory, and a run with a
+different value sees a different (or no) configuration.
+
+### The old installation no longer picks up my changes
+
+**Symptom.** After installing a newer jdbgen, connections added in it are missing
+when the previous installation is started, and the two drift apart.
+
+**Cause.** The first start of a release newer than 0.3.0 *copies* `config.json`, its
+backups and `drivers/` out of the old installation into the user data directory.
+The originals stay where they are, untouched but no longer written to.
+
+**Fix.** This is intended. Use the new installation; the old files are a snapshot
+you can delete once you are satisfied. The copy is made only when the user data
+directory has no `config.json` yet, so it never overwrites work done with the new
+build.
 
 ---
 
@@ -397,9 +418,12 @@ you started it:
   `java -jar jdbgen-<version>.jar` from the installation directory. The log appears
   in that terminal. Capture it with
   `java -jar jdbgen-<version>.jar > jdbgen.log 2>&1`.
-- **Windows** — `jdbgen.cmd` starts the application with `javaw.exe`, which has no
-  console and discards the output. To see it, open a Command Prompt in the
-  installation directory and run `java -jar jdbgen-<version>.jar` instead.
+- **Windows, unpacked ZIP** — `jdbgen.cmd` starts the application with `javaw.exe`,
+  which has no console and discards the output. To see it, open a Command Prompt in
+  the installation directory and run `java -jar jdbgen-<version>.jar` instead.
+- **Windows, MSI installation** — the generated `jdbgen.exe` has no console either.
+  Start the jar with the bundled runtime from a Command Prompt:
+  `"C:\Program Files\jdbgen\runtime\bin\java.exe" -jar "C:\Program Files\jdbgen\app\jdbgen-<version>.jar"`.
 
 The warnings that most often explain a problem are:
 

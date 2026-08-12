@@ -23,7 +23,7 @@ There are six cases, tried in this order:
 
 ## Local image file
 
-Any value that does not start with one of the recognised prefixes is treated as a filesystem path, absolute or relative. Relative paths are resolved against the working directory, which for a normal installation is the directory the launcher `cd`-ed into.
+Any value that does not start with one of the recognised prefixes is treated as a filesystem path, absolute or relative. A relative path is looked for in the [user data directory](installation.md#where-jdbgen-keeps-its-data) first and in the installation afterwards, so it stays valid wherever jdbgen is started from. Picking an icon with the `...` button stores it relative to whichever of the two it sits below, and absolute otherwise.
 
 ```
 /home/user/sample.png

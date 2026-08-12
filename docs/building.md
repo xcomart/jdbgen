@@ -129,6 +129,8 @@ Re-run it whenever `icon.png` changes. It needs nothing but Windows PowerShell (
 
 `icon.png` is itself generated, by `packaging/draw-icon.java` — run `java packaging/draw-icon.java` from the repository root to redraw the 512×512 source, then re-run `make-icon.ps1`.
 
+`resource/loading.gif`, the busy indicator, is generated the same way, by `java packaging/draw-loading.java`.
+
 ## Project layout
 
 ```

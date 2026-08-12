@@ -22,6 +22,8 @@
   <entry key="common.update.title">更新があります</entry>
   <entry key="common.update.available">新しいバージョン {0} が利用できます。&#10;今すぐ更新しますか?</entry>
   <entry key="common.update.failed">更新を自動的にインストールできませんでした。</entry>
+  <entry key="common.update.manual">新しいバージョン {0} が利用できます。&#10;jdbgen は書き込みが許可されていないディレクトリにインストールされているため、自動で更新できません。</entry>
+  <entry key="common.update.manual.winget">コマンドプロンプトで次のコマンドを実行して更新してください。&#10;    winget upgrade Xcomart.Jdbgen</entry>
   <entry key="common.update.openReleasePage">リリースページを開いて手動でダウンロードしますか?</entry>
   <entry key="common.update.progress.title">jdbgen の更新</entry>
   <entry key="common.update.progress.downloading">{0} をダウンロードしています</entry>

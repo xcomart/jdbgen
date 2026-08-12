@@ -81,7 +81,7 @@ public class ClassUtils {
     @SuppressWarnings("UseSpecificCatch")
     public static List<String> getDrivers(String jarFile) {
         try {
-            return getClasses(new File(jarFile), Driver.class);
+            return getClasses(AppDirs.resolve(jarFile), Driver.class);
         } catch (Exception e) {
             log.error(e.getLocalizedMessage(), e);
             return null;

@@ -268,7 +268,7 @@ public class UIUtils {
                         npath = "/icons/generic.png";
                     try (InputStream is = (isStock || isBlank)
                             ? UIUtils.class.getResourceAsStream(npath)
-                            : new FileInputStream(path)) {
+                            : new FileInputStream(AppDirs.resolvePath(path))) {
                         res = new ImageIcon(resize(ImageIO.read((InputStream)is)));
                     }
                 }
@@ -432,7 +432,8 @@ public class UIUtils {
     
     public static void loading(Window parent, Runnable worker) {
         try {
-            JComponent gpanel = new JLabel(new ImageIcon("resource/loading.gif"));
+            JComponent gpanel = new JLabel(new ImageIcon(
+                    AppDirs.installResourceFile("resource/loading.gif").getAbsolutePath()));
             Method m = parent.getClass().getMethod("setGlassPane", Component.class);
             m.invoke(parent, gpanel);
 //            parent.setGlassPane(gpanel);
@@ -483,16 +484,15 @@ public class UIUtils {
         }
         if (fc.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
             String fpath = fc.getSelectedFile().getAbsolutePath();
-            if (relative) {
-                String cpath = new File("").getAbsolutePath();
-                fpath = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
-            }
-            return fpath;
+            // a template or an icon below the user data or the installation
+            // directory is stored relative to it, see AppDirs.resolve() - which
+            // is what reads it back
+            return relative ? AppDirs.relativize(fpath) : fpath;
         } else {
             return null;
         }
     }
-    
+
     public static String openIconDlg(Component parent, String startPath) {
         return openFileDlg(parent, startPath, true, I18n.t("common.filechooser.imageFilter"),
                 new String[]{"jpg", "jpeg", "tiff", "tif", "gif", "png", "ico"});
@@ -508,11 +508,12 @@ public class UIUtils {
         fc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         if (fc.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
             String fpath = fc.getSelectedFile().getAbsolutePath();
-            if (relative) {
-                String cpath = new File("").getAbsolutePath();
-                fpath = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
-            }
-            return fpath;
+            // a directory below the user data or the installation directory is
+            // stored relative to it, the same way openFileDlg() does it - it is
+            // AppDirs.resolve() that reads it back, so relativizing against the
+            // working directory instead would name a different directory on the
+            // next start
+            return relative ? AppDirs.relativize(fpath) : fpath;
         } else {
             return null;
         }
@@ -604,7 +605,7 @@ public class UIUtils {
     
     public static void setApplicationIcon(Window wnd) {
         try {
-            wnd.setIconImage(ImageIO.read(new File("resource/icon.png")));
+            wnd.setIconImage(ImageIO.read(AppDirs.installResourceFile("resource/icon.png")));
         } catch (IOException ex) {
             log.error(ex.getLocalizedMessage(), ex);
         }

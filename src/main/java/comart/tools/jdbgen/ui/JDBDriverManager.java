@@ -25,6 +25,7 @@ package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.utils.AppDirs;
 import comart.utils.ClassUtils;
 import comart.utils.I18n;
 import comart.utils.PlatformUtils;
@@ -930,7 +931,7 @@ public class JDBDriverManager extends JDialog {
 
     private void btnBrowseJarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseJarActionPerformed
         JFileChooser fc = new JFileChooser();
-        fc.setCurrentDirectory(new File("drivers"));
+        fc.setCurrentDirectory(AppDirs.driversDir());
         fc.addChoosableFileFilter(new FileFilter() {
             @Override
             public boolean accept(File f) {
@@ -954,9 +955,9 @@ public class JDBDriverManager extends JDialog {
             }
         });
         if (fc.showOpenDialog(this) == 0) {
-            String cpath = new File("").getAbsolutePath();
-            String fpath = fc.getSelectedFile().getAbsolutePath();
-            String relative = fpath.startsWith(cpath) ? fpath.substring(cpath.length()+1) : fpath;
+            // a jar below the user data or the installation directory is
+            // stored relative to it, see AppDirs.resolve()
+            String relative = AppDirs.relativize(fc.getSelectedFile().getAbsolutePath());
             this.txtJarFile.setText(relative);
             updateDriver(d -> d.setJdbcJar(relative));
         }

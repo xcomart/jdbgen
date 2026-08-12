@@ -22,6 +22,8 @@
   <entry key="common.update.title">有可用更新</entry>
   <entry key="common.update.available">新版本 {0} 已发布。&#10;是否立即更新？</entry>
   <entry key="common.update.failed">无法自动安装更新。</entry>
+  <entry key="common.update.manual">新版本 {0} 已发布。&#10;jdbgen 安装在没有写入权限的目录中，因此无法自行更新。</entry>
+  <entry key="common.update.manual.winget">请在命令提示符中运行以下命令进行更新：&#10;    winget upgrade Xcomart.Jdbgen</entry>
   <entry key="common.update.openReleasePage">是否打开发布页面自行下载？</entry>
   <entry key="common.update.progress.title">正在更新 jdbgen</entry>
   <entry key="common.update.progress.downloading">正在下载 {0}</entry>

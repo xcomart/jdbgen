@@ -26,6 +26,7 @@ package comart.tools.jdbgen.update;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import comart.utils.AppDirs;
 import comart.utils.HttpUtils;
 import comart.utils.I18n;
 import java.awt.BorderLayout;
@@ -36,11 +37,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -233,19 +232,12 @@ public class UpdateManager {
      * started from a jar at all (a development run out of the class files).
      */
     public static File runningJar() {
-        try {
-            CodeSource cs = UpdateManager.class.getProtectionDomain().getCodeSource();
-            if (cs != null && cs.getLocation() != null) {
-                File loc = new File(URI.create(cs.getLocation().toString()));
-                if (loc.isFile() && loc.getName().toLowerCase().endsWith(JAR_SUFFIX))
-                    return loc.getAbsoluteFile();
-            }
-        } catch (Exception e) {
-            log.warn("cannot read the code source location: {}", e.getLocalizedMessage());
-        }
+        File jar = AppDirs.runningJar();
+        if (jar != null)
+            return jar;
         // started with an exploded class path: fall back to the working
         // directory, which is where the launcher scripts start us from.
-        List<File> jars = listJars(new File(".").getAbsoluteFile().getParentFile());
+        List<File> jars = listJars(AppDirs.workingDir());
         return jars.isEmpty() ? null : jars.get(0);
     }
 

@@ -25,6 +25,7 @@ package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.maven.SearchResponseItem;
 import comart.tools.jdbgen.types.maven.SearchResult;
+import comart.utils.AppDirs;
 import comart.utils.HttpUtils;
 import comart.utils.I18n;
 import comart.utils.MavenREST;
@@ -423,9 +424,14 @@ public class MavenExplorer extends JDialog {
                 // selected item was snapshotted by the caller on the EDT.
                 try {
                     String url = MavenREST.downloadLink(sitem);
-                    String fname = "drivers/" + url.substring(url.lastIndexOf('/') + 1);
-                    File f = new File(fname);
-                    publish(I18n.t("mavenExplorer.progress.saving", f.getAbsolutePath()));
+                    // the jar goes below the user data directory - the
+                    // installation may well be read only - and is stored
+                    // relative to it, see AppDirs.resolve()
+                    String jarName = url.substring(url.lastIndexOf('/') + 1);
+                    String stored = AppDirs.DRIVERS_DIR + "/" + jarName;
+                    File f = new File(AppDirs.driversDir(), jarName);
+                    String fname = f.getAbsolutePath();
+                    publish(I18n.t("mavenExplorer.progress.saving", fname));
                     FileUtils.forceMkdirParent(f);
                     OkHttpClient client = HttpUtils.getClient();
                     Request req = new Request.Builder().url(url).build();
@@ -446,7 +452,7 @@ public class MavenExplorer extends JDialog {
                                 publish(I18n.t("mavenExplorer.progress.received", curlen, totallen));
                             }
                         }
-                        saveLocation = fname;
+                        saveLocation = stored;
                         changed = true;
                         publish(I18n.t("mavenExplorer.progress.complete"));
                         return true;

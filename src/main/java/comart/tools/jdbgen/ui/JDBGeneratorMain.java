@@ -32,6 +32,7 @@ import comart.tools.jdbgen.types.JDBTemplate;
 import comart.tools.jdbgen.types.db.DBMeta;
 import comart.tools.jdbgen.types.db.DBSchema;
 import comart.tools.jdbgen.types.db.DBTable;
+import comart.utils.AppDirs;
 import comart.utils.I18n;
 import comart.utils.ObjUtils;
 import comart.utils.PlatformUtils;
@@ -951,6 +952,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         final Map<String, String> customVars;
         final List<DBTable> tables;
         final List<JDBTemplate> templates;
+        /** already resolved, see {@link AppDirs#resolveOutputDir(String)}. */
         final String outputDir;
 
         GenerateRequest(DBMeta meta, Map<String, String> customVars,
@@ -978,7 +980,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                     int progress = 0;
                     for (JDBTemplate tpl:req.templates) {
                         publish(I18n.t("generatorMain.progress.templateProcessing", tpl.getName()));
-                        String tplStr = ObjUtils.getFileContents(tpl.getTemplateFile());
+                        String tplStr = ObjUtils.getFileContents(
+                                AppDirs.resolvePath(tpl.getTemplateFile()));
                         TemplateManager tplCont = new TemplateManager(tplStr, req.customVars);
                         TemplateManager tplOut = new TemplateManager(tpl.getOutTemplate(), req.customVars);
                         for (DBTable t:req.tables) {
@@ -1043,7 +1046,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
         Map<String, String> custVars = UIUtils.applyTableToMap(tabVars.getModel());
         custVars.put("author", txtAuthor.getText());
-        String outputDir = txtOutputDir.getText();
+        // the configured value names a directory relative to the user data
+        // directory or the installation, not to the working directory - the
+        // browse button stores it that way, see AppDirs.relativize()
+        String outputDir = AppDirs.resolveOutputDir(txtOutputDir.getText());
 
         GenerateRequest req = new GenerateRequest(
                 dbmeta, custVars, selTables, tpls, outputDir);

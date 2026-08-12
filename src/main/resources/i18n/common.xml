@@ -22,6 +22,8 @@
   <entry key="common.update.title">Update Available</entry>
   <entry key="common.update.available">New version {0} is available.&#10;Do you want to update now?</entry>
   <entry key="common.update.failed">The update could not be installed automatically.</entry>
+  <entry key="common.update.manual">New version {0} is available.&#10;jdbgen is installed in a directory it is not allowed to write to, so it cannot update itself.</entry>
+  <entry key="common.update.manual.winget">Run the following command in a command prompt to update it:&#10;    winget upgrade Xcomart.Jdbgen</entry>
   <entry key="common.update.openReleasePage">Do you want to open the release page to download it yourself?</entry>
   <entry key="common.update.progress.title">Updating jdbgen</entry>
   <entry key="common.update.progress.downloading">Downloading {0}</entry>

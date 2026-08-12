@@ -1,5 +1,6 @@
 package comart.tools.jdbgen.types;
 
+import comart.utils.AppDirs;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -70,6 +71,27 @@ public class JDBGenConfigLanguageTest {
         assertNull(JDBGenConfig.peekLanguage(dir.resolve("config.json").toFile()));
         assertNull(JDBGenConfig.peekLanguage(dir.toFile()), "a directory is not a configuration");
         assertNull(JDBGenConfig.peekLanguage((java.io.File)null));
+    }
+
+    /**
+     * The configuration lives in the user data directory of the operating
+     * system, not next to the application - which may well be installed
+     * somewhere the user cannot write to.
+     */
+    @Test
+    public void theConfigurationIsReadFromTheUserDataDirectory(@TempDir Path dir) throws Exception {
+        System.setProperty(AppDirs.DATA_DIR_PROPERTY, dir.toString());
+        try {
+            assertEquals(dir.resolve("config.json").toFile().getAbsoluteFile(),
+                    JDBGenConfig.configFile().getAbsoluteFile());
+            assertNull(JDBGenConfig.peekLanguage(), "there is no configuration yet");
+
+            write(dir, "{\"language\":\"ja\"}");
+
+            assertEquals("ja", JDBGenConfig.peekLanguage());
+        } finally {
+            System.clearProperty(AppDirs.DATA_DIR_PROPERTY);
+        }
     }
 
     @Test

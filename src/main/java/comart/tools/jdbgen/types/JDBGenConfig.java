@@ -28,6 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import comart.utils.AppDirs;
 import comart.utils.I18n;
 import comart.utils.ObjUtils;
 import comart.utils.StrUtils;
@@ -57,7 +58,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Data
 public class JDBGenConfig {
-    private static final String CONF_PATH = "config.json";
+    /** name of the sample database shipped with the release. */
+    static final String SAMPLE_DB_FILE = "sample_h2.db.mv.db";
+    /** the H2 database name the sample connection opens, without a suffix. */
+    static final String SAMPLE_DB_NAME = "sample_h2.db";
     private static JDBGenConfig INSTANCE = null;
     private boolean isDarkUI = false;
     private List<JDBConnection> connections;
@@ -78,13 +82,23 @@ public class JDBGenConfig {
     }
 
     /**
-     * Read the <code>language</code> setting out of the configuration file in
-     * the working directory, without asking for the master password.
+     * The configuration file, below the user data directory of the operating
+     * system - the installation directory may well be read only.
+     *
+     * @see AppDirs#userDataDir()
+     */
+    public static File configFile() {
+        return AppDirs.userDataFile(AppDirs.CONFIG_NAME);
+    }
+
+    /**
+     * Read the <code>language</code> setting out of the configuration file,
+     * without asking for the master password.
      *
      * @see #peekLanguage(File)
      */
     public static String peekLanguage() {
-        return peekLanguage(new File(CONF_PATH));
+        return peekLanguage(configFile());
     }
 
     /**
@@ -123,8 +137,9 @@ public class JDBGenConfig {
 
     public static synchronized JDBGenConfig getInstance(boolean useDefault) {
         if (INSTANCE == null) {
-            log.info("config path: {}", CONF_PATH);
-            File f = new File(CONF_PATH);
+            File f = configFile();
+            String confPath = f.getAbsolutePath();
+            log.info("config path: {}", confPath);
             Gson gson = new Gson();
             if (!useDefault) {
                 // the password may be retried as often as the user wants: an
@@ -146,9 +161,9 @@ public class JDBGenConfig {
                         INSTANCE = (JDBGenConfig)gson.fromJson(fr, JDBGenConfig.class);
                         if (INSTANCE != null)
                             break;
-                        throw new IOException("configuration '" + CONF_PATH + "' is empty");
+                        throw new IOException("configuration '" + confPath + "' is empty");
                     } catch (Exception e) {
-                        log.error("cannot load configuration '" + CONF_PATH + "'", e);
+                        log.error("cannot load configuration '" + confPath + "'", e);
                         cnt++;
                         if (cnt < 3) {
                             UIUtils.error(null, I18n.t("common.config.password.incorrect"));
@@ -166,7 +181,7 @@ public class JDBGenConfig {
                         // acknowledgement, it is the user's only copy of it.
                         boolean isOk = UIUtils.confirm(null,
                                 I18n.t("common.config.default.title"),
-                                I18n.t("common.config.default.message", CONF_PATH));
+                                I18n.t("common.config.default.message", confPath));
                         if (!isOk)
                             System.exit(1);
                         master = UIUtils.password(I18n.t("common.config.password.new"), true);
@@ -183,23 +198,7 @@ public class JDBGenConfig {
                 try (InputStreamReader ir = new InputStreamReader(
                         JDBGenConfig.class.getResourceAsStream("/defaultConfig.json"), StandardCharsets.UTF_8)) {
                     INSTANCE = (JDBGenConfig)gson.fromJson(ir, JDBGenConfig.class);
-
-                    // create sample connection with H2 Embedded
-                    JDBConnection jcon = new JDBConnection();
-                    jcon.setAuthor(ObjUtils.getLoginUserId());
-                    jcon.setConnectionProps(new HashMap<>());
-                    jcon.setConnectionUrl("jdbc:h2:./sample_h2.db");
-                    jcon.setDriverType("H2 Embedded");
-                    jcon.setIcon("stock:h2.png");
-                    jcon.setName("Sample H2 Embedded");
-                    jcon.setOutputDir("output");
-                    List<JDBTemplate> templates = new ArrayList<>(Arrays.asList(
-                        new JDBTemplate("Java Model", "templates/java_model.java", "${name.suffix.pascal}Model.java"),
-                        new JDBTemplate("MyBatis mapper", "templates/mybatis_mapper.xml", "${name.suffix.camel}-mapper.xml"),
-                        new JDBTemplate("PHP CI Model", "templates/php_ci.php", "${name.suffix.lower}_ci_model.php")
-                    ));
-                    jcon.setTemplates(templates);
-                    INSTANCE.connections = new ArrayList<>(Arrays.asList(jcon));
+                    INSTANCE.connections = new ArrayList<>(Arrays.asList(createSampleConnection()));
                 } catch (Exception e) {
                     UIUtils.error(null, I18n.t("common.config.default.loadFailed", describe(e)));
                     log.error("cannot recover previous error.", e);
@@ -229,6 +228,66 @@ public class JDBGenConfig {
      */
     private static String describe(Throwable t) {
         return t.getClass().getSimpleName() + ": " + t.getLocalizedMessage();
+    }
+
+    /**
+     * The sample connection of a fresh configuration.
+     *
+     * <p>Every path it carries is absolute: the templates and the icons are
+     * read out of the installation, everything that is written - the sample
+     * database and the generated sources - lives below the user data
+     * directory, which is writable even when the application is installed
+     * below <code>C:\Program Files</code>.</p>
+     */
+    static JDBConnection createSampleConnection() {
+        JDBConnection jcon = new JDBConnection();
+        jcon.setAuthor(ObjUtils.getLoginUserId());
+        jcon.setConnectionProps(new HashMap<>());
+        jcon.setConnectionUrl("jdbc:h2:" + sampleDatabaseUrlPath());
+        jcon.setDriverType("H2 Embedded");
+        jcon.setIcon("stock:h2.png");
+        jcon.setName("Sample H2 Embedded");
+        jcon.setOutputDir(AppDirs.userDataFile("output").getAbsolutePath());
+        List<JDBTemplate> templates = new ArrayList<>(Arrays.asList(
+            new JDBTemplate("Java Model", templatePath("java_model.java"),
+                    "${name.suffix.pascal}Model.java"),
+            new JDBTemplate("MyBatis mapper", templatePath("mybatis_mapper.xml"),
+                    "${name.suffix.camel}-mapper.xml"),
+            new JDBTemplate("PHP CI Model", templatePath("php_ci.php"),
+                    "${name.suffix.lower}_ci_model.php")
+        ));
+        jcon.setTemplates(templates);
+        return jcon;
+    }
+
+    private static String templatePath(String name) {
+        return AppDirs.installResourceFile("templates/" + name).getAbsolutePath();
+    }
+
+    /**
+     * copy the sample database shipped with the release next to the
+     * configuration, so that the sample connection can write to it, and name
+     * the copy the way an H2 URL does - without the <code>.mv.db</code> suffix
+     * H2 appends itself, and with '/' separators, which H2 understands on
+     * every platform.
+     *
+     * <p>A release without the sample database - or a copy that fails - only
+     * means that the sample connection has nothing to open yet, which is
+     * reported when it is used.</p>
+     */
+    private static String sampleDatabaseUrlPath() {
+        File target = AppDirs.userDataFile(SAMPLE_DB_FILE);
+        File source = AppDirs.installResourceFile(SAMPLE_DB_FILE);
+        if (!target.exists() && source.isFile()) {
+            try {
+                Files.copy(source.toPath(), target.toPath());
+                log.info("copied the sample database to '{}'", target);
+            } catch (Exception e) {
+                log.warn("cannot copy the sample database '{}' to '{}': {}",
+                        source, target, e.getLocalizedMessage());
+            }
+        }
+        return AppDirs.userDataFile(SAMPLE_DB_NAME).getAbsolutePath().replace('\\', '/');
     }
 
     /**
@@ -335,16 +394,17 @@ public class JDBGenConfig {
     public static synchronized boolean saveInstance(Container parent) {
         Gson gson = (new GsonBuilder()).setPrettyPrinting().create();
 
+        File conf = configFile();
         try {
             String json = gson.toJson(INSTANCE);
-            try (FileWriter fw = new FileWriter(CONF_PATH, StandardCharsets.UTF_8)) {
+            try (FileWriter fw = new FileWriter(conf, StandardCharsets.UTF_8)) {
                 fw.write(json);
             }
             return true;
         } catch (Exception e) {
             // not only IOException: encryption of the stored passwords may fail
             // as well, and it must not escape into the caller's error handling.
-            log.error("cannot save configuration '" + CONF_PATH + "'", e);
+            log.error("cannot save configuration '" + conf.getAbsolutePath() + "'", e);
             UIUtils.error(null, I18n.t("common.config.save.failed", describe(e)));
         }
 

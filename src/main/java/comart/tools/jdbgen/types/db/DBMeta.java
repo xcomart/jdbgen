@@ -7,8 +7,8 @@ package comart.tools.jdbgen.types.db;
 
 import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
+import comart.utils.AppDirs;
 import comart.utils.StrUtils;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -54,7 +54,7 @@ public class DBMeta implements AutoCloseable {
 
     public DBMeta(JDBDriver driver, JDBConnection jconn) throws Exception {
         this.child = new URLClassLoader(
-                new URL[] {new File(driver.getJdbcJar()).toURI().toURL()},
+                new URL[] {AppDirs.resolve(driver.getJdbcJar()).toURI().toURL()},
                 this.getClass().getClassLoader()
         );
         try {

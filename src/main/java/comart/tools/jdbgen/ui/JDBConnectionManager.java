@@ -27,6 +27,7 @@ import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBTemplate;
+import comart.utils.AppDirs;
 import comart.utils.I18n;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
@@ -1192,7 +1193,8 @@ public class JDBConnectionManager extends JDialog {
     }//GEN-LAST:event_btnDelPropActionPerformed
 
     private void btnBrowseTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseTemplateActionPerformed
-        String path = UIUtils.openFileDlg(this, "templates", true);
+        String path = UIUtils.openFileDlg(this,
+                AppDirs.installResourceFile("templates").getAbsolutePath(), true);
         if (!StrUtils.isEmpty(path))
             this.txtTemplateFile.setText(path);
     }//GEN-LAST:event_btnBrowseTemplateActionPerformed

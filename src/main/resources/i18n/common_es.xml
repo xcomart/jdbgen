@@ -22,6 +22,8 @@
   <entry key="common.update.title">Actualización disponible</entry>
   <entry key="common.update.available">La nueva versión {0} está disponible.&#10;¿Desea actualizar ahora?</entry>
   <entry key="common.update.failed">No se pudo instalar la actualización automáticamente.</entry>
+  <entry key="common.update.manual">La nueva versión {0} está disponible.&#10;jdbgen está instalado en un directorio en el que no tiene permiso de escritura, por lo que no puede actualizarse a sí mismo.</entry>
+  <entry key="common.update.manual.winget">Ejecute el siguiente comando en el símbolo del sistema para actualizarlo:&#10;    winget upgrade Xcomart.Jdbgen</entry>
   <entry key="common.update.openReleasePage">¿Desea abrir la página de versiones para descargarla usted mismo?</entry>
   <entry key="common.update.progress.title">Actualizando jdbgen</entry>
   <entry key="common.update.progress.downloading">Descargando {0}</entry>

@@ -182,7 +182,7 @@ public class PlatformUtils {
     public static void setDockIcon() {
         try {
             final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
-            final URL imageResource = new File("resource/icon.png").toURI().toURL();
+            final URL imageResource = AppDirs.installResourceFile("resource/icon.png").toURI().toURL();
             final Image image = defaultToolkit.getImage(imageResource);
             final Taskbar taskbar = Taskbar.getTaskbar();
             taskbar.setIconImage(image);
@@ -249,11 +249,33 @@ public class PlatformUtils {
         }
         if (compareVersions(curVersion, tagName) < 0) {
             // updates available
+            if (!AppDirs.isInstallWritable()) {
+                // an installed build - below C:\Program Files, or owned by the
+                // package manager it was installed with - cannot replace its
+                // own files, so the user is told how to update instead.
+                announceManualUpdate(tagName);
+                return;
+            }
             if (UIUtils.confirm(null, I18n.t("common.update.title"),
                     I18n.t("common.update.available", tagName))) {
                 applyUpdate(release);
             }
         }
+    }
+
+    /**
+     * tell the user about a new version that cannot be installed by the
+     * application itself, and offer the release page.
+     */
+    private static void announceManualUpdate(String tagName) {
+        log.info("'{}' is not writable, the update has to be installed by the user.",
+                AppDirs.installResourceBase());
+        StringBuilder msg = new StringBuilder(I18n.t("common.update.manual", tagName));
+        if (isWindows())
+            msg.append("\n\n").append(I18n.t("common.update.manual.winget"));
+        msg.append("\n\n").append(I18n.t("common.update.openReleasePage"));
+        if (UIUtils.confirm(null, I18n.t("common.update.title"), msg.toString()))
+            openURL(RELEASE_PAGE);
     }
 
     /**

@@ -75,7 +75,8 @@ jdbgen/
 │   │   ├── JDBGenerator.java             main(): look and feel, update check, main window
 │   │   ├── template/                     the template engine
 │   │   ├── types/                        configuration and database model types
-│   │   └── ui/                           Swing windows (NetBeans .form + .java pairs)
+│   │   ├── ui/                           Swing windows (NetBeans .form + .java pairs)
+│   │   └── update/                       the self-update
 │   └── utils/                            shared helpers
 ├── src/main/configs/version.properties   token-filtered into the resources
 ├── src/main/resources/
@@ -110,11 +111,18 @@ Every Swing window, as NetBeans GUI Builder `.form` files paired with generated 
 
 > Edit the `.form` files in NetBeans rather than hand-editing the generated `initComponents()` blocks in the matching `.java` files — the GUI Builder overwrites them.
 
+### `comart.tools.jdbgen.update`
+
+The self-update, split in two because the second half has to run while `lib/` is being replaced.
+
+- `UpdateManager` — runs inside the application: picks the `jdbgen-*.zip` asset out of the release description, downloads it into `<installation>/.update/` behind a cancellable progress dialog, unpacks it (stripping the top-level `jdbgen-<version>/` directory and refusing entries that point outside the target), copies the running jar to `.update/updater.jar` and starts the applier in a JVM of its own. It also removes a staging directory left over from an earlier run at every startup.
+- `UpdateApplier` — the `main()` of that second JVM. It waits for the application to release its jar, moves the old jar and `lib/` to `.update/backup/`, copies the new release over the installation, restarts jdbgen and cleans up. **It runs with nothing but a copy of the jdbgen jar on its class path, so it must use JDK classes only** — no slf4j/lombok logging, no gson, no okhttp. Its output is redirected into `.update/update.log`. See [installation.md](installation.md#updating) for which files it replaces.
+
 ### `comart.utils`
 
 - `StrUtils` — string casing and padding helpers used by the template decorators, plus all password-based encryption (v2 AES-256-GCM with PBKDF2, and the legacy AES-128/CBC reader).
 - `UIUtils` — look-and-feel setup, dialogs, list/table renderers, and `getIcon()`, the resolver behind every icon string ([icons.md](icons.md)).
-- `PlatformUtils` — OS detection, dock icon, opening URLs, version lookup and the GitHub release update check.
+- `PlatformUtils` — OS detection, dock icon, opening URLs, version lookup and the GitHub release update check, which hands a newer release over to `comart.tools.jdbgen.update`.
 - `EncryptionAdapter` — the Gson `TypeAdapter` that encrypts on write and decrypts on read.
 - `HttpUtils` — the shared OkHttp client.
 - `MavenREST` — Maven Central search and download.
@@ -133,6 +141,8 @@ The suite runs on JUnit 5 (Jupiter 5.10.2) via `useJUnitPlatform()`.
 | `comart/utils/EncryptionTest` | v2 round trips, non-deterministic ciphertext, rejection of a wrong master password, reading legacy-format values, null/empty pass-through, and malformed input. |
 | `comart/tools/jdbgen/types/JDBGenConfigBackupTest` | Configuration backup and restore: moving an unreadable file aside, reporting a failed backup, and putting it back. |
 | `comart/tools/jdbgen/types/ConfigRoundTripTest` | Configuration serialisation, including that encrypted fields survive a save/load cycle and that the bundled `defaultConfig.json` serialises cleanly. |
+| `comart/tools/jdbgen/update/UpdateManagerTest` | Picking the distribution archive out of a release description, stripping the top-level directory while unpacking, and refusing archive entries that point outside the target directory. |
+| `comart/tools/jdbgen/update/UpdateApplierTest` | Applying a release to an installation: jar and `lib/` replaced, launcher scripts and resources overwritten, configuration, drivers, output, edited templates and the sample database kept, and the previous version put back when the update fails. |
 
 Run everything with `./gradlew test`, or a single class with:
 
@@ -170,4 +180,4 @@ version = '0.2.5'
 4. Tag the commit as `v<version>` — matching the existing tags (`v0.2.4`, `v0.2.5`, …) — and push the tag. The startup update check compares the running version against `tag_name` from the GitHub API and tolerates the leading `v`.
 5. Create the GitHub release for that tag and upload `build/distributions/jdbgen-<version>.zip` manually.
 
-Once the release is published, running installations of older versions will offer the update on their next start.
+Once the release is published, running installations of older versions will offer the update on their next start. The update is installed automatically, so the `jdbgen-<version>.zip` asset has to be attached to the release and keep its name — that is what `UpdateManager` looks for, and it expects the usual single top-level `jdbgen-<version>/` directory inside.

@@ -116,7 +116,7 @@ alias jdbgen='(cd /opt/jdbgen-<version> && java -jar jdbgen-<version>.jar)'
 
 ## First run
 
-1. **Update check.** On startup the application queries the GitHub Releases API for `xcomart/jdbgen`. If a newer tag than the running version is found, it offers to update; accepting opens the [releases page](https://github.com/xcomart/jdbgen/releases/latest) in your browser and exits so you can download the new archive. The update is not applied automatically. If the network is unreachable the check fails quietly and startup continues.
+1. **Update check.** On startup the application queries the GitHub Releases API for `xcomart/jdbgen`. If a newer tag than the running version is found, it offers to update; accepting downloads the new archive, installs it over the current directory and restarts jdbgen. Cancelling the download simply continues the startup. If the automatic update cannot be carried out, jdbgen offers to open the [releases page](https://github.com/xcomart/jdbgen/releases/latest) in your browser instead. If the network is unreachable the check fails quietly and startup continues. See [Updating](#updating) for what is replaced and what is kept.
 
 2. **Master password.** With no `config.json` present, the application asks you to choose a master password.
 
@@ -209,9 +209,26 @@ All ten are marked as *stock* items: they cannot be fully edited or deleted in t
 
 ## Updating
 
-jdbgen does not update itself. When the startup check reports a new release and you accept, it opens the releases page and exits.
+When the startup check reports a new release and you accept, jdbgen updates itself in place:
 
-To upgrade:
+1. The release archive is downloaded into `<installation>/.update/`, with a progress window you can cancel at any time.
+2. The archive is unpacked and jdbgen exits, handing over to a small updater process that runs from a copy of the jar in `.update/`.
+3. The updater replaces the installed files, starts the new version and removes its working files. `.update/updater.jar` and `.update/update.log` are left behind and cleaned up the next time jdbgen starts; the log is where to look if an update went wrong.
+
+The update runs entirely inside the installation directory, so it needs write access there — an installation below `C:\Program Files` or `/opt` owned by another user cannot update itself.
+
+What the updater does with each file:
+
+| Path | |
+|---|---|
+| `jdbgen-<version>.jar`, `lib/` | replaced — the old jar and the whole `lib/` are moved to `.update/backup/` first |
+| `jdbgen.cmd`, `jdbgen.sh`, `resource/` | overwritten, they belong to the release |
+| `templates/`, `sample_h2.db.mv.db` | kept; only files that are missing are added, so edited templates and the sample database survive |
+| `config.json`, `config.json.*.bak`, `drivers/`, `output/` | never touched |
+
+If anything fails halfway, the previous jar and `lib/` are moved back from `.update/backup/`, the new version is not started, and that backup is kept until the next start — should the restore have failed too, it is the only copy left. The old version keeps running in the meantime.
+
+**Updating by hand.** If the automatic update fails, jdbgen offers to open the releases page. To upgrade manually:
 
 1. Download and unpack the new `jdbgen-<version>.zip` next to the old one.
 2. Copy `config.json` (and `drivers/`, if you keep jars there) from the old directory into the new one.

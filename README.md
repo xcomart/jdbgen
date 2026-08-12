@@ -143,6 +143,11 @@ abbreviation rules and custom variables. See the
    `java -jar jdbgen-<version>.jar` directly, as long as that directory is your
    current working directory.
 
+jdbgen keeps itself up to date: when a newer release is published it offers to
+install it on the next start, downloads it and restarts itself. Your
+`config.json`, the drivers you downloaded and the templates you edited are kept
+— see [Updating](docs/installation.md#updating).
+
 The archive ships with a small H2 sample database and three example templates,
 and the default configuration includes a `Sample H2 Embedded` connection that
 uses them, so you can generate something on the first run without setting up a

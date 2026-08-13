@@ -26,13 +26,20 @@ package comart.tools.jdbgen.types.maven;
 import lombok.Data;
 
 /**
+ * The reply of a Maven Central search call. It mirrors the Solr response
+ * document: a header telling how the query was run and the response body with
+ * the matches.
  *
  * @author comart
  */
 @Data
 public class SearchResult {
+    /** status of the query, 0 when it succeeded. */
     int status;
+    /** time the server needed for the query, in milliseconds. */
     int QTime;
+    /** the parameters the query was run with, as echoed by the server. */
     SearchParams params;
+    /** the matches of the query. */
     SearchResponse response;
 }

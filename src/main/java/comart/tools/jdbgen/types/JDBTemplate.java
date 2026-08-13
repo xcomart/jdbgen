@@ -28,6 +28,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
+ * One generation rule: the template file to render for each selected table and
+ * the pattern that names the file it is written to.
  *
  * @author comart
  */
@@ -35,14 +37,30 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JDBTemplate implements Cloneable {
+    /** user given name of this template entry. */
     private String name;
+    /** path of the template file that is rendered. */
     private String templateFile;
+    /** name pattern of the generated file, with <code>${...}</code> variables such as <code>${name.suffix.pascal}</code>. */
     private String outTemplate;
     
+    /**
+     * this entry as a row of the template table model.
+     *
+     * @return the field values in table column order: name, template file and
+     *         output name pattern.
+     */
     public Object[] getRowArray() {
         return new Object[]{ name, templateFile, outTemplate };
     }
     
+    /**
+     * a copy of this entry. All fields are immutable strings, so the shallow
+     * copy is independent of the original.
+     *
+     * @return the cloned template entry.
+     * @throws CloneNotSupportedException if cloning fails.
+     */
     @Override
     public Object clone() throws CloneNotSupportedException {
         return super.clone();

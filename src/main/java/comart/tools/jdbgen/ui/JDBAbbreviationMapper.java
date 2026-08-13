@@ -45,6 +45,14 @@ import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * editor of the abbreviation mappings kept in the application configuration.
+ * Every row of the table maps an abbreviation to the word it is replaced with
+ * while names are generated, and tells whether the mapping is active and
+ * whether it applies to a whole name instead of a single name part. Edits are
+ * written back to <code>JDBGenConfig</code> as they happen, the table always
+ * keeps one trailing empty row for new entries, and duplicated abbreviations
+ * are rejected. On a right click in the abbreviation cell of a whole name
+ * mapping, a popup offers the table names of the current connection.
  *
  * @author comart
  */
@@ -52,7 +60,21 @@ import lombok.extern.slf4j.Slf4j;
 public class JDBAbbreviationMapper extends javax.swing.JDialog {
 
 
+    /** the shared dialog instance, created on the first call of
+     * <code>getInstance(Frame)</code>. */
     private static JDBAbbreviationMapper INSTANCE = null;
+    /**
+     * return the shared abbreviation mapper dialog. The dialog is created as a
+     * modal dialog of <code>parent</code> and registered for look and feel
+     * updates on the first call, later calls reuse that instance. The
+     * application icon and the component tree are refreshed and the dialog is
+     * centered on <code>parent</code> on every call.
+     *
+     * @param parent
+     *            frame the dialog is centered on, used as owner on the first
+     *            call.
+     * @return the shared <code>JDBAbbreviationMapper</code> instance.
+     */
     public static synchronized JDBAbbreviationMapper getInstance(Frame parent) {
         if (INSTANCE == null) {
             INSTANCE = new JDBAbbreviationMapper(parent, true);
@@ -65,15 +87,34 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         return INSTANCE;
     }
     
+    /**
+     * reapply the current look and feel to the whole dialog. Called after a
+     * theme or font change so that the already created dialog is redrawn with
+     * the new settings.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
     }
     
+    /** application configuration the edited abbreviations are written to. */
     private JDBGenConfig conf;
+    /** model of the mapping table, kept for the delete button and the
+     * duplication check. */
     private DefaultTableModel mdl;
 
     /**
      * Creates new form JDBAbbreviationMapper
+     * <p>
+     * The column headers are translated, the preferred column widths are
+     * applied and the table is filled with the abbreviations of the current
+     * configuration followed by one empty row. A model listener is installed
+     * which rejects duplicated abbreviations and otherwise writes the table
+     * back to the configuration and makes sure an empty trailing row remains.
+     *
+     * @param parent
+     *            frame the dialog belongs to.
+     * @param modal
+     *            <code>true</code> to create a modal dialog.
      */
     public JDBAbbreviationMapper(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -118,6 +159,17 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         
     }
     
+    /**
+     * check that no abbreviation is mapped twice. Only rows which are applied
+     * and which have both an abbreviation and a replacement take part, and an
+     * error message naming the offending abbreviation is shown for the first
+     * collision found.
+     *
+     * @param model
+     *            model of the mapping table to be checked.
+     * @return <code>true</code> when all abbreviations are unique,
+     *         <code>false</code> when a duplicate was found and reported.
+     */
     private boolean checkDuplication(DefaultTableModel model) {
         HashMap<String,String> map = new HashMap<>();
         for (int i=0; i<model.getRowCount(); i++) {
@@ -136,11 +188,24 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         return true;
     }
     
+    /** apply the font icons of the ok and of the delete button. */
     private void applyIcons() {
         UIUtils.addIcon(btnOk, FontAwesome.CHECK);
         UIUtils.applyIcon(btnDel, FontAwesome.MINUS);
     }    
 
+    /**
+     * convert the rows of the mapping table into abbreviation objects. Rows
+     * whose abbreviation or replacement is empty are skipped, so the trailing
+     * empty row of the editor is dropped, and the remaining rows are mapped to
+     * <code>JDBAbbr</code> instances keeping their apply and whole name flags.
+     *
+     * @param model
+     *            table model of the mapping table, holding the apply flag, the
+     *            whole name flag, the abbreviation and the replacement in
+     *            columns <code>0</code> to <code>3</code>.
+     * @return the abbreviations of all filled rows, in table order.
+     */
     public static List<JDBAbbr> applyTableToList(TableModel model) {
         List<JDBAbbr> abbrs = new ArrayList<>();
         for (int i=0; i<model.getRowCount(); i++) {
@@ -248,11 +313,13 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /** save the configuration and hide the dialog. */
     private void btnOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOkActionPerformed
         JDBGenConfig.saveInstance(this);
         setVisible(false);
     }//GEN-LAST:event_btnOkActionPerformed
 
+    /** ask for confirmation and remove the selected mapping row. */
     private void btnDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelActionPerformed
         int idx = tblMapping.getSelectedRow();
         if (idx > -1 && idx < mdl.getRowCount()) {
@@ -273,6 +340,16 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         }
     }//GEN-LAST:event_btnDelActionPerformed
 
+    /**
+     * show the table name popup for a right click on the mapping table. The
+     * popup only appears on the abbreviation cell of a row which is marked as
+     * a whole name mapping and only while the main window holds tables, and
+     * the chosen table name is written into the clicked cell.
+     *
+     * @param evt
+     *            mouse event of the click, its button and point decide whether
+     *            and where the popup is shown.
+     */
     private void showPopupTrigger(java.awt.event.MouseEvent evt) {
         if (evt.getButton() == MouseEvent.BUTTON3) {
             Point p = evt.getPoint();
@@ -297,11 +374,17 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         }
     }
     
+    /** hand a click on the mapping table to <code>showPopupTrigger()</code>. */
     private void tblMappingMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMappingMouseClicked
         showPopupTrigger(evt);
     }//GEN-LAST:event_tblMappingMouseClicked
 
     /**
+     * stand alone entry point which shows this dialog on its own, used to
+     * preview the form during development. The Nimbus look and feel is
+     * selected when available and the virtual machine is terminated once the
+     * dialog is closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

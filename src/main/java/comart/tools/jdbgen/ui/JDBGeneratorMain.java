@@ -61,13 +61,49 @@ import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * main window of the application. It opens the connection chosen in the
+ * connection manager, shows its catalog/schema tree and the tables of the
+ * selected schema, and runs the code generation for the tables and templates
+ * the user ticked.
+ * <p>
+ * It also hosts the global settings that are stored in the configuration: the
+ * dark user interface flag, the interface language and whether the
+ * abbreviation mapping is applied. Opening a connection and generating code are
+ * both done on background threads, the window is left in a disabled state
+ * meanwhile.
  *
  * @author comart
  */
 @Slf4j
 public class JDBGeneratorMain extends javax.swing.JFrame {
 
+    /**
+     * label user interface that keeps a label from growing with its text.
+     * The layout is computed for at most the first 20 characters, so a long
+     * connection url cannot widen the label, while the full text is still
+     * returned for painting.
+     */
     private static class MyLabelUI extends BasicLabelUI {
+        /**
+         * lay the label out for at most the first 20 characters, but return the
+         * full text so that it is painted unclipped.
+         *
+         * @param label
+         *            the label being laid out.
+         * @param fontMetrics
+         *            the metrics of the label's font.
+         * @param text
+         *            the label's text, may be <code>null</code>.
+         * @param icon
+         *            the label's icon, may be <code>null</code>.
+         * @param viewR
+         *            the area available to the label, filled in by the caller.
+         * @param iconR
+         *            receives the computed icon bounds.
+         * @param textR
+         *            receives the computed text bounds.
+         * @return the unmodified <code>text</code>.
+         */
         @Override
         protected String layoutCL(
                 JLabel label, FontMetrics fontMetrics, String text, Icon icon,
@@ -99,23 +135,61 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     private static final String[] LANGUAGES = { null, "en", "ko", "es", "ja", "zh-CN" };
 
+    /**
+     * the configuration the connections, the drivers and the global settings
+     * are read from and written back to.
+     */
     private final JDBGenConfig conf;
+    /**
+     * the connections by name, used by the combo box renderer to find the icon
+     * of an entry.
+     */
     private final Map<String, JDBConnection> connMap = new HashMap<>();
+    /**
+     * the connection currently applied to the window, or <code>null</code>
+     * before the first one has been chosen.
+     */
     private JDBConnection currConn = null;
+    /**
+     * the metadata of the open connection, or <code>null</code> while none is
+     * open. Everything that reads the database has to check this first.
+     */
     private DBMeta dbmeta = null;
+    /**
+     * the tables of the schema selected in the tree, in the order they are
+     * shown in the table list. <code>null</code> while no schema is selected.
+     */
     private List<DBTable> tables;
+    /**
+     * guard against feedback while the variable table is being filled
+     * programmatically. While <code>false</code>, the table model listener does
+     * not append a trailing empty row.
+     */
     private boolean autoReset = true;
     /** true while a connection is being opened on a background thread */
     private boolean connecting = false;
     
+    /**
+     * the main window, assigned at the end of its construction so that the
+     * other dialogs can reach it. <code>null</code> until then.
+     */
     public static JDBGeneratorMain INSTANCE = null;
     
+    /**
+     * the tables of the schema currently selected in the tree.
+     *
+     * @return the table list shown in the table list box, or <code>null</code>
+     *         while no schema is selected.
+     */
     public List<DBTable> getTables() {
         return tables;
     }
     
     /**
-     * Creates new form JDBGeneratorMain
+     * Creates new form JDBGeneratorMain. Restores the stored settings, asks for
+     * a connection through the connection manager - the application exits when
+     * that dialog is cancelled - and registers the platform handlers for the
+     * about menu entry.
      */
     public JDBGeneratorMain() {
         initComponents();
@@ -159,10 +233,17 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         INSTANCE = this;
     }
     
+    /**
+     * show the about dialog.
+     */
     private void showAbout() {
         JDBAbout.getInstance(this).setVisible(true);
     }
     
+    /**
+     * empty the template table, the variable table, the table list and the
+     * author and output directory fields.
+     */
     private void clearContents() {
         ((DefaultTableModel)this.tabTemplates.getModel()).setRowCount(0);
         ((DefaultTableModel)this.tabVars.getModel()).setRowCount(0);
@@ -174,6 +255,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     /**
      * The column names of a generated table model are the untranslated
      * placeholders of the form editor, the shown ones are set here.
+     *
+     * @param table
+     *            the table whose column headers are replaced.
+     * @param keys
+     *            the resource keys of the header texts, one per column,
+     *            starting at the first column. Keys beyond the last column are
+     *            ignored.
      */
     private static void applyHeaders(JTable table, String... keys) {
         TableColumnModel colModel = table.getColumnModel();
@@ -181,6 +269,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             colModel.getColumn(i).setHeaderValue(I18n.t(keys[i]));
     }
 
+    /**
+     * set up the template and variable tables: fixed column widths, translated
+     * headers and a click on the header of the check box column that ticks or
+     * unticks every template at once.
+     */
     private void initTemplates() {
         tabTemplates.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         TableColumnModel colModel = tabTemplates.getColumnModel();
@@ -215,6 +308,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         });
     }
     
+    /**
+     * apply the font icons of the buttons of this window.
+     */
     private void applyIcons() {
         UIUtils.addIcon(btnManageConn, FontAwesome.COG);
         UIUtils.applyIcon(btnDelVar, FontAwesome.MINUS);
@@ -224,7 +320,23 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
     }    
     
+    /**
+     * while <code>true</code>, a change of the connection combo box does not
+     * open a connection. Set while the combo box is being rebuilt, because
+     * selecting an entry is what triggers the connect.
+     */
     private boolean suppressCboConnEvent = false;
+    /**
+     * reload the connection combo box from the configuration and show the
+     * templates, the author and the custom variables of the given connection.
+     * Selecting the connection in the combo box is what triggers the actual
+     * connect, so a <code>null</code> argument only refreshes the list and
+     * restores the previous entry without connecting again.
+     *
+     * @param conn
+     *            the connection to apply, or <code>null</code> to just reload
+     *            the list of connections.
+     */
     private void applyConnection(JDBConnection conn) {
         suppressCboConnEvent = conn == null;
         currConn = conn;
@@ -275,6 +387,14 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * Build the catalog/schema node hierarchy. This queries the database, so it
      * must NOT be called on the EDT. The returned nodes are not attached to any
      * component yet, so building them off the EDT is safe.
+     *
+     * @param meta
+     *            the metadata of the open connection.
+     * @return the root node of the tree. A database with a single catalog uses
+     *         that catalog as the root, otherwise a generic root holds one node
+     *         per catalog.
+     * @throws SQLException
+     *             if the schema list cannot be read.
      */
     private static DefaultMutableTreeNode buildSchemaRoot(DBMeta meta) throws SQLException {
         Map<String, List<DBSchema>> tree = meta.getSchemaTree();
@@ -302,6 +422,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     /**
      * Attach the schema hierarchy built by {@link #buildSchemaRoot(DBMeta)}.
      * EDT only.
+     *
+     * @param root
+     *            the root node built off the event dispatch thread.
      */
     private void showSchemaRoot(DefaultMutableTreeNode root) {
         treSchemas.setModel(new DefaultTreeModel(root));
@@ -321,6 +444,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     /**
      * Toggle the controls that must not be touched while a connection is being
      * opened on a background thread.
+     *
+     * @param flag
+     *            <code>true</code> while connecting, which disables those
+     *            controls and shows the wait cursor, <code>false</code> to
+     *            restore them.
      */
     private void setConnecting(boolean flag) {
         connecting = flag;
@@ -335,6 +463,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * Open the connection and read the schema tree on a background thread, then
      * apply the result to the UI on the EDT. Opening a JDBC connection can take
      * seconds, so it must never run on the EDT.
+     *
+     * @param jdr
+     *            the driver definition to load the JDBC driver from.
+     * @param jcc
+     *            the connection to open.
      */
     private void connectAsync(final JDBDriver jdr, final JDBConnection jcc) {
         // EDT: tear down the previous connection first, so a failure while
@@ -383,6 +516,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     /**
      * Restore a consistent "not connected" state after a failed connection.
      * EDT only.
+     *
+     * @param jcc
+     *            the connection that could not be opened, named in the error
+     *            message.
+     * @param cause
+     *            the failure, logged and shown to the user.
      */
     private void connectFailed(JDBConnection jcc, Throwable cause) {
         log.error(cause.getLocalizedMessage(), cause);
@@ -816,6 +955,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * switch between the dark and the light look and feel and store the choice.
+     */
     private void chkDarkUIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkDarkUIActionPerformed
         if (this.chkDarkUI.isSelected()) {
             UIUtils.setFlatDarkLaf();
@@ -832,6 +974,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     /**
      * the entry of <code>cboLanguage</code> a stored language setting selects.
      * Anything unknown falls back to the system default entry.
+     *
+     * @param language
+     *            the stored language tag, or <code>null</code> for the
+     *            operating system locale.
+     * @return the index into <code>cboLanguage</code>, <code>0</code> for the
+     *         system default entry.
      */
     static int languageIndex(String language) {
         if (language != null) {
@@ -857,6 +1005,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         cboLanguage.setSelectedIndex(languageIndex(conf.getLanguage()));
     }
 
+    /**
+     * store the chosen interface language, which takes effect on the next start.
+     */
     private void cboLanguageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLanguageActionPerformed
         int idx = cboLanguage.getSelectedIndex();
         // filling the combo in the constructor selects the stored entry, and
@@ -870,6 +1021,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         UIUtils.info(this, I18n.t("common.language.restartRequired"));
     }//GEN-LAST:event_cboLanguageActionPerformed
 
+    /**
+     * open the connection chosen in the combo box, after looking up the driver
+     * it refers to.
+     */
     private void cboConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboConnectionActionPerformed
         // ignore while a connection is already being opened - the combo is
         // disabled meanwhile, this is just a second line of defense.
@@ -894,6 +1049,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         connectAsync(jdr, jcc);
     }//GEN-LAST:event_cboConnectionActionPerformed
 
+    /**
+     * open the connection manager and apply the connection it returns.
+     */
     private void btnManageConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageConnActionPerformed
         JDBConnectionManager cm = JDBConnectionManager.getInstance();
         cm.setModal(true);
@@ -904,10 +1062,16 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             applyConnection(cm.selectedConnection);
     }//GEN-LAST:event_btnManageConnActionPerformed
 
+    /**
+     * reload the table list for the schema selected in the tree.
+     */
     private void treSchemasValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treSchemasValueChanged
         chkShowViewActionPerformed(null);
     }//GEN-LAST:event_treSchemasValueChanged
 
+    /**
+     * reload the table list of the selected schema, with or without views.
+     */
     private void chkShowViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkShowViewActionPerformed
         // dbmeta is null while a connection is being opened (or after a failure)
         if (dbmeta == null)
@@ -936,6 +1100,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_chkShowViewActionPerformed
 
+    /**
+     * close the database connection and terminate the application.
+     */
     @SuppressWarnings("UseSpecificCatch")
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
         if (dbmeta != null)
@@ -948,13 +1115,37 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * EDT so that the worker never has to read a Swing component.
      */
     private static final class GenerateRequest {
+        /**
+         * the metadata of the open connection.
+         */
         final DBMeta meta;
+        /**
+         * the custom template variables, including the author.
+         */
         final Map<String, String> customVars;
+        /**
+         * the tables selected for generation.
+         */
         final List<DBTable> tables;
+        /**
+         * the templates ticked for generation.
+         */
         final List<JDBTemplate> templates;
         /** already resolved, see {@link AppDirs#resolveOutputDir(String)}. */
         final String outputDir;
 
+        /**
+         * @param meta
+         *            the metadata of the open connection.
+         * @param customVars
+         *            the custom template variables, including the author.
+         * @param tables
+         *            the tables selected for generation.
+         * @param templates
+         *            the templates ticked for generation.
+         * @param outputDir
+         *            the directory the generated files are written to.
+         */
         GenerateRequest(DBMeta meta, Map<String, String> customVars,
                 List<DBTable> tables, List<JDBTemplate> templates, String outputDir) {
             this.meta = meta;
@@ -965,6 +1156,18 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }
 
+    /**
+     * build the worker that generates the code. It reads the columns of every
+     * requested table, then applies each template to each table and writes the
+     * result to the file named by the template's output expression, reporting
+     * its progress to the progress dialog. A failure is logged and reported as
+     * a failed result instead of being thrown.
+     *
+     * @param req
+     *            the values snapshotted on the event dispatch thread; the
+     *            worker must not read any Swing component itself.
+     * @return the worker to hand to a <code>ProcessProgress</code> dialog.
+     */
     private ProcessProgress.Worker getProgressWorker(final GenerateRequest req) {
         return new ProcessProgress.Worker() {
             @Override
@@ -1009,6 +1212,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         };
     }
 
+    /**
+     * run the code generation for the selected tables and the ticked templates
+     * in a modal progress dialog, and offer to open the output directory
+     * afterwards.
+     */
     private void btnGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateActionPerformed
         if (dbmeta == null) {
             UIUtils.error(this, I18n.t("generatorMain.msg.connectFirst"));
@@ -1068,6 +1276,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnGenerateActionPerformed
 
+    /**
+     * open the column view of a table on a double click.
+     */
     private void lstTablesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseClicked
         if (evt.getClickCount() == 2) {
             if (dbmeta == null || tables == null)
@@ -1089,14 +1300,23 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_lstTablesMouseClicked
 
+    /**
+     * show the about dialog.
+     */
     private void btnAckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAckActionPerformed
         showAbout();
     }//GEN-LAST:event_btnAckActionPerformed
 
+    /**
+     * show the template of the hovered row as a tooltip.
+     */
     private void tabTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplatesMouseMoved
         UIUtils.templateTooltip(tabTemplates, 1, evt);
     }//GEN-LAST:event_tabTemplatesMouseMoved
 
+    /**
+     * show the full name of the hovered table as a tooltip.
+     */
     private void lstTablesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseMoved
         int idx = tables == null ? -1 : lstTables.locationToIndex(evt.getPoint());
         if (idx > -1 && idx < tables.size()) {
@@ -1107,15 +1327,24 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_lstTablesMouseMoved
 
+    /**
+     * open the abbreviation mapper.
+     */
     private void btnMapperActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMapperActionPerformed
         JDBAbbreviationMapper.getInstance(this).setVisible(true);
     }//GEN-LAST:event_btnMapperActionPerformed
 
+    /**
+     * store whether the abbreviation mapping is applied when generating.
+     */
     private void chkApplyAbbrActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkApplyAbbrActionPerformed
         conf.setApplyAbbr(chkApplyAbbr.isSelected());
         JDBGenConfig.saveInstance(this);
     }//GEN-LAST:event_chkApplyAbbrActionPerformed
 
+    /**
+     * pick the directory the generated files are written to.
+     */
     private void btnBrowseOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseOutputActionPerformed
         String path = UIUtils.openDirDlg(this, "", true);
         if (!StrUtils.isEmpty(path))
@@ -1123,6 +1352,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }//GEN-LAST:event_btnBrowseOutputActionPerformed
 
     /**
+     * show this window alone for development purposes. The regular entry point
+     * of the application is <code>comart.tools.jdbgen.JDBGenerator</code>.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

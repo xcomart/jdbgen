@@ -33,10 +33,24 @@ import java.awt.Font;
 import javax.swing.UIManager;
 
 /**
+ * Entry point of the JDBGen desktop application. It brings the environment up
+ * in the order the rest of the application expects: legacy data of releases up
+ * to 0.3.0 is migrated into the user data directory, the language is applied,
+ * the look and feel is installed, an update check is run and the main window
+ * {@link comart.tools.jdbgen.ui.JDBGeneratorMain} is finally shown.
  *
  * @author comart
  */
 public class JDBGenerator {
+    /**
+     * start the application. The steps are ordered on purpose: the legacy data
+     * has to be in place before anything reads it, and the language has to be
+     * settled before the first dialog - the master password prompt of
+     * <code>JDBGenConfig</code> - can appear.
+     *
+     * @param args
+     *            command line arguments; they are not evaluated.
+     */
     public static void main(final String[] args) {
         // a release up to 0.3.0 kept the configuration and the driver jars next
         // to the application; they are carried over into the user data

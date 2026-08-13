@@ -35,6 +35,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
+ * A database connection of the configuration: everything needed to open a JDBC
+ * connection plus the templates and the output directory the generator uses for
+ * it. The URL, the user name and the password are stored encrypted with the
+ * master password.
  *
  * @author comart
  */
@@ -44,22 +48,41 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class JDBConnection extends JDBListBase {
+    /** name of the {@link JDBDriver} this connection is opened with. */
     private String driverType;
+    /** JDBC connection URL, stored encrypted. */
     @JsonAdapter(EncryptionAdapter.class)
     private String connectionUrl;
+    /** database user name, stored encrypted. */
     @JsonAdapter(EncryptionAdapter.class)
     private String userName;
+    /** database password, stored encrypted. */
     @JsonAdapter(EncryptionAdapter.class)
     private String userPassword;
+    /** additional properties handed to the JDBC driver on connect. */
     private Map<String, String> connectionProps;
+    /** whether the connection is held open by a periodic keep-alive query. */
     private boolean useKeepAlive;
+    /** keep-alive interval in seconds, as text. */
     private String keepAliveSec;
+    /** the statement executed on every keep-alive round. */
     private String keepAliveQuery;
+    /** the templates generated for the tables of this connection. */
     private List<JDBTemplate> templates;
+    /** directory the generated sources are written to. */
     private String outputDir;
+    /** author name made available to the templates. */
     private String author;
+    /** user defined variables made available to the templates. */
     private Map<String, String> customVars;
     
+    /**
+     * whether this connection carries the settings needed to open it: a driver
+     * type, a connection URL, an output directory and, when the keep-alive is
+     * turned on, a keep-alive query.
+     *
+     * @return <code>true</code> when the connection may be used as it is.
+     */
     public boolean validate() {
         return !StrUtils.isEmpty(driverType) &&
                 !StrUtils.isEmpty(connectionUrl) &&

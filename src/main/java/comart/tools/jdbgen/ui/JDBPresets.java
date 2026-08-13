@@ -46,24 +46,62 @@ import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * preset management dialog. A preset is a named list of
+ * <code>JDBTemplate</code> entries that is stored in the application
+ * configuration and can be reused by any connection. The left side lists the
+ * presets, the right side edits the templates of the selected one.
+ * <p>
+ * The dialog is opened on top of the connection editor and keeps a reference to
+ * that editor's template table, so the selected preset can be copied down into
+ * the connection and the connection's templates can be lifted up into a new
+ * preset.
  *
  * @author comart
  */
 @Slf4j
 public class JDBPresets extends JDialog {
 
+    /**
+     * the model of the template table of the selected preset.
+     */
     private final DefaultTableModel templateModel;
+    /**
+     * the model behind the preset list, holding the preset names.
+     */
     private final DefaultListModel presetModel;
+    /**
+     * the presets by name, used by the list cell renderer to find the icon
+     * of an entry.
+     */
     private final HashMap<String, JDBPreset> presetMap;
     
+    /**
+     * the configuration the presets are read from and written back to.
+     */
     private final JDBGenConfig conf = JDBGenConfig.getInstance();
     
+    /**
+     * the live preset list of the configuration. Every edit of this dialog
+     * goes into this list, which is what gets saved.
+     */
     private final List<JDBPreset> presets = conf.getPresets();
     
+    /**
+     * the template table of the connection editor that opened this dialog,
+     * or <code>null</code> when the dialog runs stand-alone.
+     */
     private final JTable connTpls;
     /**
-     * Creates new form JDBPresets
+     * Creates new form JDBPresets. The dialog is filled with the presets of the
+     * current configuration and stays connected to the given table for the
+     * apply/import buttons.
+     *
      * @param connTpls
+     *            the template table of the connection editor that opened this
+     *            dialog. Its rows are the source of "new preset from the
+     *            connection" and the destination of "apply preset". May be
+     *            <code>null</code> when the dialog is opened stand-alone, in
+     *            which case those two buttons must not be used.
      */
     public JDBPresets(JTable connTpls) {
         initComponents();
@@ -99,6 +137,9 @@ public class JDBPresets extends JDialog {
         this.pack();
     }
     
+    /**
+     * apply the font icons of every button of this dialog.
+     */
     private void applyIcons() {
         UIUtils.applyIcon(btnNew, FontAwesome.PLUS);
         UIUtils.applyIcon(btnClone, FontAwesome.CLONE);
@@ -131,6 +172,14 @@ public class JDBPresets extends JDialog {
             colModel.getColumn(i).setHeaderValue(I18n.t(keys[i]));
     }
 
+    /**
+     * show the template of the given table row in the editor fields below the
+     * table, or clear them when nothing is selected.
+     *
+     * @param row
+     *            the selected row of <code>tabTemplates</code>, or a negative
+     *            value for "no selection".
+     */
     private void setTemplate(int row) {
         if (row > -1) {
             txtTemplateName.setText((String)tabTemplates.getValueAt(row, 0));
@@ -463,6 +512,9 @@ public class JDBPresets extends JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * create a new preset from the templates of the connection editor.
+     */
     private void btnNewFromConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewFromConnActionPerformed
         // clear selection
         btnNewActionPerformed(evt);
@@ -474,6 +526,9 @@ public class JDBPresets extends JDialog {
         }
     }//GEN-LAST:event_btnNewFromConnActionPerformed
 
+    /**
+     * add an empty preset with a generated name and select it.
+     */
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
         JDBPreset preset = new JDBPreset();
         preset.setName(NamingUtils.nextNameOf(presets, I18n.t("presets.msg.newName")));
@@ -484,6 +539,9 @@ public class JDBPresets extends JDialog {
         lstPresets.setSelectedIndex(presets.size()-1);
     }//GEN-LAST:event_btnNewActionPerformed
 
+    /**
+     * add a copy of the selected preset and select it.
+     */
     private void btnCloneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneActionPerformed
         int idx = lstPresets.getSelectedIndex();
         if (idx > -1) {
@@ -502,6 +560,9 @@ public class JDBPresets extends JDialog {
         }
     }//GEN-LAST:event_btnCloneActionPerformed
 
+    /**
+     * remove the selected preset after asking the user.
+     */
     private void btnDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelActionPerformed
         int idx = lstPresets.getSelectedIndex();
         if (idx > -1) {
@@ -522,10 +583,16 @@ public class JDBPresets extends JDialog {
         }
     }//GEN-LAST:event_btnDelActionPerformed
 
+    /**
+     * clear the template selection, so the editor fields describe a new one.
+     */
     private void btnNewTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewTemplateActionPerformed
         tabTemplates.clearSelection();
     }//GEN-LAST:event_btnNewTemplateActionPerformed
 
+    /**
+     * remove the selected template from the table.
+     */
     private void btnDelTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelTemplateActionPerformed
         int idx = tabTemplates.getSelectedRow();
         if (idx > -1) {
@@ -534,6 +601,16 @@ public class JDBPresets extends JDialog {
         }
     }//GEN-LAST:event_btnDelTemplateActionPerformed
 
+    /**
+     * write the template editor fields back into the template table. An
+     * existing selection is updated in place, otherwise a row is appended and
+     * selected. An empty editor without a selection is not an error, it simply
+     * means there is nothing to store.
+     *
+     * @return <code>true</code> if the table now reflects the editor,
+     *         <code>false</code> if a required field was left empty, in which
+     *         case the user has already been told about it.
+     */
     private boolean saveTemplate() {
         int idx = tabTemplates.getSelectedRow();
         String tname = txtTemplateName.getText();
@@ -560,10 +637,16 @@ public class JDBPresets extends JDialog {
         return true;
     }
     
+    /**
+     * store the template editor fields into the template table.
+     */
     private void btnSaveTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveTemplateActionPerformed
         saveTemplate();
     }//GEN-LAST:event_btnSaveTemplateActionPerformed
 
+    /**
+     * replace the templates of the connection editor with the ones shown here.
+     */
     private void btnApplyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApplyActionPerformed
         DefaultTableModel connTplModel = (DefaultTableModel)connTpls.getModel();
         connTplModel.setRowCount(0);
@@ -576,11 +659,17 @@ public class JDBPresets extends JDialog {
         
     }//GEN-LAST:event_btnApplyActionPerformed
 
+    /**
+     * close the dialog, discarding whatever has not been saved.
+     */
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         setVisible(false);
             
     }//GEN-LAST:event_btnCancelActionPerformed
 
+    /**
+     * load the selected preset into the name field and the template table.
+     */
     private void lstPresetsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstPresetsValueChanged
         // TODO add your handling code here:
         int idx = lstPresets.getSelectedIndex();
@@ -592,6 +681,16 @@ public class JDBPresets extends JDialog {
         }
     }//GEN-LAST:event_lstPresetsValueChanged
 
+    /**
+     * store the edited preset and persist the configuration. The pending
+     * template edit is saved first, then the name is checked for emptiness and
+     * for collisions with the other presets. On success the preset receives the
+     * rows of the template table and the configuration is written to disk.
+     *
+     * @return <code>true</code> if the preset was stored,
+     *         <code>false</code> if a validation error was reported to the
+     *         user instead.
+     */
     private boolean savePreset() {
         if (!saveTemplate())
             return false;
@@ -640,15 +739,24 @@ public class JDBPresets extends JDialog {
         return false;
     }
     
+    /**
+     * store the edited preset and save the configuration.
+     */
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         savePreset();
     }//GEN-LAST:event_btnSaveActionPerformed
 
+    /**
+     * show the template of the hovered row as a tooltip.
+     */
     private void tabTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplatesMouseMoved
         UIUtils.templateTooltip(tabTemplates, 0, evt);
     }//GEN-LAST:event_tabTemplatesMouseMoved
 
     /**
+     * show this dialog alone for development purposes. The virtual machine is
+     * terminated as soon as the dialog is closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

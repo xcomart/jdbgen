@@ -28,18 +28,46 @@ import java.util.List;
 import javax.swing.SwingWorker;
 
 /**
+ * undecorated progress dialog for long running background tasks such as the
+ * driver download of the maven explorer. The dialog shows a progress bar and
+ * a log area which are fed by an attached <code>Worker</code>, and hides
+ * itself as soon as that worker is done.
  *
  * @author comart
  */
 public class ProcessProgress extends javax.swing.JDialog {
     
+    /**
+     * background task driving a <code>ProcessProgress</code> dialog.
+     * Subclasses only have to implement <code>doInBackground()</code>, report
+     * their progress with <code>setProgress(int)</code> and their log lines
+     * with <code>publish(String...)</code>, and return whether the task
+     * succeeded. The dialog is wired to the worker by the
+     * <code>ProcessProgress</code> constructor.
+     */
     public static abstract class Worker extends SwingWorker<Boolean, String> {
+        /** dialog fed by this worker, assigned by the
+         * <code>ProcessProgress</code> constructor. */
         ProcessProgress parent = null;
         
+        /**
+         * create a worker which is not attached to a dialog yet. The dialog
+         * is assigned when the worker is passed to the
+         * <code>ProcessProgress</code> constructor.
+         */
         public Worker() {
             
         }
         
+        /**
+         * publish the log lines produced since the last call on the event
+         * dispatch thread. The progress bar is set to the current progress
+         * value, every chunk is appended as one line to the log area and the
+         * caret is moved to the end of the text.
+         *
+         * @param chunks
+         *            log lines published by <code>doInBackground()</code>.
+         */
         @Override
         protected void process(List<String> chunks) {
             parent.progStatus.setValue(getProgress());
@@ -50,6 +78,12 @@ public class ProcessProgress extends javax.swing.JDialog {
             parent.txtProcessLog.setSelectionEnd(last);
         }
 
+        /**
+         * store the result of the task in the dialog and hide it. The value
+         * returned by <code>doInBackground()</code> is written to the
+         * <code>result</code> field of the dialog, <code>false</code> is
+         * stored when the task failed with an exception.
+         */
         @Override
         protected void done() {
             boolean bStatus = false;
@@ -63,12 +97,32 @@ public class ProcessProgress extends javax.swing.JDialog {
         } 
     }
     
+    /**
+     * outcome of the attached worker, valid once the dialog has been hidden.
+     * <code>true</code> when the worker returned <code>true</code>,
+     * <code>false</code> when it failed or when it has not run yet.
+     */
     public boolean result = false;
     
+    /** task started by <code>start()</code>, <code>null</code> when the dialog
+     * was created without a worker. */
     private Worker worker = null;
 
     /**
      * Creates new form ProcessProgress
+     * <p>
+     * The dialog is created undecorated, centered on <code>parent</code> and
+     * attached to <code>worker</code> so that the worker can feed the
+     * progress bar and the log area. The worker is not started here, call
+     * <code>start()</code> for that.
+     *
+     * @param parent
+     *            frame the dialog belongs to and is centered on.
+     * @param modal
+     *            <code>true</code> to create a modal dialog.
+     * @param worker
+     *            background task to be attached, may be <code>null</code> in
+     *            which case the dialog shows no progress at all.
      */
     @SuppressWarnings("LeakingThisInConstructor")
     public ProcessProgress(java.awt.Frame parent, boolean modal, Worker worker) {
@@ -86,6 +140,11 @@ public class ProcessProgress extends javax.swing.JDialog {
         this.pack();
     }
     
+    /**
+     * start the attached background task. Nothing happens when no worker was
+     * given to the constructor. Call this before the dialog is made visible,
+     * as a modal dialog blocks the caller until the worker is done.
+     */
     public void start() {
         if (worker != null)
             worker.execute();
@@ -135,6 +194,11 @@ public class ProcessProgress extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     /**
+     * stand alone entry point which shows this dialog on its own, used to
+     * preview the form during development. The dialog is created without a
+     * worker, the Nimbus look and feel is selected when available and the
+     * virtual machine is terminated once the dialog is closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

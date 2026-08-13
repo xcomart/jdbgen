@@ -29,14 +29,26 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
+ * A named set of templates that can be applied to a connection in one step, so
+ * that a frequently used combination of templates does not have to be entered
+ * again for every connection.
  *
  * @author comart
  */
 @Data
 @EqualsAndHashCode(callSuper=true)
 public class JDBPreset extends JDBListBase {
+    /** the templates this preset installs on a connection. */
     private List<JDBTemplate> templates;
     
+    /**
+     * a deep copy of this preset: the template list and every template in it
+     * are copied as well, so the clone can be edited independently.
+     *
+     * @return the cloned preset, always with a non <code>null</code> template
+     *         list.
+     * @throws CloneNotSupportedException if cloning fails.
+     */
     @Override
     public Object clone() throws CloneNotSupportedException {
         JDBPreset res = (JDBPreset)super.clone();

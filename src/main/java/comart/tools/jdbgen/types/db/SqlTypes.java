@@ -9,11 +9,16 @@ import java.sql.Types;
 import java.util.HashMap;
 
 /**
+ * Lookup tables translating the SQL type codes of <code>java.sql.Types</code>
+ * into the JDBC type name and into the Java type a generated model uses for the
+ * column.
  *
  * @author comart
  */
 public final class SqlTypes {
+    /** JDBC type name per SQL type code. */
     private static final HashMap<Integer,String> jdbcTypes = new HashMap<>();
+    /** Java type name per SQL type code. */
     private static final HashMap<Integer,String> javaTypes = new HashMap<>();
     static {
         jdbcTypes.put(Types.ARRAY, "ARRAY");
@@ -91,10 +96,24 @@ public final class SqlTypes {
         javaTypes.put(Types.VARCHAR, "String");
     }
     
+    /**
+     * the JDBC type name of an SQL type code.
+     *
+     * @param sqlType a type code of <code>java.sql.Types</code>.
+     * @return the type name, for example <code>"VARCHAR"</code>, or
+     *         <code>null</code> for an unknown code.
+     */
     public static String getJDBCType(int sqlType) {
         return jdbcTypes.get(sqlType);
     }
     
+    /**
+     * the Java type a generated model uses for an SQL type code.
+     *
+     * @param sqlType a type code of <code>java.sql.Types</code>.
+     * @return the Java type name, for example <code>"String"</code>, or
+     *         <code>null</code> for an unknown code.
+     */
     public static String getJavaType(int sqlType) {
         return javaTypes.get(sqlType);
     }

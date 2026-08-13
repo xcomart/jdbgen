@@ -15,13 +15,30 @@ import javax.swing.SwingUtilities;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * acknowledgements dialog, reachable from the about dialog. The dialog shows
+ * the read only content of the bundled <code>/acknowledgements.txt</code>
+ * resource, which lists the third party works used by the application. A
+ * single shared instance is kept and reused.
  *
  * @author comart
  */
 @Slf4j
 public class Acknowledgements extends javax.swing.JDialog {
 
+    /** the shared dialog instance, created on the first call of
+     * <code>getInstance(Frame)</code>. */
     private static Acknowledgements INSTANCE = null;
+    /**
+     * return the shared acknowledgements dialog. The dialog is created as a
+     * modal dialog of <code>parent</code> and registered for look and feel
+     * updates on the first call, later calls reuse that instance regardless of
+     * <code>parent</code>. The application icon and the component tree are
+     * refreshed on every call.
+     *
+     * @param parent
+     *            frame the dialog is created for, used on the first call only.
+     * @return the shared <code>Acknowledgements</code> instance.
+     */
     public static synchronized Acknowledgements getInstance(Frame parent) {
         if (INSTANCE == null) {
             INSTANCE = new Acknowledgements(parent, true);
@@ -33,12 +50,27 @@ public class Acknowledgements extends javax.swing.JDialog {
         return INSTANCE;
     }
     
+    /**
+     * reapply the current look and feel to the whole dialog. Called after a
+     * theme or font change so that the already created dialog is redrawn with
+     * the new settings.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
     }
     
     /**
      * Creates new form Acknowledgements
+     * <p>
+     * The dialog is centered on <code>parent</code> and the bundled
+     * <code>/acknowledgements.txt</code> resource is read as UTF-8 into the
+     * read only text area, an unreadable resource is logged and leaves the
+     * text area empty.
+     *
+     * @param parent
+     *            frame the dialog belongs to and is centered on.
+     * @param modal
+     *            <code>true</code> to create a modal dialog.
      */
     private Acknowledgements(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -125,12 +157,18 @@ public class Acknowledgements extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /** hide the dialog when the ok button is pressed. */
     private void btnOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOkActionPerformed
         // TODO add your handling code here:
         this.setVisible(false);
     }//GEN-LAST:event_btnOkActionPerformed
 
     /**
+     * stand alone entry point which shows this dialog on its own, used to
+     * preview the form during development. The Nimbus look and feel is
+     * selected when available and the virtual machine is terminated once the
+     * dialog is closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

@@ -52,6 +52,11 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
+ * The whole application configuration, held as a singleton and stored as a
+ * single JSON file below the user data directory. The connection URL, user name
+ * and password of every connection are encrypted with a master password, which
+ * is asked for once while the singleton is created; everything else is plain
+ * JSON.
  *
  * @author comart
  */
@@ -62,13 +67,21 @@ public class JDBGenConfig {
     static final String SAMPLE_DB_FILE = "sample_h2.db.mv.db";
     /** the H2 database name the sample connection opens, without a suffix. */
     static final String SAMPLE_DB_NAME = "sample_h2.db";
+    /** the singleton, built on the first call of {@link #getInstance(boolean)}. */
     private static JDBGenConfig INSTANCE = null;
+    /** whether the user interface uses the dark theme. */
     private boolean isDarkUI = false;
+    /** the configured database connections. */
     private List<JDBConnection> connections;
+    /** the configured JDBC drivers, predefined ones included. */
     private List<JDBDriver> drivers;
+    /** the configured template presets. */
     private List<JDBPreset> presets;
+    /** the abbreviation rules applied while identifiers are turned into names. */
     private List<JDBAbbr> abbrs = new ArrayList<>();
+    /** URLs of the Maven repository the driver jars are searched and downloaded from. */
     private MavenConfig maven;
+    /** whether {@link #abbrs} is applied at all. */
     private boolean applyAbbr = false;
     /**
      * user interface language: <code>null</code>, an empty value or
@@ -77,6 +90,13 @@ public class JDBGenConfig {
      */
     private String language = null;
 
+    /**
+     * the configuration singleton, loading it from the configuration file on
+     * first use.
+     *
+     * @return the shared configuration instance.
+     * @see #getInstance(boolean)
+     */
     public static JDBGenConfig getInstance() {
         return getInstance(false);
     }
@@ -85,6 +105,7 @@ public class JDBGenConfig {
      * The configuration file, below the user data directory of the operating
      * system - the installation directory may well be read only.
      *
+     * @return the configuration file, which need not exist yet.
      * @see AppDirs#userDataDir()
      */
     public static File configFile() {
@@ -95,6 +116,7 @@ public class JDBGenConfig {
      * Read the <code>language</code> setting out of the configuration file,
      * without asking for the master password.
      *
+     * @return the stored language tag, or <code>null</code> when there is none.
      * @see #peekLanguage(File)
      */
     public static String peekLanguage() {
@@ -109,6 +131,7 @@ public class JDBGenConfig {
      * fields of the configuration are encrypted, so the file parses as plain
      * JSON and this single entry can be read without a password.</p>
      *
+     * @param f the configuration file to read, may be <code>null</code>.
      * @return the stored language tag, or <code>null</code> when there is no
      *         configuration, it cannot be parsed or it carries no language.
      */
@@ -135,6 +158,24 @@ public class JDBGenConfig {
     }
 
 
+    /**
+     * the configuration singleton, creating it on first use.
+     *
+     * <p>Unless <code>useDefault</code> is given, the master password is asked
+     * for and the configuration file is read with it; a wrong password may be
+     * retried as often as the user wants, and the existing file is only
+     * replaced by the built-in default configuration after the user explicitly
+     * agrees to it. When the configuration still carries passwords in the
+     * superseded encryption format, it is rewritten so that they are upgraded
+     * in place.</p>
+     *
+     * <p>The method terminates the application when the user cancels the
+     * password prompt or the default configuration cannot be built.</p>
+     *
+     * @param useDefault <code>true</code> to build the configuration from the
+     *                   bundled defaults without reading or writing any file.
+     * @return the shared configuration instance.
+     */
     public static synchronized JDBGenConfig getInstance(boolean useDefault) {
         if (INSTANCE == null) {
             File f = configFile();
@@ -225,6 +266,9 @@ public class JDBGenConfig {
      * the technical detail of a failure, appended to a translated message. It
      * is not translated itself: the exception text comes from the JDK or from
      * a driver.
+     *
+     * @param t the failure to describe.
+     * @return the simple class name of the exception and its localized message.
      */
     private static String describe(Throwable t) {
         return t.getClass().getSimpleName() + ": " + t.getLocalizedMessage();
@@ -238,6 +282,9 @@ public class JDBGenConfig {
      * database and the generated sources - lives below the user data
      * directory, which is writable even when the application is installed
      * below <code>C:\Program Files</code>.</p>
+     *
+     * @return a connection opening the bundled sample H2 database with the
+     *         three sample templates.
      */
     static JDBConnection createSampleConnection() {
         JDBConnection jcon = new JDBConnection();
@@ -260,6 +307,12 @@ public class JDBGenConfig {
         return jcon;
     }
 
+    /**
+     * the absolute path of a template shipped with the installation.
+     *
+     * @param name file name of the template below the templates directory.
+     * @return the absolute path of the template file.
+     */
     private static String templatePath(String name) {
         return AppDirs.installResourceFile("templates/" + name).getAbsolutePath();
     }
@@ -274,6 +327,8 @@ public class JDBGenConfig {
      * <p>A release without the sample database - or a copy that fails - only
      * means that the sample connection has nothing to open yet, which is
      * reported when it is used.</p>
+     *
+     * @return the database path to put behind <code>jdbc:h2:</code>.
      */
     private static String sampleDatabaseUrlPath() {
         File target = AppDirs.userDataFile(SAMPLE_DB_FILE);
@@ -294,6 +349,11 @@ public class JDBGenConfig {
      * write the freshly built default configuration over an existing one, in a
      * way that can never leave the user without a configuration file: the old
      * file is moved aside first and moved back when the write fails.
+     *
+     * <p>The application is terminated when neither the new nor the previous
+     * configuration can be put in place.</p>
+     *
+     * @param f the configuration file to write.
      */
     private static void replaceWithDefaultConfig(File f) {
         Path backup = null;
@@ -332,6 +392,7 @@ public class JDBGenConfig {
      * move an existing, unloadable configuration file aside so that writing a
      * fresh default configuration cannot destroy the user's data.
      *
+     * @param f the configuration file to move aside.
      * @return the path the configuration was moved to, or null when it could
      *         not be moved - the caller must not overwrite it in that case.
      */
@@ -353,6 +414,11 @@ public class JDBGenConfig {
     /**
      * undo {@link #backupExistingConfig(File)} after a failed attempt to write
      * a replacement configuration.
+     *
+     * @param backup the path {@link #backupExistingConfig(File)} returned.
+     * @param f the configuration file the backup is moved back to.
+     * @return <code>true</code> when the previous configuration is in place
+     *         again.
      */
     static boolean restoreBackup(Path backup, File f) {
         if (backup == null || !Files.isRegularFile(backup))
@@ -370,6 +436,12 @@ public class JDBGenConfig {
     /**
      * fill in collections omitted from the configuration file, so that callers
      * never have to null-check them.
+     *
+     * <p>The lists of the configuration itself and the collections of every
+     * connection, driver and preset in them are replaced by empty ones where
+     * they are missing.</p>
+     *
+     * @param conf the configuration to fill in, may be <code>null</code>.
      */
     private static void normalize(JDBGenConfig conf) {
         if (conf == null)
@@ -391,6 +463,15 @@ public class JDBGenConfig {
         });
     }
 
+    /**
+     * write the configuration singleton back to the configuration file as
+     * pretty printed JSON. A failure is logged and reported to the user rather
+     * than thrown.
+     *
+     * @param parent unused; kept so that callers can pass the window the save
+     *               was triggered from.
+     * @return <code>true</code> when the configuration was written.
+     */
     public static synchronized boolean saveInstance(Container parent) {
         Gson gson = (new GsonBuilder()).setPrettyPrinting().create();
 

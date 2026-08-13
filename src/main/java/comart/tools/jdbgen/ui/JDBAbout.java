@@ -40,15 +40,34 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 /**
+ * about dialog of the application. The dialog shows the application icon, the
+ * name and the running version, and offers clickable links to the author mail
+ * address and to the project page as well as a button which opens the
+ * acknowledgements dialog. A single shared instance is kept and reused.
  *
  * @author comart
  */
 public class JDBAbout extends javax.swing.JDialog {
     
+    /** logger of this dialog, used when the application icon cannot be read. */
     private static final Logger logger = Logger.getLogger(JDBAbout.class.getName());
 
 
+    /** the shared dialog instance, created on the first call of
+     * <code>getInstance(Frame)</code>. */
     private static JDBAbout INSTANCE = null;
+    /**
+     * return the shared about dialog. The dialog is created as a modal dialog
+     * of <code>parent</code> and registered for look and feel updates on the
+     * first call, later calls reuse that instance. The application icon and
+     * the component tree are refreshed and the dialog is centered on
+     * <code>parent</code> on every call.
+     *
+     * @param parent
+     *            frame the dialog is centered on, used as owner on the first
+     *            call.
+     * @return the shared <code>JDBAbout</code> instance.
+     */
     public static synchronized JDBAbout getInstance(Frame parent) {
         if (INSTANCE == null) {
             INSTANCE = new JDBAbout(parent, true);
@@ -61,6 +80,11 @@ public class JDBAbout extends javax.swing.JDialog {
         return INSTANCE;
     }
     
+    /**
+     * reapply the current look and feel to the whole dialog. Called after a
+     * theme or font change, the accent color of the mail and project links is
+     * taken from the new look and feel afterwards.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
         lblEmail.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
@@ -69,6 +93,14 @@ public class JDBAbout extends javax.swing.JDialog {
     
     /**
      * Creates new form JDBAbout
+     * <p>
+     * The version label is filled with the running application version and the
+     * application icon resource is loaded and scaled into the image label.
+     *
+     * @param parent
+     *            frame the dialog belongs to.
+     * @param modal
+     *            <code>true</code> to create a modal dialog.
      */
     public JDBAbout(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
@@ -79,6 +111,11 @@ public class JDBAbout extends javax.swing.JDialog {
         pack();
     }
     
+    /**
+     * read the bundled application icon and show it in the image label. The
+     * image is scaled smoothly to the size of the label, a resource which
+     * cannot be read is logged and leaves the label empty.
+     */
     private void loadAppIcon() {
         try (InputStream is = getClass().getResourceAsStream("/icons/generic.png") ){
             BufferedImage img = ImageIO.read(is);
@@ -270,10 +307,12 @@ public class JDBAbout extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /** open the author mail address in the default mail client. */
     private void lblEmailMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblEmailMouseClicked
         PlatformUtils.openURL("mailto:xcomart@gmail.com");
     }//GEN-LAST:event_lblEmailMouseClicked
 
+    /** show the acknowledgements dialog, modal and centered on this dialog. */
     private void btnAckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAckActionPerformed
         JFrame dummy = new JFrame();
         Acknowledgements ack = Acknowledgements.getInstance(dummy);
@@ -282,15 +321,22 @@ public class JDBAbout extends javax.swing.JDialog {
         ack.setVisible(true);
     }//GEN-LAST:event_btnAckActionPerformed
 
+    /** hide the dialog when the ok button is pressed. */
     private void btnOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOkActionPerformed
         setVisible(false);
     }//GEN-LAST:event_btnOkActionPerformed
 
+    /** open the project page shown by the label in the default browser. */
     private void lblGithubMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblGithubMouseClicked
         PlatformUtils.openURL(lblGithub.getText());
     }//GEN-LAST:event_lblGithubMouseClicked
 
     /**
+     * stand alone entry point which shows this dialog on its own, used to
+     * preview the form during development. The Nimbus look and feel is
+     * selected when available and the virtual machine is terminated once the
+     * dialog is closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

@@ -55,19 +55,59 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * JDBC driver management dialog. It lists the configured drivers and edits the
+ * selected one: the jar file and driver class to load, the url template and the
+ * icon shown for it, the default connection properties, and the optional
+ * vendor specific queries that replace the standard metadata lookups.
+ * <p>
+ * Drivers that ship with the application are marked as stock items; their name,
+ * class and icon are read only and they cannot be deleted, but they can be
+ * cloned into an editable copy. The dialog is a singleton, see
+ * {@link #getInstance()}, and is shown modally from the connection manager.
  *
  * @author comart
  */
 @Slf4j
 public class JDBDriverManager extends JDialog {
 
+    /**
+     * the live driver list of the configuration. Every edit of this dialog
+     * goes into this list, which is what gets saved.
+     */
     private final List<JDBDriver> drivers;
+    /**
+     * the model behind the driver list, holding the driver names.
+     */
     private final DefaultListModel<String> listModel;
+    /**
+     * the model of the connection property table of the selected driver.
+     */
     private final DefaultTableModel tableModel;
+    /**
+     * <code>true</code> once a driver has been saved, so that the caller knows
+     * it has to reload the driver list. Reset by {@link #getInstance()}.
+     */
     public boolean changed = false;
+    /**
+     * guard against feedback while the property table is being filled
+     * programmatically. While <code>false</code>, the table model listener
+     * neither writes back into the selected driver nor appends a trailing
+     * empty row.
+     */
     private boolean autoreset = true;
 
+    /**
+     * the single instance of this dialog, see {@link #getInstance()}.
+     */
     private static JDBDriverManager INSTANCE = null;
+    /**
+     * the single instance of this dialog, created on first use. The returned
+     * instance is refreshed for the current look and feel and its
+     * {@link #changed} flag is cleared, so that a caller can tell whether the
+     * driver list was edited while the dialog was open.
+     *
+     * @return the shared driver manager dialog, never <code>null</code>.
+     */
     public static synchronized JDBDriverManager getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new JDBDriverManager();
@@ -81,7 +121,9 @@ public class JDBDriverManager extends JDialog {
     }
 
     /**
-     * Creates new form JDBDriverManager
+     * Creates new form JDBDriverManager. Loads the drivers of the current
+     * configuration into the list and registers the listener that writes the
+     * property table back into the selected driver.
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     private JDBDriverManager() {
@@ -118,16 +160,35 @@ public class JDBDriverManager extends JDialog {
         this.pack();
     }
     
+    /**
+     * convert the rows of the property table into a map, dropping the rows
+     * with an empty key such as the trailing input row.
+     *
+     * @return the connection properties currently shown, in table order.
+     */
     private Map<String, String> applyToPropsMap() {
         return UIUtils.applyTableToMap(tableModel);
     }
     
+    /**
+     * preselect a driver in the list before the dialog is shown. A negative
+     * index leaves the current selection alone.
+     *
+     * @param index
+     *            the index of the driver to select in the driver list.
+     */
     public void setDriverIndex(int index) {
         if (index > -1) {
             lstDrivers.setSelectedIndex(index);
         }
     }
 
+    /**
+     * rebuild the user interface delegates of every component of this dialog
+     * and restore what a look and feel change resets: the link style of the
+     * download button and the icon renderer of the driver list. Needed because
+     * the dialog outlives a look and feel change made in the main window.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
         btnDownJdbc.setBorder((Border)null);
@@ -138,6 +199,9 @@ public class JDBDriverManager extends JDialog {
                         .findFirst().orElse(null)));
     }
 
+    /**
+     * apply the font icons of every button of this dialog.
+     */
     private void applyIcons() {
         UIUtils.applyIcon(btnNewDriver, FontAwesome.PLUS);
         UIUtils.applyIcon(btnCloneDriver, FontAwesome.CLONE);
@@ -157,6 +221,10 @@ public class JDBDriverManager extends JDialog {
         UIUtils.addIcon(btnSave, FontAwesome.CHECK);
     }
 
+    /**
+     * register the window listener that cancels the dialog when its window is
+     * closed and raises it when it is activated.
+     */
     private void eventSetup() {
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -172,6 +240,10 @@ public class JDBDriverManager extends JDialog {
         // guarded) table model listener registered in the constructor.
     }
     
+    /**
+     * clear the selection and every editor field, leaving the dialog in the
+     * state of "no driver selected" with all read only fields editable again.
+     */
     private void resetControls() {
         lstDrivers.clearSelection();
         txtDriverClass.setText("");
@@ -688,10 +760,18 @@ public class JDBDriverManager extends JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * close the dialog, discarding whatever has not been saved.
+     */
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         setVisible(false);
     }//GEN-LAST:event_btnCancelActionPerformed
 
+    /**
+     * validate the editor fields, store them into the driver, save the
+     * configuration and close the dialog. The first failing check is reported
+     * and focuses its field.
+     */
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         int idx = lstDrivers.getSelectedIndex();
         boolean isNameExists;
@@ -767,6 +847,13 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_btnSaveActionPerformed
 
+    /**
+     * apply a change to the driver that is currently selected in the list.
+     * Does nothing when there is no selection.
+     *
+     * @param cons
+     *            the change to perform on the selected driver.
+     */
     private void updateDriver(Consumer<JDBDriver> cons) {
         int idx = lstDrivers.getSelectedIndex();
         if (idx < 0) return;
@@ -774,6 +861,10 @@ public class JDBDriverManager extends JDialog {
         cons.accept(driver);
     }
     
+    /**
+     * load the selected driver into the editor fields. The identifying fields
+     * of a driver shipped with the application stay read only.
+     */
     private void lstDriversValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstDriversValueChanged
         int idx = lstDrivers.getSelectedIndex();
         if (idx < 0) return;
@@ -823,6 +914,9 @@ public class JDBDriverManager extends JDialog {
         UIUtils.tableSetLastEmpty(tableModel);
     }//GEN-LAST:event_lstDriversValueChanged
 
+    /**
+     * add a driver with a generated name and the generic icon, and select it.
+     */
     private void btnNewDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewDriverActionPerformed
 //        resetControls();
         JDBDriver driver = new JDBDriver();
@@ -834,6 +928,9 @@ public class JDBDriverManager extends JDialog {
         lstDrivers.setSelectedIndex(drivers.size()-1);
     }//GEN-LAST:event_btnNewDriverActionPerformed
 
+    /**
+     * add an editable copy of the selected driver and select it.
+     */
     private void btnCloneDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneDriverActionPerformed
         int idx = lstDrivers.getSelectedIndex();
         if (idx >= 0) {
@@ -853,6 +950,9 @@ public class JDBDriverManager extends JDialog {
 
     }//GEN-LAST:event_btnCloneDriverActionPerformed
 
+    /**
+     * remove the selected driver unless it is shipped with the application.
+     */
     private void btnDelDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelDriverActionPerformed
         int idx = lstDrivers.getSelectedIndex();
         if (idx >= 0) {
@@ -865,6 +965,9 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_btnDelDriverActionPerformed
 
+    /**
+     * remove the selected connection property.
+     */
     private void btnDelPropActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelPropActionPerformed
         int idx = tabProps.getSelectedRow();
         if (idx > -1) {
@@ -872,6 +975,9 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_btnDelPropActionPerformed
 
+    /**
+     * pick the icon shown for this driver.
+     */
     private void btnBrowseIconActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseIconActionPerformed
         String fpath = UIUtils.openIconDlg(this, "");
         if (!StrUtils.isEmpty(fpath)) {
@@ -879,6 +985,10 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_btnBrowseIconActionPerformed
 
+    /**
+     * offer the driver classes found in the selected jar in a popup menu, and
+     * store the picked one in the driver.
+     */
     private void txtDriverClassMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDriverClassMouseClicked
         if (ObjectUtils.isNotEmpty(txtJarFile.getText())) {
             List<String> clazz = ClassUtils.getDrivers(txtJarFile.getText());
@@ -897,6 +1007,10 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_txtDriverClassMouseClicked
 
+    /**
+     * download the JDBC jar of this driver through the maven explorer, using
+     * the driver's default query as the initial search.
+     */
     private void btnDownJdbcActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownJdbcActionPerformed
         MavenExplorer me = MavenExplorer.getInstance();
         EventQueue.invokeLater(() -> {
@@ -929,6 +1043,11 @@ public class JDBDriverManager extends JDialog {
 //        }
     }//GEN-LAST:event_btnDownJdbcActionPerformed
 
+    /**
+     * pick the JDBC jar, filtered to jar and zip files and starting in the
+     * driver directory. A jar below the user data or the installation directory
+     * is stored relative to it.
+     */
     private void btnBrowseJarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseJarActionPerformed
         JFileChooser fc = new JFileChooser();
         fc.setCurrentDirectory(AppDirs.driversDir());
@@ -963,43 +1082,70 @@ public class JDBDriverManager extends JDialog {
         }
     }//GEN-LAST:event_btnBrowseJarActionPerformed
 
+    /**
+     * enable the table comment query along with its check box.
+     */
     private void chkTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTableCommentsActionPerformed
         txtTableComments.setEnabled(chkTableComments.isSelected());
     }//GEN-LAST:event_chkTableCommentsActionPerformed
 
+    /**
+     * enable the column comment query along with its check box.
+     */
     private void chkColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnCommentsActionPerformed
         txtColumnComments.setEnabled(chkColumnComments.isSelected());
     }//GEN-LAST:event_chkColumnCommentsActionPerformed
 
+    /**
+     * open the documentation of the table comment query.
+     */
     private void btnTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableCommentsActionPerformed
         // TODO add your handling code here:
         PlatformUtils.openDoc("custom-queries.md#get-table-comments-sql");
     }//GEN-LAST:event_btnTableCommentsActionPerformed
 
+    /**
+     * open the documentation of the column comment query.
+     */
     private void btnColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnCommentsActionPerformed
         // TODO add your handling code here:
         PlatformUtils.openDoc("custom-queries.md#get-column-comments-sql");
     }//GEN-LAST:event_btnColumnCommentsActionPerformed
 
+    /**
+     * enable the table list query along with its check box.
+     */
     private void chkTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTablesActionPerformed
         txtTables.setEnabled(chkTables.isSelected());
     }//GEN-LAST:event_chkTablesActionPerformed
 
+    /**
+     * open the documentation of the table list query.
+     */
     private void btnTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTablesActionPerformed
         // TODO add your handling code here:
         PlatformUtils.openDoc("custom-queries.md#get-table-list-sql");
     }//GEN-LAST:event_btnTablesActionPerformed
 
+    /**
+     * enable the column list query along with its check box.
+     */
     private void chkColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnsActionPerformed
         txtColumns.setEnabled(chkColumns.isSelected());
     }//GEN-LAST:event_chkColumnsActionPerformed
 
+    /**
+     * open the documentation of the column list query.
+     */
     private void btnColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnsActionPerformed
         // TODO add your handling code here:
         PlatformUtils.openDoc("custom-queries.md#get-column-list-sql");
     }//GEN-LAST:event_btnColumnsActionPerformed
 
     /**
+     * show this dialog alone for development purposes. The virtual machine is
+     * terminated as soon as the dialog is closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

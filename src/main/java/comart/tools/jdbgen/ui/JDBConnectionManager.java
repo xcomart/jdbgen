@@ -50,14 +50,34 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 
 /**
+ * connection management dialog. It lists the configured database connections
+ * and edits the selected one: driver, url, credentials, keep-alive, output
+ * directory, JDBC connection properties, code templates and custom template
+ * variables.
+ * <p>
+ * The dialog is a singleton that is reused for the whole lifetime of the
+ * application, see {@link #getInstance()}. It is shown modally both at start up
+ * and from the main window; the connection the user finally picked is left in
+ * {@link #selectedConnection}.
  *
  * @author comart
  */
 @Slf4j
 public class JDBConnectionManager extends JDialog {
     
+    /**
+     * the single instance of this dialog, see {@link #getInstance()}.
+     */
     private static JDBConnectionManager INSTANCE = null;
 
+    /**
+     * the single instance of this dialog, created on first use. The returned
+     * instance is refreshed for the current look and feel and its
+     * {@link #selectedConnection} is cleared, so that a caller can tell a
+     * cancelled dialog from a confirmed one.
+     *
+     * @return the shared connection manager dialog, never <code>null</code>.
+     */
     public static synchronized JDBConnectionManager getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new JDBConnectionManager();
@@ -70,22 +90,71 @@ public class JDBConnectionManager extends JDialog {
         return INSTANCE;
     }
 
+    /**
+     * the live connection list of the configuration. Every edit of this dialog
+     * goes into this list, which is what gets saved.
+     */
     private List<JDBConnection> connections = null;
+    /**
+     * the driver list of the configuration, reloaded whenever the driver
+     * manager reports a change.
+     */
     private List<JDBDriver> drivers = null;
+    /**
+     * the connections by name, used by the list cell renderer to find the icon
+     * of an entry.
+     */
     private Map<String, JDBConnection> connMap = new HashMap<>();
+    /**
+     * the drivers by name, used by the combo box renderer and to look up the
+     * driver the edited connection refers to.
+     */
     private Map<String, JDBDriver> driverMap = new HashMap<>();
+    /**
+     * the model of the JDBC connection property table.
+     */
     private DefaultTableModel propsModel = null;
+    /**
+     * the model of the code template table.
+     */
     private DefaultTableModel tplModel = null;
+    /**
+     * the model of the custom template variable table.
+     */
     private DefaultTableModel varsModel = null;
+    /**
+     * the model behind the connection list, holding the connection names.
+     */
     private DefaultListModel listModel = null;
+    /**
+     * the configuration the connections and drivers are read from and written
+     * back to.
+     */
     private JDBGenConfig conf = null;
+    /**
+     * whether the last save attempt stored the connection. The connect button
+     * only closes the dialog when it did.
+     */
     private boolean saveSuccess = false;
+    /**
+     * guard against feedback while a table is being filled programmatically.
+     * While <code>false</code>, the table model listeners neither write back
+     * into the selected connection nor append a trailing empty row.
+     */
     private boolean autoReset = true;
     
+    /**
+     * the connection the user confirmed with "connect" or "save", or
+     * <code>null</code> if the dialog was cancelled or nothing has been saved
+     * yet. Reset by {@link #getInstance()} before the dialog is shown again.
+     */
     public JDBConnection selectedConnection = null;
     
     /**
-     * Creates new form JDBConnectionManager
+     * Creates new form JDBConnectionManager. Loads the drivers and connections
+     * of the current configuration into the dialog, registers the listeners
+     * that keep the property and variable tables in sync with the selected
+     * connection, and selects the first connection if there is one.
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     private JDBConnectionManager() {
@@ -154,6 +223,14 @@ public class JDBConnectionManager extends JDialog {
         this.pack();
     }
     
+    /**
+     * show the selected template of the template table in the editor fields
+     * below it. Registered as the selection listener of that table; the
+     * intermediate events of an ongoing selection change are ignored.
+     *
+     * @param e
+     *            the selection event of the template table.
+     */
     public void tabTemplateSelectionChanged(ListSelectionEvent e) {
         if (!e.getValueIsAdjusting()) {
             int idx = tabTemplates.getSelectedRow();
@@ -165,10 +242,18 @@ public class JDBConnectionManager extends JDialog {
         }
     }
     
+    /**
+     * rebuild the user interface delegates of every component of this dialog.
+     * Needed because the dialog outlives a look and feel change made in the
+     * main window.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
     }
     
+    /**
+     * apply the font icons of every button of this dialog.
+     */
     private void applyIcons() {
         UIUtils.applyIcon(btnNewConn, FontAwesome.PLUS);
         UIUtils.applyIcon(btnCloneConn, FontAwesome.CLONE);
@@ -209,11 +294,24 @@ public class JDBConnectionManager extends JDialog {
                 "connectionManager.tabVars.col.value");
     }
 
+    /**
+     * name the leading columns of a table with translated texts.
+     *
+     * @param table
+     *            the table whose column headers are replaced.
+     * @param keys
+     *            the resource keys of the header texts, one per column,
+     *            starting at the first column.
+     */
     private static void setColumnHeaders(javax.swing.JTable table, String... keys) {
         for (int i = 0; i < keys.length; i++)
             table.getColumnModel().getColumn(i).setHeaderValue(I18n.t(keys[i]));
     }
 
+    /**
+     * register the window listener that cancels the dialog when its window is
+     * closed and raises it when it is activated.
+     */
     private void eventSetup() {
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -227,6 +325,10 @@ public class JDBConnectionManager extends JDialog {
         });
     }
     
+    /**
+     * rebuild the driver combo box from the configuration, keeping the driver
+     * that was selected before if it still exists.
+     */
     private void refreshDrivers() {
         String dname = (String)cboDriver.getSelectedItem();
         int idx = -1;
@@ -245,18 +347,31 @@ public class JDBConnectionManager extends JDialog {
         cboDriver.setSelectedIndex(idx);
     }
     
+    /**
+     * empty the JDBC connection property table.
+     */
     private void removeProps() {
         propsModel.setRowCount(0);
     }
     
+    /**
+     * empty the code template table.
+     */
     private void removeTemplates() {
         tplModel.setRowCount(0);
     }
     
+    /**
+     * empty the custom template variable table.
+     */
     private void removeVars() {
         varsModel.setRowCount(0);
     }
     
+    /**
+     * clear the selection and every editor field, leaving the dialog in the
+     * state of "no connection selected".
+     */
     private void resetControls() {
         lstConnections.clearSelection();
         txtAuthor.setText("");
@@ -937,11 +1052,23 @@ public class JDBConnectionManager extends JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /**
+     * close the dialog without a selected connection.
+     */
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         selectedConnection = null;
         setVisible(false);
     }//GEN-LAST:event_btnCancelActionPerformed
 
+    /**
+     * show the driver manager modally on top of this dialog.
+     *
+     * @param driverIndex
+     *            the index of the driver to preselect there, or a negative
+     *            value to leave its selection alone.
+     * @return <code>true</code> if the driver list was changed there, so that
+     *         the caller knows it has to reload the driver combo box.
+     */
     private boolean manageDrivers(int driverIndex) {
         JDBDriverManager dm = JDBDriverManager.getInstance();
         dm.setModal(true);
@@ -952,15 +1079,28 @@ public class JDBConnectionManager extends JDialog {
         return dm.changed;
     }
     
+    /**
+     * open the driver manager and reload the driver combo box if the driver
+     * list was changed there.
+     */
     private void btnManageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageActionPerformed
         if (manageDrivers(cboDriver.getSelectedIndex()))
             refreshDrivers();
     }//GEN-LAST:event_btnManageActionPerformed
 
+    /**
+     * nothing to do here: a driver change is handled by
+     * {@link #cboDriverItemStateChanged(java.awt.event.ItemEvent)} instead.
+     */
     private void cboDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboDriverActionPerformed
 
     }//GEN-LAST:event_cboDriverActionPerformed
 
+    /**
+     * add a copy of the selected connection and select it. The properties,
+     * variables and templates are copied into fresh collections, so that the
+     * copy can be edited independently.
+     */
     private void btnCloneConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneConnActionPerformed
         int idx = lstConnections.getSelectedIndex();
         if (idx > -1) {
@@ -985,6 +1125,14 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_btnCloneConnActionPerformed
 
+    /**
+     * select the given connection in the list and load it into the editor.
+     * The connection is looked up by identity, an object that is not part of
+     * the configured list leaves the selection unchanged.
+     *
+     * @param conn
+     *            the connection to select, may be <code>null</code>.
+     */
     public void setSelection(JDBConnection conn) {
         for (int i=0; i<connections.size(); i++) {
             if (connections.get(i) == conn) {
@@ -995,6 +1143,9 @@ public class JDBConnectionManager extends JDialog {
         }
     }
     
+    /**
+     * load the selected connection into the editor fields and tables.
+     */
     private void lstConnectionsValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstConnectionsValueChanged
         int idx = lstConnections.getSelectedIndex();
         if (idx > -1) {
@@ -1039,6 +1190,9 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_lstConnectionsValueChanged
 
+    /**
+     * add an empty connection with a generated name and select it.
+     */
     private void btnNewConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewConnActionPerformed
         resetControls();
         JDBConnection newConn = new JDBConnection();
@@ -1053,14 +1207,31 @@ public class JDBConnectionManager extends JDialog {
         lstConnections.setSelectedIndex(connections.size() - 1);
     }//GEN-LAST:event_btnNewConnActionPerformed
 
+    /**
+     * convert the rows of the property table into a map, dropping the rows
+     * with an empty key such as the trailing input row.
+     *
+     * @return the JDBC connection properties currently shown.
+     */
     private Map<String, String> applyToPropsMap() {
         return UIUtils.applyTableToMap(propsModel);
     }
     
+    /**
+     * convert the rows of the variable table into a map, dropping the rows
+     * with an empty key such as the trailing input row.
+     *
+     * @return the custom template variables currently shown.
+     */
     private Map<String, String> applyToVarsMap() {
         return UIUtils.applyTableToMap(varsModel);
     }
     
+    /**
+     * convert the rows of the template table into template objects.
+     *
+     * @return the templates currently shown, in table order.
+     */
     private List<JDBTemplate> applyToTplList() {
         List<JDBTemplate> tpls = new ArrayList<>();
         for (int i=0; i<tplModel.getRowCount(); i++) {
@@ -1072,6 +1243,10 @@ public class JDBConnectionManager extends JDialog {
         return tpls;
     }
     
+    /**
+     * validate the editor fields, store them into the connection and save the
+     * configuration. The first failing check is reported and focuses its field.
+     */
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         int idx = lstConnections.getSelectedIndex();
         boolean isNameExists;
@@ -1155,12 +1330,18 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_btnSaveActionPerformed
 
+    /**
+     * save the connection and close the dialog if it was stored.
+     */
     private void btnConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnConnectActionPerformed
         btnSaveActionPerformed(evt);
         if (saveSuccess)
             setVisible(false);
     }//GEN-LAST:event_btnConnectActionPerformed
 
+    /**
+     * open the preset dialog on the template table of this dialog.
+     */
     private void btnPresetsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPresetsActionPerformed
         JDBPresets preset = new JDBPresets(tabTemplates);
         preset.setModal(true);
@@ -1168,6 +1349,9 @@ public class JDBConnectionManager extends JDialog {
         preset.setVisible(true);
     }//GEN-LAST:event_btnPresetsActionPerformed
 
+    /**
+     * connect on a double click on a connection.
+     */
     private void lstConnectionsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstConnectionsMouseClicked
         // TODO add your handling code here:
         if (evt.getClickCount() == 2) {
@@ -1175,6 +1359,10 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_lstConnectionsMouseClicked
 
+    /**
+     * remove the selected connection property, or clear it when it is the only
+     * row left, and write the result back into the selected connection.
+     */
     private void btnDelPropActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelPropActionPerformed
         int row = tabProps.getSelectedRow();
         if (row > -1) {
@@ -1192,6 +1380,9 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_btnDelPropActionPerformed
 
+    /**
+     * pick a template file, starting in the installed template directory.
+     */
     private void btnBrowseTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseTemplateActionPerformed
         String path = UIUtils.openFileDlg(this,
                 AppDirs.installResourceFile("templates").getAbsolutePath(), true);
@@ -1199,18 +1390,28 @@ public class JDBConnectionManager extends JDialog {
             this.txtTemplateFile.setText(path);
     }//GEN-LAST:event_btnBrowseTemplateActionPerformed
 
+    /**
+     * pick the icon shown for this connection.
+     */
     private void btnBrowseIconActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseIconActionPerformed
         String fpath = UIUtils.openIconDlg(this, "");
         if (!StrUtils.isEmpty(fpath))
             this.txtIcon.setText(fpath);
     }//GEN-LAST:event_btnBrowseIconActionPerformed
 
+    /**
+     * pick the directory the generated files are written to.
+     */
     private void btnBrowseOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseOutputActionPerformed
         String path = UIUtils.openDirDlg(this, "", true);
         if (!StrUtils.isEmpty(path))
             this.txtOutputDir.setText(path);
     }//GEN-LAST:event_btnBrowseOutputActionPerformed
 
+    /**
+     * clear the template selection and the editor fields, so they describe a
+     * new template.
+     */
     private void btnNewTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewTemplateActionPerformed
         tabTemplates.clearSelection();
         this.txtTemplateName.setText("");
@@ -1218,6 +1419,9 @@ public class JDBConnectionManager extends JDialog {
         this.txtOutTemplate.setText("");
     }//GEN-LAST:event_btnNewTemplateActionPerformed
 
+    /**
+     * remove the selected template and clear the editor fields.
+     */
     private void btnDelTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelTemplateActionPerformed
         int idx = tabTemplates.getSelectedRow();
         if (idx > -1) {
@@ -1229,6 +1433,10 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_btnDelTemplateActionPerformed
 
+    /**
+     * store the template editor fields into the template table, appending a
+     * row when nothing is selected.
+     */
     private void btnSaveTemplateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveTemplateActionPerformed
         int idx = tabTemplates.getSelectedRow();
         if (idx > -1) {
@@ -1246,6 +1454,10 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_btnSaveTemplateActionPerformed
 
+    /**
+     * remove the selected custom variable, or clear it when it is the only row
+     * left, and write the result back into the selected connection.
+     */
     private void btnDelVarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelVarActionPerformed
         int row = tabVars.getSelectedRow();
         if (row > -1) {
@@ -1263,6 +1475,11 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_btnDelVarActionPerformed
 
+    /**
+     * apply the defaults of the newly selected driver: the url template and the
+     * icon replace a still unedited value, the connection properties are
+     * replaced, and the credential fields follow the driver's no-auth flag.
+     */
     private void cboDriverItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cboDriverItemStateChanged
         if (autoReset) {
             String dname = (String)cboDriver.getSelectedItem();
@@ -1284,10 +1501,17 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_cboDriverItemStateChanged
 
+    /**
+     * show the template of the hovered row as a tooltip.
+     */
     private void tabTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplatesMouseMoved
         UIUtils.templateTooltip(tabTemplates, 0, evt);
     }//GEN-LAST:event_tabTemplatesMouseMoved
 
+    /**
+     * remove the selected connection after asking the user, then save the
+     * configuration.
+     */
     private void btnDelConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelConnActionPerformed
         int idx = lstConnections.getSelectedIndex();
         if (idx > -1) {
@@ -1305,12 +1529,18 @@ public class JDBConnectionManager extends JDialog {
         }
     }//GEN-LAST:event_btnDelConnActionPerformed
 
+    /**
+     * enable the keep alive query and interval fields along with the check box.
+     */
     private void chkKeepAliveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkKeepAliveActionPerformed
         txtKeepAliveQuery.setEnabled(chkKeepAlive.isSelected());
         txtKeepAliveSec.setEnabled(chkKeepAlive.isSelected());
     }//GEN-LAST:event_chkKeepAliveActionPerformed
 
     /**
+     * show this dialog alone for development purposes. The virtual machine is
+     * terminated as soon as the dialog is closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

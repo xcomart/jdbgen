@@ -57,13 +57,31 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * modal dialog which searches the maven central repository for a JDBC driver
+ * and downloads its jar. The left list shows the artifacts matching the search
+ * text, the right list the versions of the selected artifact, both are paged
+ * and extended by their more button. The selected version is downloaded into
+ * the drivers directory below the user data directory while a
+ * <code>ProcessProgress</code> dialog reports the progress. A single shared
+ * instance is kept and reused.
  *
  * @author comart
  */
 @Slf4j
 public class MavenExplorer extends JDialog {
 
+    /** the shared dialog instance, created on the first call of
+     * <code>getInstance()</code>. */
     private static MavenExplorer INSTANCE = null;
+    /**
+     * return the shared maven explorer dialog. The dialog is created and
+     * registered for look and feel updates on the first call, later calls
+     * reuse that instance. The application icon and the component tree are
+     * refreshed, the search is cleared and <code>changed</code> is reset on
+     * every call.
+     *
+     * @return the shared <code>MavenExplorer</code> instance.
+     */
     public static synchronized MavenExplorer getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new MavenExplorer();
@@ -75,21 +93,46 @@ public class MavenExplorer extends JDialog {
         INSTANCE.changed = false;
         return INSTANCE;
     }
+    /**
+     * whether a driver jar has been downloaded since the dialog was obtained
+     * from <code>getInstance()</code>. Read by the caller to find out whether
+     * <code>saveLocation</code> holds a new download.
+     */
     public boolean changed = false;
+    /**
+     * location of the downloaded jar, relative to the user data directory, in
+     * the form <code>drivers/&lt;jar name&gt;</code>. Only meaningful when
+     * <code>changed</code> is <code>true</code>.
+     */
     public String saveLocation = "";
     
+    /** text of the running artifact search, empty while nothing was searched. */
     private String searchText = "";
+    /** zero based page of the artifact search, raised by the more button. */
     private int searchPageNo = 0;
+    /** number of artifacts the repository reports for <code>searchText</code>. */
     private int searchTotal = 0;
+    /** zero based page of the version search, raised by the more button. */
     private int versionPageNo = 0;
+    /** number of versions the repository reports for the selected artifact. */
     private int versionTotal = 0;
     
+    /** titles of the artifacts shown in the result list. */
     private final DefaultListModel<String> searchModel;
+    /** titles of the versions shown in the version list. */
     private final DefaultListModel<String> versionModel;
     
+    /** artifacts found so far, in the order of the result list. */
     private final List<SearchResponseItem> searchItems = new ArrayList<>();
+    /** versions found so far, in the order of the version list. */
     private final List<SearchResponseItem> versionItems = new ArrayList<>();
     
+    /**
+     * reapply the current look and feel to the whole dialog. Called after a
+     * theme or font change, the accent color of the maven link and the cell
+     * renderer of the result list are installed again afterwards and the
+     * search results are cleared.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
         lblMvnLink.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
@@ -103,6 +146,11 @@ public class MavenExplorer extends JDialog {
     
     /**
      * Creates new form MavenExplorer
+     * <p>
+     * The dialog is made modal, the empty list models of the result and of the
+     * version list are installed, the button icons are applied and a window
+     * listener is registered which cancels the dialog when it is closed and
+     * keeps it in front while it is active.
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public MavenExplorer() {
@@ -119,6 +167,7 @@ public class MavenExplorer extends JDialog {
         this.pack();
     }
 
+    /** apply the font icons of the search, cancel, download and more buttons. */
     private void applyIcons() {
         UIUtils.applyIcon(btnSearch, FontAwesome.SEARCH);
         UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
@@ -127,6 +176,10 @@ public class MavenExplorer extends JDialog {
         UIUtils.addIcon(btnMore1, FontAwesome.PLUS);
     }
     
+    /**
+     * drop the version list and its paging state, so that the next version
+     * search starts at the first page of the selected artifact.
+     */
     private void clearVersions() {
         versionItems.clear();
         versionModel.removeAllElements();
@@ -135,6 +188,10 @@ public class MavenExplorer extends JDialog {
         versionTotal = 0;
     }
 
+    /**
+     * drop the artifact list and its paging state, together with the version
+     * list, so that the next search starts at the first page.
+     */
     private void clearSearch() {
         searchItems.clear();
         searchModel.removeAllElements();
@@ -144,6 +201,15 @@ public class MavenExplorer extends JDialog {
         clearVersions();
     }
     
+    /**
+     * fill the search field and run that search. The search itself is
+     * scheduled on the event dispatch thread, so it starts once the caller
+     * returns, which lets the dialog be prepared before it is made visible.
+     *
+     * @param query
+     *            text to be searched on maven central, a blank text runs no
+     *            search at all.
+     */
     public void setQuery(String query) {
         txtSearch.setText(query);
         EventQueue.invokeLater(() -> {
@@ -151,6 +217,12 @@ public class MavenExplorer extends JDialog {
         });
     }
 
+    /**
+     * register the window listener of the dialog. Closing the window is
+     * handled like the cancel button and the dialog is raised to the front
+     * whenever it becomes active, as it may be shown above another modal
+     * dialog.
+     */
     private void eventSetup() {
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -361,6 +433,7 @@ public class MavenExplorer extends JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /** show the details of the hovered artifact as tool tip of the result list. */
     private void lstSearchResultMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstSearchResultMouseMoved
         int idx = lstSearchResult.locationToIndex(evt.getPoint());
         if (idx > -1)
@@ -369,15 +442,18 @@ public class MavenExplorer extends JDialog {
             lstSearchResult.setToolTipText(null);
     }//GEN-LAST:event_lstSearchResultMouseMoved
 
+    /** hide the dialog without downloading anything. */
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         setVisible(false);
     }//GEN-LAST:event_btnCancelActionPerformed
 
+    /** run the search when enter is pressed in the search field. */
     private void txtSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyPressed
         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
             btnSearchActionPerformed(null);
     }//GEN-LAST:event_txtSearchKeyPressed
 
+    /** search the first page of artifacts for the text of the search field. */
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         if (StringUtils.isBlank(txtSearch.getText()))
             return;
@@ -386,6 +462,7 @@ public class MavenExplorer extends JDialog {
         searchMaven();
     }//GEN-LAST:event_btnSearchActionPerformed
 
+    /** append the next page of artifacts, or report that there are no more. */
     private void btnMoreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoreActionPerformed
         if (StringUtils.isBlank(searchText))
             return;
@@ -397,6 +474,7 @@ public class MavenExplorer extends JDialog {
         }
     }//GEN-LAST:event_btnMoreActionPerformed
 
+    /** load the versions of the artifact selected in the result list. */
     private void lstSearchResultValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstSearchResultValueChanged
         int idx = lstSearchResult.getSelectedIndex();
         if (idx > -1 && !evt.getValueIsAdjusting()) {
@@ -407,17 +485,37 @@ public class MavenExplorer extends JDialog {
         }
     }//GEN-LAST:event_lstSearchResultValueChanged
 
+    /** open the maven repository page in the default browser. */
     private void lblMvnLinkMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblMvnLinkMouseClicked
         PlatformUtils.openURL("https://maven.org");
     }//GEN-LAST:event_lblMvnLinkMouseClicked
 
     /**
+     * build the background task which downloads the jar of the given version.
+     * The task resolves the download link, streams the jar into the drivers
+     * directory below the user data directory, reports its progress and stores
+     * the relative location in <code>saveLocation</code> while setting
+     * <code>changed</code> on success. Failures are logged, published to the
+     * progress log and reported through <code>errHolder</code>.
+     *
      * @param sitem the version selected on the EDT by the caller
      * @param errHolder receives the failure message, read by the caller on the EDT
+     * @return a worker returning <code>true</code> when the jar was stored,
+     *         <code>false</code> otherwise.
      */
     private ProcessProgress.Worker getProgressWorker(
             final SearchResponseItem sitem, final String[] errHolder) {
         return new ProcessProgress.Worker() {
+            /**
+             * stream the jar of the snapshotted version into the drivers
+             * directory, publishing the received amount as it goes.
+             *
+             * @return <code>true</code> when the jar was written completely,
+             *         <code>false</code> when the download failed.
+             * @throws Exception
+             *             never thrown, every failure is caught and reported
+             *             through <code>errHolder</code>.
+             */
             @Override
             protected Boolean doInBackground() throws Exception {
                 // NOTE: this method must not touch any Swing component - the
@@ -467,6 +565,7 @@ public class MavenExplorer extends JDialog {
         };
     }
 
+    /** download the selected version while a modal progress dialog is shown. */
     @SuppressWarnings("UseSpecificCatch")
     private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
         int vidx = lstVersion.getSelectedIndex();
@@ -493,6 +592,7 @@ public class MavenExplorer extends JDialog {
         }
     }//GEN-LAST:event_btnDownloadActionPerformed
 
+    /** append the next page of versions, or report that there are no more. */
     private void btnMore1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMore1ActionPerformed
         if (versionTotal > versionItems.size()) {
             versionPageNo++;
@@ -502,6 +602,12 @@ public class MavenExplorer extends JDialog {
         }
     }//GEN-LAST:event_btnMore1ActionPerformed
 
+    /**
+     * search the current page of artifacts on maven central. The request runs
+     * behind the loading overlay, the found artifacts are appended to the
+     * result list and the more button is enabled while further pages are
+     * available. A failing request is logged and reported to the user.
+     */
     private void searchMaven() {
         UIUtils.loading(this, () -> {
             try {
@@ -522,6 +628,13 @@ public class MavenExplorer extends JDialog {
         });
     }
 
+    /**
+     * search the current page of versions of the selected artifact. Nothing
+     * happens while no artifact is selected, otherwise the request runs behind
+     * the loading overlay, the found versions are appended to the version list
+     * and the more button is enabled while further pages are available. A
+     * failing request is logged and reported to the user.
+     */
     private void searchVersion() {
         int idx = lstSearchResult.getSelectedIndex();
         if (idx < 0)
@@ -545,6 +658,11 @@ public class MavenExplorer extends JDialog {
     }
 
     /**
+     * stand alone entry point which shows this dialog on its own, used to
+     * preview the form during development. The dark flat look and feel is
+     * installed and the virtual machine is terminated once the modal dialog is
+     * closed.
+     *
      * @param args the command line arguments
      */
     public static void main(String args[]) {

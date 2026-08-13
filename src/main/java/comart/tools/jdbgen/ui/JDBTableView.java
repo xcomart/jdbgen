@@ -34,15 +34,31 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 /**
+ * modal dialog showing the structure of a single database table. The table
+ * name and its remarks are shown as header, the columns of the table are
+ * listed with their ordinal number, name, type and primary key flag, and the
+ * remarks of a column are shown as tool tip while the mouse hovers its row.
  *
  * @author comart
  */
 public class JDBTableView extends javax.swing.JDialog {
     
+    /** table shown by this dialog, kept to look up the column remarks. */
     private final DBTable table;
     
     /**
      * Creates new form JDBTableView
+     * <p>
+     * The dialog is always modal. The design time rows of the column table are
+     * dropped and replaced by one row per column of <code>table</code>, the
+     * column headers are translated and the preferred column widths are
+     * applied.
+     *
+     * @param parent
+     *            frame the dialog belongs to.
+     * @param table
+     *            table whose name, remarks and columns are shown, also used
+     *            to look up the column remarks shown as tool tip.
      */
     public JDBTableView(java.awt.Frame parent, DBTable table) {
         super(parent, true);
@@ -177,10 +193,12 @@ public class JDBTableView extends javax.swing.JDialog {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    /** hide the dialog when the close button is pressed. */
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
         this.setVisible(false);
     }//GEN-LAST:event_btnCloseActionPerformed
 
+    /** show the remarks of the hovered column as tool tip of the column table. */
     private void tabColumnsMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabColumnsMouseMoved
         Point p = evt.getPoint();
         int row = tabColumns.rowAtPoint(p);

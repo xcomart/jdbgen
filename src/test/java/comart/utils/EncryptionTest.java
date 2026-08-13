@@ -169,6 +169,47 @@ public class EncryptionTest {
     }
 
     @Test
+    public void testAValueSurvivesASaltRotation() {
+        StrUtils.setMaster(MASTER);
+        String enc = StrUtils.encrypt("stored in an earlier session");
+
+        // the next start draws a new session salt; the salt a value was written
+        // with is carried in the value itself, so it stays readable
+        StrUtils.setMaster(MASTER);
+        assertEquals("stored in an earlier session", StrUtils.decrypt(enc));
+
+        // and a value written now still carries the new salt
+        String fresh = StrUtils.encrypt("stored now");
+        assertNotEquals(enc.substring(0, 20), fresh.substring(0, 20),
+                "the session salt is drawn again for every session");
+        assertEquals("stored now", StrUtils.decrypt(fresh));
+    }
+
+    @Test
+    public void testANewMasterPasswordClearsTheLegacyFlag() throws Exception {
+        StrUtils.setMaster(MASTER);
+        StrUtils.decrypt(legacyEncrypt(MASTER, "stored by an older release"));
+        assertTrue(StrUtils.hasLegacyEncryption());
+
+        // entering the password again starts a new session: whatever the
+        // previous configuration carried is not this one's business
+        StrUtils.setMaster(MASTER);
+        assertFalse(StrUtils.hasLegacyEncryption());
+    }
+
+    @Test
+    public void testATamperedValueIsRejected() {
+        StrUtils.setMaster(MASTER);
+        String enc = StrUtils.encrypt("secret");
+        byte[] raw = Base64.getDecoder().decode(enc.substring("ENC2:".length()));
+        // flip a bit of the ciphertext, which the GCM tag has to catch
+        raw[raw.length - 1] ^= 0x01;
+        String tampered = "ENC2:" + Base64.getEncoder().encodeToString(raw);
+
+        assertThrows(RuntimeException.class, () -> StrUtils.decrypt(tampered));
+    }
+
+    @Test
     public void testEncryptionRequiresMaster() throws Exception {
         StrUtils.clearMaster();
         try {

@@ -233,6 +233,56 @@ public class AppDirsTest {
     }
 
     @Test
+    public void aSiblingWhoseNameOnlyStartsTheSameIsNotBelowIt(@TempDir Path dir) throws Exception {
+        useDirectories(dir);
+        // 'data-backup' starts with the path of 'data' but is not inside it,
+        // so it has to be stored as the absolute path it is
+        String sibling = dir.resolve("data-backup/h2.jar").toFile().getAbsolutePath();
+        assertEquals(sibling, AppDirs.relativize(sibling));
+
+        // the directory itself is no file below itself either
+        String base = dir.resolve("data").toFile().getAbsolutePath();
+        assertEquals(base, AppDirs.relativize(base));
+    }
+
+    @Test
+    public void aDevelopmentRunHasNoJarAndReadsItsResourcesFromTheWorkingDirectory() {
+        // the tests run from class files, so there is no jar to take the
+        // installation directory from and the working directory stands in
+        assertNull(AppDirs.runningJar());
+        assertEquals(new File(System.getProperty("user.dir")).getAbsoluteFile(),
+                AppDirs.workingDir());
+        assertEquals(AppDirs.workingDir(), AppDirs.installResourceBase());
+    }
+
+    @Test
+    public void theTwoLegacyLocationsAreTheInstallationAndTheWorkingDirectory(@TempDir Path dir)
+            throws Exception {
+        useDirectories(dir);
+
+        assertEquals(java.util.Arrays.asList(
+                dir.resolve("install").toFile().getAbsoluteFile(),
+                AppDirs.workingDir()), AppDirs.legacySources());
+
+        // an installation that is the working directory is one location, not two
+        System.setProperty(AppDirs.RESOURCE_BASE_PROPERTY,
+                AppDirs.workingDir().getPath());
+        assertEquals(1, AppDirs.legacySources().size());
+    }
+
+    @Test
+    public void aFileOfTheUserDataDirectoryIsNamedBelowIt(@TempDir Path dir) throws Exception {
+        File data = subDir(dir, "portable-data");
+        System.setProperty(AppDirs.DATA_DIR_PROPERTY, data.getPath());
+
+        assertEquals(new File(data, "config.json.20240101_101010.bak"),
+                AppDirs.userDataFile(AppDirs.CONFIG_NAME + ".20240101_101010.bak"));
+        // the override is trimmed, a hand edited property may carry white space
+        System.setProperty(AppDirs.DATA_DIR_PROPERTY, "  " + data.getPath() + "  ");
+        assertEquals(data, AppDirs.configuredUserDataDir());
+    }
+
+    @Test
     public void writabilityIsDecidedByActuallyWritingAFile(@TempDir Path dir) throws Exception {
         Path file = dir.resolve("not-a-directory");
         Files.write(file, "x".getBytes(StandardCharsets.UTF_8));

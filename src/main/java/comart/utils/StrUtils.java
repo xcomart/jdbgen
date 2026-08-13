@@ -99,14 +99,12 @@ public class StrUtils
         int idx, prevIdx = 0;
         int delimlen = delim.length();
 
-        if (src.contains(delim)) {
-            while ((idx = src.indexOf(delim, prevIdx)) > -1) {
-                String item = src.substring(prevIdx, idx);
-                if (trim)
-                    item = item.trim();
-                res.add(item);
-                prevIdx = idx + delimlen;
-            }
+        while ((idx = src.indexOf(delim, prevIdx)) > -1) {
+            String item = src.substring(prevIdx, idx);
+            if (trim)
+                item = item.trim();
+            res.add(item);
+            prevIdx = idx + delimlen;
         }
         return res.toArray(new String[0]);
     }
@@ -169,11 +167,14 @@ public class StrUtils
      *            padding character.
      * @param right
      *            pad right or not.
-     * @return padded string.
+     * @return padded string, or <code>null</code> if <code>src</code> is
+     *         <code>null</code>.
      */
     public static String padString(String src, int length, char padchar,
             boolean right)
     {
+        if (src == null)
+            return null;
         char[] data = src.toCharArray();
         char[] res = pad(padchar, length);
         int stpos = 0, len = data.length, destPos = 0;
@@ -207,11 +208,14 @@ public class StrUtils
      * @param src
      *            byte to be tested.
      * @param spc
-     *            array of bytes.
-     * @return <code>src</code> is in <code>spc</code> or not.
+     *            array of bytes, may be <code>null</code>.
+     * @return <code>src</code> is in <code>spc</code> or not;
+     *         <code>false</code> if <code>spc</code> is <code>null</code>.
      */
     public static boolean isSpace(int src, byte[] spc)
     {
+        if (spc == null)
+            return false;
         for (int i = 0; i < spc.length; i++) {
             if (src == spc[i])
                 return true;
@@ -225,11 +229,14 @@ public class StrUtils
      * @param src
      *            character to be tested.
      * @param spc
-     *            space string.
-     * @return <code>src</code> is in <code>spc</code> or not.
+     *            space string, may be <code>null</code>.
+     * @return <code>src</code> is in <code>spc</code> or not;
+     *         <code>false</code> if <code>spc</code> is <code>null</code>.
      */
     public static boolean isSpace(char src, String spc)
     {
+        if (spc == null)
+            return false;
         for (int i = 0; i < spc.length(); i++) {
             if (src == spc.charAt(i))
                 return true;
@@ -239,16 +246,23 @@ public class StrUtils
 
     /**
      * every character in <code>src</code> are in <code>spc</code> return true, any
-     * one of them is not in <code>spc</code> return false.
+     * one of them is not in <code>spc</code> return false. A string with nothing
+     * in it holds no character that is not a space, so it answers
+     * <code>true</code>; a string that is not there at all is nothing to look
+     * at and answers <code>false</code>.
      *
      * @param src
-     *            string to be tested.
+     *            string to be tested, may be <code>null</code>.
      * @param spc
-     *            space string.
-     * @return all chracters of <code>src</code> is space or not.
+     *            space string, may be <code>null</code>.
+     * @return all chracters of <code>src</code> is space or not;
+     *         <code>false</code> whenever either argument is
+     *         <code>null</code>.
      */
     public static boolean isSpace(String src, String spc)
     {
+        if (src == null || spc == null)
+            return false;
         for (int i = 0; i < src.length(); i++) {
             if (!isSpace(src.charAt(i), spc))
                 return false;
@@ -575,6 +589,9 @@ public class StrUtils
 
     /**
      * read an integer, tolerating the thousands separators and never throwing.
+     * A fraction is cut off at the decimal point rather than rejected, so it is
+     * truncated towards zero: <code>"1.5"</code> reads as <code>1</code> and
+     * <code>"-1.9"</code> as <code>-1</code>.
      *
      * @param intval
      *            the number as it was typed, may be <code>null</code>.
@@ -585,7 +602,11 @@ public class StrUtils
     public static int toInt(String intval)
     {
         try {
-            return Integer.parseInt(parseInt(intval));
+            String num = parseInt(intval);
+            int dot = num.indexOf('.');
+            if (dot > -1)
+                num = num.substring(0, dot);
+            return Integer.parseInt(num);
         } catch(Exception t) {
             return 0;
         }
@@ -628,13 +649,14 @@ public class StrUtils
      *            value to look for, may be <code>null</code>.
      * @return an equal element is in <code>arr</code> or not;
      *         <code>false</code> whenever either argument is
-     *         <code>null</code>.
+     *         <code>null</code>. An element that is <code>null</code> itself is
+     *         skipped instead of breaking the comparison.
      */
     public static boolean contains(Object[] arr, Object val) {
         if (arr == null || val == null)
             return false;
         for (Object c:arr)
-            if (c.equals(val)) return true;
+            if (Objects.equals(c, val)) return true;
         return false;
     }
 
@@ -1099,12 +1121,17 @@ public class StrUtils
      * given array holds a string equal to <code>key</code> or not.
      *
      * @param key
-     *            string to look for.
+     *            string to look for, may be <code>null</code>.
      * @param haystack
-     *            array to be searched.
-     * @return <code>key</code> is in <code>haystack</code> or not.
+     *            array to be searched, may be <code>null</code>.
+     * @return <code>key</code> is in <code>haystack</code> or not;
+     *         <code>false</code> whenever either argument is
+     *         <code>null</code>. An element that is <code>null</code> itself is
+     *         skipped instead of breaking the comparison.
      */
     public static boolean strIn(String key, String[] haystack) {
+        if (key == null || haystack == null)
+            return false;
         for (String h: haystack) {
             if (key.equals(h))
                 return true;

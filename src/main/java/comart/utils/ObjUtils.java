@@ -51,15 +51,19 @@ public class ObjUtils {
      * @param obj
      *            the object to read from, may be <code>null</code>.
      * @param property
-     *            name of the property.
+     *            name of the property, may be <code>null</code> or empty.
      * @return the value, or <code>null</code> when <code>obj</code> is
-     *         <code>null</code> or has no such property.
+     *         <code>null</code>, when there is no property name to read or when
+     *         <code>obj</code> has no such property.
      * @throws Exception
      *             if the accessor itself fails.
      */
     @SuppressWarnings("UseSpecificCatch")
     private static Object getValuePrivate(Object obj, String property) throws Exception {
-        if (obj instanceof Map) {
+        // nothing names nothing, whatever kind of context this is asked of
+        if (property == null || property.isEmpty()) {
+            return null;
+        } else if (obj instanceof Map) {
             return ((Map)obj).get(property);
         } else if (obj != null) {
             Class<?> c = obj.getClass();
@@ -102,13 +106,19 @@ public class ObjUtils {
      * @param obj
      *            the object to read from.
      * @param property
-     *            property name, dot separated for a nested one.
-     * @return the value, or <code>null</code> when any segment of the path
-     *         resolves to nothing.
+     *            property name, dot separated for a nested one, may be
+     *            <code>null</code> or empty.
+     * @return the value, or <code>null</code> when there is no property name to
+     *         read or when any segment of the path resolves to nothing. An
+     *         empty name reads as nothing whatever <code>obj</code> is, so that
+     *         a <code>${}</code> of a template is left alone against a bean and
+     *         against a map alike.
      * @throws Exception
      *             if an accessor along the path fails.
      */
     public static Object getValue(Object obj, String property) throws Exception {
+        if (property == null)
+            return null;
         int idx = property.indexOf('.');
         if (idx < 0) {
             return getValuePrivate(obj, property);

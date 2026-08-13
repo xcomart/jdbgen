@@ -78,14 +78,17 @@ public class JDBDriver extends JDBListBase {
     
     /**
      * whether this driver carries the settings needed to open a connection: a
-     * driver jar, a driver class and, for every custom comment query that is
-     * turned on, the statement itself.
+     * driver jar, a driver class and, for every custom query that is turned on
+     * - the table and column lists as well as their comments - the statement
+     * itself.
      *
      * @return <code>true</code> when the driver may be used as it is.
      */
     public boolean validate() {
         return !StrUtils.isEmpty(jdbcJar) &&
                 !StrUtils.isEmpty(driverClass) &&
+                (!useTables || !StrUtils.isEmpty(tablesSql)) &&
+                (!useColumns || !StrUtils.isEmpty(columnsSql)) &&
                 (!useTableComments || !StrUtils.isEmpty(tableCommentsSql)) &&
                 (!useColumnComments || !StrUtils.isEmpty(columnCommentsSql));
     }

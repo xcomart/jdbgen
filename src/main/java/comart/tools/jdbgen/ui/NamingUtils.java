@@ -43,11 +43,15 @@ public class NamingUtils {
      *            list of items to be searched.
      * @param name
      *            name to be looked up, compared with
-     *            <code>JDBListBase.getName()</code>.
+     *            <code>JDBListBase.getName()</code>, may be <code>null</code>.
      * @return <code>true</code> if any element of <code>list</code> carries
-     *         the given name, <code>false</code> otherwise.
+     *         the given name, <code>false</code> otherwise. A name that is not
+     *         there collides with nothing, not even with an element which
+     *         carries no name either.
      */
     public static boolean nameExists(List<? extends JDBListBase> list, String name) {
+        if (name == null)
+            return false;
         return list.stream().anyMatch((d) -> {
             return name.equals(d.getName());
         });

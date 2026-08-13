@@ -267,19 +267,28 @@ public class PlatformUtils {
     
     /**
      * compare two dotted version strings numerically. A leading 'v' is ignored,
-     * and any non numeric segment is treated as 0. Missing trailing segments are
-     * treated as 0 too, so "1.2" equals "1.2.0".
+     * and missing trailing segments are treated as 0, so "1.2" equals "1.2.0".
+     *
+     * <p>Whatever follows the dotted number - <code>"-rc1"</code> of
+     * <code>"0.3.2-rc1"</code> - is a pre-release mark and not part of the
+     * number: the numbers are compared first, and only when they are equal does
+     * the marked version count as the older one, so that
+     * <code>0.3.2-rc1</code> precedes <code>0.3.2</code> and follows
+     * <code>0.3.1</code>. Two pre-releases of the same number are not told
+     * apart, the tag itself is never read.</p>
      *
      * @param a
-     *            left hand version string.
+     *            left hand version string, may be <code>null</code>.
      * @param b
-     *            right hand version string.
+     *            right hand version string, may be <code>null</code>.
      * @return negative if <code>a</code> precedes <code>b</code>, 0 if they are
      *         equal, positive otherwise.
      */
     static int compareVersions(String a, String b) {
-        String[] av = stripVersionPrefix(a).split("\\.");
-        String[] bv = stripVersionPrefix(b).split("\\.");
+        String as = stripVersionPrefix(a);
+        String bs = stripVersionPrefix(b);
+        String[] av = numericPart(as).split("\\.");
+        String[] bv = numericPart(bs).split("\\.");
         int len = Math.max(av.length, bv.length);
         for (int i=0; i<len; i++) {
             int an = i < av.length ? StrUtils.toInt(av[i]) : 0;
@@ -287,7 +296,40 @@ public class PlatformUtils {
             if (an != bn)
                 return an < bn ? -1 : 1;
         }
-        return 0;
+        // same number: a pre-release precedes the release it leads up to
+        boolean ap = isPreRelease(as);
+        boolean bp = isPreRelease(bs);
+        if (ap == bp)
+            return 0;
+        return ap ? -1 : 1;
+    }
+
+    /**
+     * the dotted number a version string opens with.
+     *
+     * @param v
+     *            the version, already stripped of its tag prefix.
+     * @return the leading run of digits and dots, empty when the version does
+     *         not open with one.
+     */
+    private static String numericPart(String v) {
+        int idx = 0;
+        while (idx < v.length() &&
+                (v.charAt(idx) == '.' || (v.charAt(idx) >= '0' && v.charAt(idx) <= '9')))
+            idx++;
+        return v.substring(0, idx);
+    }
+
+    /**
+     * whether a version carries anything beyond its dotted number, which is how
+     * <code>0.3.2-rc1</code> is told from <code>0.3.2</code>.
+     *
+     * @param v
+     *            the version, already stripped of its tag prefix.
+     * @return there is a pre-release mark or not.
+     */
+    private static boolean isPreRelease(String v) {
+        return numericPart(v).length() < v.length();
     }
 
     /**

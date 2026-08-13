@@ -5,7 +5,7 @@
             "stockItem": true,
             "name": "Oracle",
             "driverClass": "oracle.jdbc.OracleDriver",
-            "urlTemplate": "jdbc:oracle:thin:@<databaseHost>:1521:<database>",
+            "urlTemplate": "jdbc:oracle:thin:@//<databaseHost>:1521/<database>",
             "defaultQuery": "ojdbc8",
             "icon": "stock:oracle.png",
             "props": {
@@ -24,11 +24,13 @@
         {
             "stockItem": true,
             "name": "MySQL",
-            "driverClass": "com.mysql.jdbc.Driver",
+            "driverClass": "com.mysql.cj.jdbc.Driver",
             "urlTemplate": "jdbc:mysql://<databaseHost>:3306/<database>",
-            "defaultQuery": "mysql-connector-java",
+            "defaultQuery": "mysql-connector-j",
             "icon": "stock:mysql.png",
-            "props": {}
+            "props": {
+                "useInformationSchema": "true"
+            }
         },
         {
             "stockItem": true,

@@ -347,7 +347,9 @@ public class TemplateManager {
      * advance to the next placeholder, appending the literal text passed on
      * the way to <code>items</code>. A quoted placeholder -
      * <code>${'text'}</code> or <code>${"text"}</code> - is a literal itself:
-     * its unescaped content is appended as text and the search continues.
+     * its unescaped content is appended as text and the search continues. An
+     * empty literal - <code>${''}</code> - stands for empty text, so nothing is
+     * appended for it.
      *
      * @param ctx
      *            parse position.
@@ -384,8 +386,12 @@ public class TemplateManager {
             ctx.skipSpace();
             int c = ctx.peek();
             StringBuilder sb = new StringBuilder();
+            // whether a quote was opened; an empty literal - ${''} - is a
+            // literal like any other, so the content alone cannot tell
+            boolean isLiteral = false;
             // check escaping string
             if (c == '"' || c == '\'') {
+                isLiteral = true;
                 int openChar = ctx.nextChar();
                 boolean isEscape = false;
                 while ((c = ctx.nextChar()) > -1) {
@@ -408,11 +414,13 @@ public class TemplateManager {
             if (lst < 0) {
                 throw new ParseException("'}' not found, before: "+ctx.near(), ctx.line);
             }
-            String res = sb.length() == 0 ? StrUtils.trim(ctx.template.substring(sp, lst)):sb.toString();
+            String res = isLiteral ? sb.toString():StrUtils.trim(ctx.template.substring(sp, lst));
             ctx.updateLineCount(lst);
             ctx.nextChar(); // skip '}'
-            if (sb.length() > 0) {
-                items.add(new TemplateItem(TemplateType.TEXT, res));
+            if (isLiteral) {
+                // an empty literal stands for no text at all
+                if (!res.isEmpty())
+                    items.add(new TemplateItem(TemplateType.TEXT, res));
                 // current one is text escape template, so find next one.
                 return next(ctx, items);
             } else {
@@ -1604,8 +1612,9 @@ public class TemplateManager {
      * fragment is indented to the column the loop started in, plus the
      * <code>indent</code> attribute. Elements whose <code>name</code> appears
      * in the comma separated <code>skiplist</code> are left out, and every
-     * rendered element gets its one based position assigned to its
-     * <code>no</code> member.
+     * rendered element gets its one based position among the rendered ones
+     * assigned to its <code>no</code> member - a skipped element does not take
+     * a number.
      *
      * @param sb
      *            output built so far.
@@ -1637,6 +1646,9 @@ public class TemplateManager {
         splen += idnt;
         String prepend = StrUtils.space(splen, ' ');
         boolean isFirst = true;
+        // 'no' counts the elements that are rendered, so a skipped one leaves
+        // no gap in the numbering
+        int no = 0;
         for (int i=0; i<litems.size(); i++) {
             Object o = litems.get(i);
             if (skips != null) {
@@ -1654,7 +1666,7 @@ public class TemplateManager {
                         sb.append(lineEnd).append(prepend).append(parts[p]);
                 }
             }
-            ObjUtils.setValue(o, "no", (i+1));
+            ObjUtils.setValue(o, "no", (++no));
             appendMapper(sb, tpls, o, mapper);
             isFirst = false;
         }

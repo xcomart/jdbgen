@@ -42,7 +42,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>A JDBC connection is not thread safe, so every use of it - the optional
  * keep-alive timer included - is serialized internally. Closing the instance
  * stops the keep-alive, closes the connection and releases the driver class
- * loader.</p>
+ * loader; every metadata call afterwards is refused with an
+ * <code>SQLException</code>.</p>
  *
  * @author comart
  */
@@ -84,7 +85,9 @@ public class DBMeta implements AutoCloseable {
      * @param driver the driver definition naming the jar, the driver class and
      *               the custom metadata queries.
      * @param jconn the connection settings: URL, credentials, driver properties
-     *              and keep-alive.
+     *              and keep-alive. A user name or a password that is not set is
+     *              left out of the driver properties rather than passed as
+     *              <code>null</code>.
      * @throws Exception if the driver jar or class cannot be loaded, or the
      *         connection cannot be opened - including when the driver does not
      *         accept the connection URL. The driver class loader is released
@@ -100,8 +103,13 @@ public class DBMeta implements AutoCloseable {
             Driver sqldriver = (Driver)driverClass.getDeclaredConstructor().newInstance();
 
             Properties props = new Properties();
-            props.setProperty("user", jconn.getUserName());
-            props.setProperty("password", jconn.getUserPassword());
+            // a connection of a 'no auth' driver - and a freshly created one -
+            // carries no credentials at all; Properties does not take a null
+            // value, so an unset one is simply not passed to the driver
+            if (jconn.getUserName() != null)
+                props.setProperty("user", jconn.getUserName());
+            if (jconn.getUserPassword() != null)
+                props.setProperty("password", jconn.getUserPassword());
             if (jconn.getConnectionProps() != null)
                 props.putAll(jconn.getConnectionProps());
 
@@ -276,6 +284,20 @@ public class DBMeta implements AutoCloseable {
     }
 
     /**
+     * refuse to read anything through a connection that was closed. The driver
+     * class loader is released together with the connection, so a metadata call
+     * on a closed instance would otherwise fail somewhere inside the driver -
+     * typically with a <code>NoClassDefFoundError</code> - instead of saying
+     * what happened.
+     *
+     * @throws SQLException if {@link #close()} was called on this instance.
+     */
+    private void checkOpen() throws SQLException {
+        if (closed)
+            throw new SQLException("connection is closed");
+    }
+
+    /**
      * the driver metadata of the connection, asked for once and cached
      * afterwards.
      *
@@ -297,15 +319,21 @@ public class DBMeta implements AutoCloseable {
      * all schemas of the database, read once and cached afterwards.
      *
      * <p>The schemas are collected per catalog, a catalog the driver reports
-     * without a name being called <code>"Default Catalog"</code>. A catalog
+     * without a name being called <code>"Default Catalog"</code>. A database
+     * that has no catalogs at all - Oracle, say, whose driver answers
+     * <code>getCatalogs()</code> with an empty result - has its schemas read
+     * without one and grouped under <code>"Default Catalog"</code>. A catalog
      * without schemas gets a placeholder schema carrying only the catalog name,
-     * and a database that reports neither is represented by a single
-     * <code>"Default Schema"</code> entry, so the list is never empty.</p>
+     * and a database that reports neither catalogs nor schemas is represented by
+     * a single <code>"Default Schema"</code> entry, so the list is never
+     * empty.</p>
      *
      * @return the schemas, in catalog order.
-     * @throws SQLException if the metadata cannot be read.
+     * @throws SQLException if the metadata cannot be read, or when this
+     *         instance was closed.
      */
     public List<DBSchema> getSchemas() throws SQLException {
+        checkOpen();
         connLock.lock();
         try {
             if (schemas == null) {
@@ -321,15 +349,32 @@ public class DBMeta implements AutoCloseable {
                         tree.put(catalog, new ArrayList<>());
                     }
                 }
-                for (Map.Entry<String, List<DBSchema>> ent:tree.entrySet()) {
-                    String cat = ent.getKey();
-                    if ("Default Catalog".equals(cat))
-                        cat = null;
-                    try (ResultSet rs = dbm.getSchemas(cat, null)) {
+                if (tree.isEmpty()) {
+                    // a database without catalogs still has schemas; ask for
+                    // them without one rather than falling straight through to
+                    // the placeholder below
+                    ArrayList<DBSchema> noCatalog = new ArrayList<>();
+                    try (ResultSet rs = dbm.getSchemas(null, null)) {
                         while (rs.next()) {
                             DBSchema scheme = new DBSchema(rs);
                             log.debug("schema: {}", scheme);
-                            ent.getValue().add(scheme);
+                            noCatalog.add(scheme);
+                        }
+                    }
+                    if (!noCatalog.isEmpty())
+                        tree.put("Default Catalog", noCatalog);
+                }
+                for (Map.Entry<String, List<DBSchema>> ent:tree.entrySet()) {
+                    if (ent.getValue().isEmpty()) {
+                        String cat = ent.getKey();
+                        if ("Default Catalog".equals(cat))
+                            cat = null;
+                        try (ResultSet rs = dbm.getSchemas(cat, null)) {
+                            while (rs.next()) {
+                                DBSchema scheme = new DBSchema(rs);
+                                log.debug("schema: {}", scheme);
+                                ent.getValue().add(scheme);
+                            }
                         }
                     }
                     if (ent.getValue().isEmpty()) {
@@ -359,9 +404,11 @@ public class DBMeta implements AutoCloseable {
      *
      * @return the schemas per catalog name, in the order the driver reports the
      *         catalogs.
-     * @throws SQLException if the metadata cannot be read.
+     * @throws SQLException if the metadata cannot be read, or when this
+     *         instance was closed.
      */
     public Map<String, List<DBSchema>> getSchemaTree() throws SQLException {
+        checkOpen();
         getSchemas(); // to ensure build tree
         return tree;
     }
@@ -431,10 +478,12 @@ public class DBMeta implements AutoCloseable {
      * @param schema the schema to list, also the cache of the result.
      * @param includeViews <code>true</code> to return views next to tables.
      * @return the tables of the schema, views included when asked for.
+     * @throws SQLException when this instance was closed.
      * @throws Exception if the metadata or one of the custom queries fails.
      */
     public List<DBTable> getTables(
             DBSchema schema, boolean includeViews) throws Exception {
+        checkOpen();
         synchronized(schema) {
             if (schema.getTables() == null) {
                 connLock.lock();
@@ -454,15 +503,18 @@ public class DBMeta implements AutoCloseable {
     /**
      * the columns of a table, read once per table and cached on it. Reading
      * them also fills in the primary key flag of the columns and the key and
-     * non-key lists of the table. Depending on the driver definition the
-     * columns come from <code>DatabaseMetaData</code> or from the custom column
-     * and column comment queries.
+     * non-key lists of the table, the key list in the order the key was
+     * declared in. Depending on the driver definition the columns come from
+     * <code>DatabaseMetaData</code> or from the custom column and column
+     * comment queries.
      *
      * @param table the table to list, also the cache of the result.
      * @return the columns of the table, in the order the database reports them.
+     * @throws SQLException when this instance was closed.
      * @throws Exception if the metadata or one of the custom queries fails.
      */
     public List<DBColumn> getTableColumns(DBTable table) throws Exception {
+        checkOpen();
         synchronized(table) {
             if (table.getColumns() == null) {
                 connLock.lock();
@@ -485,6 +537,11 @@ public class DBMeta implements AutoCloseable {
      * the driver, which reports the key flag in its <code>IS_KEY</code> column.
      * Every column is numbered in the order it is read, and a custom column
      * comment query, where the driver declares one, replaces the comments.</p>
+     *
+     * <p>The key list is in the order the key was declared in: the metadata
+     * path sorts the rows of <code>getPrimaryKeys()</code>, which arrive by
+     * column name, by their <code>KEY_SEQ</code>, while the custom column query
+     * keeps the order its own result set is in.</p>
      *
      * @param table the table to read the columns of.
      * @throws Exception if the metadata or one of the custom queries fails.
@@ -524,6 +581,10 @@ public class DBMeta implements AutoCloseable {
                 }
             }
 
+            // getPrimaryKeys() is ordered by COLUMN_NAME, so the rows do not
+            // arrive in the order the key was declared in; KEY_SEQ carries that
+            // order and is what the key list is sorted by
+            ArrayList<int[]> keyOrder = new ArrayList<>();
             try (ResultSet rs = dbm.getPrimaryKeys(
                     table.getCatalog(), table.getSchema(), table.getTable())) {
                 while (rs.next()) {
@@ -531,6 +592,7 @@ public class DBMeta implements AutoCloseable {
                     DBColumn column = colmap.get(key);
                     if (column != null) {
                         column.setKey(true);
+                        keyOrder.add(new int[] { rs.getShort("KEY_SEQ"), keyFields.size() });
                         keyFields.add(column);
                     } else {
                         log.warn("primary key column '{}' of table '{}' not found "+
@@ -539,6 +601,15 @@ public class DBMeta implements AutoCloseable {
                     }
                 }
             }
+            // a driver that reports no usable KEY_SEQ leaves the rows where they
+            // are, because the sort is stable on the second element
+            keyOrder.sort((a, b) -> a[0] != b[0] ? Integer.compare(a[0], b[0])
+                    : Integer.compare(a[1], b[1]));
+            ArrayList<DBColumn> ordered = new ArrayList<>(keyFields.size());
+            for (int[] pos: keyOrder)
+                ordered.add(keyFields.get(pos[1]));
+            keyFields.clear();
+            keyFields.addAll(ordered);
         }
         
         if (driver.isUseColumnComments()) {

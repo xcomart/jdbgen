@@ -6,11 +6,26 @@
   <!-- window chrome -->
   <entry key="generatorMain.title">JDBGen principal</entry>
 
+  <!-- menu bar -->
+  <entry key="generatorMain.menu.file">Archivo</entry>
+  <entry key="generatorMain.menu.file.generate">Generar</entry>
+  <entry key="generatorMain.menu.file.close">Cerrar</entry>
+  <entry key="generatorMain.menu.tools">Herramientas</entry>
+  <entry key="generatorMain.menu.tools.connectionManager">Administrador de conexiones…</entry>
+  <entry key="generatorMain.menu.tools.driverManager">Administrador de controladores…</entry>
+  <entry key="generatorMain.menu.tools.abbreviationMapper">Asignador de abreviaturas…</entry>
+  <entry key="generatorMain.menu.view">Ver</entry>
+  <entry key="generatorMain.menu.view.darkUI">Tema oscuro</entry>
+  <entry key="generatorMain.menu.view.language">Idioma</entry>
+  <entry key="generatorMain.menu.help">Ayuda</entry>
+  <entry key="generatorMain.menu.help.about">Acerca de JDBGen</entry>
+  <entry key="generatorMain.menu.help.templateReference">Referencia de plantillas</entry>
+
   <!-- connection bar -->
   <entry key="generatorMain.jLabel2.text">Conexión</entry>
   <entry key="generatorMain.btnManageConn.text">Administrar</entry>
   <entry key="generatorMain.btnMapper.text">Asignador de abreviaturas</entry>
-  <entry key="generatorMain.btnAck.toolTipText">Acerca de este programa</entry>
+  <entry key="generatorMain.btnAck.toolTipText">Acerca de JDBGen</entry>
 
   <!-- catalog/schema pane -->
   <entry key="generatorMain.jLabel1.text">Catálogos/Esquemas</entry>
@@ -19,21 +34,37 @@
   <!-- table pane -->
   <entry key="generatorMain.jLabel5.text">Tablas</entry>
   <entry key="generatorMain.chkShowView.text">Mostrar vistas</entry>
+  <entry key="generatorMain.txtTableFilter.placeholder">Filtrar tablas…</entry>
+  <entry key="generatorMain.lstTables.popup.selectAll">Seleccionar todo</entry>
+  <entry key="generatorMain.lstTables.popup.clearSelection">Borrar selección</entry>
 
   <!-- generation options -->
   <entry key="generatorMain.jLabel4.text">Opciones de generación</entry>
   <entry key="generatorMain.jLabel6.text">Plantillas</entry>
+  <entry key="generatorMain.tabTemplates.emptyHint">Haga clic derecho para añadir una plantilla</entry>
   <entry key="generatorMain.tabTemplates.column.select">Seleccionar</entry>
   <entry key="generatorMain.tabTemplates.column.name">Nombre</entry>
   <entry key="generatorMain.tabTemplates.column.templateFile">Archivo de plantilla</entry>
-  <entry key="generatorMain.tabTemplates.column.outTemplate">Plantilla de salida</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">Nombre del archivo de salida</entry>
+  <entry key="generatorMain.tabTemplates.header.toolTipText">Plantillas que se ejecutan para cada tabla seleccionada. La columna del nombre del archivo de salida admite variables de plantilla, por ejemplo {0}. Haga clic con el botón derecho en la lista para añadir, editar o eliminar una plantilla.</entry>
+  <entry key="generatorMain.tabTemplates.popup.add">Añadir plantilla…</entry>
+  <entry key="generatorMain.tabTemplates.popup.edit">Editar plantilla…</entry>
+  <entry key="generatorMain.tabTemplates.popup.delete">Eliminar plantilla</entry>
+  <entry key="generatorMain.tabTemplates.popup.presets">Conjuntos de plantillas…</entry>
+  <entry key="generatorMain.template.add.title">Añadir plantilla</entry>
+  <entry key="generatorMain.template.edit.title">Editar plantilla</entry>
+  <entry key="generatorMain.template.name">Nombre:</entry>
+  <entry key="generatorMain.template.file">Archivo de plantilla:</entry>
+  <entry key="generatorMain.template.outTemplate">Nombre del archivo de salida:</entry>
   <entry key="generatorMain.jLabel11.text">Directorio de salida:</entry>
+  <entry key="generatorMain.txtOutputDir.toolTipText">Directorio donde se escriben los archivos generados. Una ruta relativa se resuelve dentro del directorio de datos del usuario o, si allí existe, dentro del directorio de instalación.</entry>
   <entry key="generatorMain.jLabel14.text">Nombre del autor:</entry>
   <entry key="generatorMain.jLabel15.text">Abreviatura:</entry>
   <entry key="generatorMain.chkApplyAbbr.text">Aplicar la regla de abreviaturas a todos los campos de nombre.</entry>
   <entry key="generatorMain.jLabel16.text">Variables personalizadas:</entry>
   <entry key="generatorMain.tabVars.column.name">Nombre</entry>
   <entry key="generatorMain.tabVars.column.value">Valor</entry>
+  <entry key="generatorMain.tabVars.toolTipText">Variables personalizadas disponibles en las plantillas. Al escribir en la última fila vacía se añade otra.</entry>
 
   <!-- bottom bar -->
   <entry key="generatorMain.chkDarkUI.text">Tema oscuro</entry>
@@ -50,6 +81,7 @@
   <entry key="generatorMain.msg.connectFirst">Conéctese primero a una base de datos.</entry>
   <entry key="generatorMain.msg.selectTable">Seleccione al menos una tabla para generar.</entry>
   <entry key="generatorMain.msg.selectTemplate">Seleccione al menos una plantilla para generar.</entry>
+  <entry key="generatorMain.msg.templateRequired">El nombre, el archivo de plantilla y el nombre del archivo de salida son obligatorios.</entry>
   <entry key="generatorMain.msg.complete.title">Proceso completado</entry>
   <entry key="generatorMain.msg.complete">El proceso se completó correctamente.&#10;¿Desea abrir el directorio de salida?</entry>
   <entry key="generatorMain.msg.failed">El proceso ha fallado.</entry>

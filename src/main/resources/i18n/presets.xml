@@ -11,17 +11,18 @@
   <entry key="presets.jLabel3.text">Preset Name:</entry>
   <entry key="presets.tabTemplates.column.templateName">Template Name</entry>
   <entry key="presets.tabTemplates.column.templateFile">Template File</entry>
-  <entry key="presets.tabTemplates.column.outTemplate">Out Template</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">Output File Name</entry>
   <entry key="presets.btnNewTemplate.text">New</entry>
   <entry key="presets.btnDelTemplate.text">Delete</entry>
   <entry key="presets.btnSaveTemplate.text">Apply</entry>
   <entry key="presets.jLabel9.text">Template Name:</entry>
   <entry key="presets.jLabel8.text">Template File:</entry>
-  <entry key="presets.jLabel13.text">Output Name Template:</entry>
+  <entry key="presets.jLabel13.text">Output File Name:</entry>
 
   <!-- bottom bar -->
-  <entry key="presets.btnNewFromConn.text">New Preset from Current Connection</entry>
-  <entry key="presets.btnApply.text">Apply to Current Connection</entry>
+  <entry key="presets.btnNewFromConn.text">Import from Connection</entry>
+  <entry key="presets.btnApply.text">Apply to Connection</entry>
+  <entry key="presets.btnApply.toolTipText">Replaces the template list of the current connection with the templates of this preset. The existing list is not merged, it is discarded.</entry>
   <entry key="presets.btnSave.text">Save</entry>
   <entry key="presets.btnCancel.text">Cancel</entry>
 

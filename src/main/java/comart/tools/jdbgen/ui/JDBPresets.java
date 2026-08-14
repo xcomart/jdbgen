@@ -92,21 +92,46 @@ public class JDBPresets extends JDialog {
      */
     private final JTable connTpls;
     /**
+     * index of the template name column of {@link #connTpls}. The template
+     * file and the output name follow it. The columns before it - the tick
+     * column of the main window - are set to <code>TRUE</code> when a preset is
+     * applied, so that an applied preset is generated right away.
+     */
+    private final int connBaseIdx;
+
+    /**
+     * {@link #JDBPresets(javax.swing.JTable, int)} for a table whose first
+     * column is the template name.
+     *
+     * @param connTpls
+     *            the template table this dialog exchanges templates with, may
+     *            be <code>null</code>.
+     */
+    public JDBPresets(JTable connTpls) {
+        this(connTpls, 0);
+    }
+
+    /**
      * Creates new form JDBPresets. The dialog is filled with the presets of the
      * current configuration and stays connected to the given table for the
      * apply/import buttons.
      *
      * @param connTpls
-     *            the template table of the connection editor that opened this
-     *            dialog. Its rows are the source of "new preset from the
-     *            connection" and the destination of "apply preset". May be
-     *            <code>null</code> when the dialog is opened stand-alone, in
-     *            which case those two buttons must not be used.
+     *            the template table of the window that opened this dialog. Its
+     *            rows are the source of "new preset from the connection" and
+     *            the destination of "apply preset". May be <code>null</code>
+     *            when the dialog is opened stand-alone, in which case those two
+     *            buttons must not be used.
+     * @param connBaseIdx
+     *            index of the template name column of that table; the template
+     *            file and the output name are the two columns after it.
      */
-    public JDBPresets(JTable connTpls) {
+    public JDBPresets(JTable connTpls, int connBaseIdx) {
         initComponents();
+        this.connBaseIdx = connBaseIdx;
         applyIcons();
-        
+        applyTooltips();
+
         this.connTpls = connTpls;
         applyTemplateHeaders();
 
@@ -156,7 +181,16 @@ public class JDBPresets extends JDialog {
         UIUtils.addIcon(btnSave, FontAwesome.FLOPPY_O);
         UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
     }
-    
+
+    /**
+     * warn about the one button of this dialog that throws work away: applying
+     * a preset replaces the template list of the connection instead of adding
+     * to it.
+     */
+    private void applyTooltips() {
+        btnApply.setToolTipText(I18n.t("presets.btnApply.toolTipText"));
+    }
+
     /**
      * The column names of the generated table model are the untranslated
      * placeholders of the form editor, the shown ones are set here.
@@ -519,9 +553,9 @@ public class JDBPresets extends JDialog {
         // clear selection
         btnNewActionPerformed(evt);
         for (int i=0; i<connTpls.getRowCount(); i++) {
-            String name = (String)connTpls.getValueAt(i, 0);
-            String tplf = (String)connTpls.getValueAt(i, 1);
-            String otpl = (String)connTpls.getValueAt(i, 2);
+            String name = (String)connTpls.getValueAt(i, connBaseIdx);
+            String tplf = (String)connTpls.getValueAt(i, connBaseIdx+1);
+            String otpl = (String)connTpls.getValueAt(i, connBaseIdx+2);
             templateModel.addRow(new Object[]{ name, tplf, otpl });
         }
     }//GEN-LAST:event_btnNewFromConnActionPerformed
@@ -651,12 +685,17 @@ public class JDBPresets extends JDialog {
         DefaultTableModel connTplModel = (DefaultTableModel)connTpls.getModel();
         connTplModel.setRowCount(0);
         for (int i=0; i<tabTemplates.getRowCount(); i++) {
-            String name = (String)tabTemplates.getValueAt(i, 0);
-            String tplf = (String)tabTemplates.getValueAt(i, 1);
-            String otpl = (String)tabTemplates.getValueAt(i, 2);
-            connTplModel.addRow(new Object[]{ name, tplf, otpl });
+            Object[] row = new Object[connBaseIdx + 3];
+            // the columns before the name are the tick of the main window: a
+            // preset is applied to be generated, so it comes in ticked
+            for (int c=0; c<connBaseIdx; c++)
+                row[c] = Boolean.TRUE;
+            row[connBaseIdx] = tabTemplates.getValueAt(i, 0);
+            row[connBaseIdx+1] = tabTemplates.getValueAt(i, 1);
+            row[connBaseIdx+2] = tabTemplates.getValueAt(i, 2);
+            connTplModel.addRow(row);
         }
-        
+
     }//GEN-LAST:event_btnApplyActionPerformed
 
     /**

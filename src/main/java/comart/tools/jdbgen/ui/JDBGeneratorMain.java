@@ -40,6 +40,7 @@ import comart.utils.StrUtils;
 import comart.utils.UIUtils;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
@@ -50,10 +51,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
 import javax.swing.*;
+import javax.swing.plaf.LayerUI;
 import javax.swing.plaf.basic.BasicLabelUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
@@ -161,6 +164,23 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     private List<DBTable> tables;
     /**
+     * the tables of {@link #tables} that pass the current text of
+     * {@link #txtTableFilter}, in the order they are shown in the table list.
+     * The list box only ever displays this subset, so every consumer that
+     * resolves a list index - a selection, a mouse position - has to read this
+     * field instead of <code>tables</code>. <code>null</code> while no schema
+     * is selected.
+     */
+    private List<DBTable> visibleTables;
+    /**
+     * the filter field placed above the table list at runtime, see
+     * {@link #initTableFilterUI()}. Not part of the NetBeans generated code,
+     * because the generator only adds new controls to the panel it owns
+     * through the form editor, and this panel is instead rebuilt by hand so
+     * that its content stays free-form.
+     */
+    private javax.swing.JTextField txtTableFilter;
+    /**
      * guard against feedback while the variable table is being filled
      * programmatically. While <code>false</code>, the table model listener does
      * not append a trailing empty row.
@@ -197,10 +217,33 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         // this panel at preferred size, so without this a long tree item would
         // widen the panel and push the right-hand panels off screen.
         jScrollPane1.setPreferredSize(jScrollPane1.getPreferredSize());
+        // the generation options panel is pinned the same way, and these two
+        // fields grow their preferred width with the text they hold - a long
+        // output path would widen the panel until it is pushed over the right
+        // window edge. A column count keeps their preferred width constant.
+        txtOutputDir.setColumns(20);
+        txtAuthor.setColumns(20);
+        // the custom variables label and its delete button form their own
+        // trailing sub group, which is only as wide as its two members and
+        // therefore hugs the left of the label column. Linking the label to
+        // the other labels widens that group to the full column, so both of
+        // them right-align with the labels above.
+        ((javax.swing.GroupLayout)jPanel4.getLayout()).linkSize(
+                javax.swing.SwingConstants.HORIZONTAL, jLabel11, jLabel14, jLabel16);
+        // hiding the toolbar duplicates of the menu entries makes the layout
+        // drop the container gap at the right window edge together with them,
+        // so every row would end flush with the window border. The border
+        // below puts that gap back for all of them at once.
+        ((javax.swing.JComponent)getContentPane()).setBorder(
+                javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 6));
         conf = JDBGenConfig.getInstance();
         chkDarkUI.setSelected(conf.isDarkUI());
         initLanguageCombo();
         chkApplyAbbr.setSelected(conf.isApplyAbbr());
+        buildMenuBar();
+        hideMenuDuplicates();
+        initTableFilterUI();
+        initTableListPopup();
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         UIUtils.setApplicationIcon(this);
 
@@ -217,6 +260,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         
         initTemplates();
         applyIcons();
+        applyTooltips();
         clearContents();
         
         tabVars.getModel().addTableModelListener((evt) -> {
@@ -225,11 +269,28 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         });
         UIUtils.setCommitOnLostFocus(tabVars);
-        
+        btnDelVar.addActionListener(e -> removeSelectedVar());
+        initTemplateActions();
+        // the window is EXIT_ON_CLOSE, and this runs before it exits: the
+        // generation options are stored whichever way the window is left
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                saveGenerationOptions();
+            }
+        });
+
         PlatformUtils.registerHandlers(e -> showAbout(), null, null, null);
         log.info("before pack");
         this.pack();
         log.info("after pack");
+        // below its minimum the layout does not shrink any further, it pushes
+        // the right-hand panel over the window edge instead: do not let the
+        // window be resized to where that happens. The computed minimum has
+        // been measured to come out one layout gap short of what actually
+        // fits, hence the extra slack on top of it.
+        java.awt.Dimension minSize = getMinimumSize();
+        setMinimumSize(new java.awt.Dimension(minSize.width + 12, minSize.height));
         INSTANCE = this;
     }
     
@@ -239,7 +300,278 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private void showAbout() {
         JDBAbout.getInstance(this).setVisible(true);
     }
-    
+
+    /**
+     * open the driver manager on top of this window. The connection manager
+     * opens the same shared dialog, this is only the second way in.
+     */
+    private void showDriverManager() {
+        JDBDriverManager dm = JDBDriverManager.getInstance();
+        dm.setModal(true);
+        dm.setLocationRelativeTo(this);
+        dm.setVisible(true);
+    }
+
+    /**
+     * the dark user interface entry of the view menu, kept in step with
+     * <code>chkDarkUI</code>. <code>null</code> until the menu bar is built.
+     */
+    private JCheckBoxMenuItem miDarkUI;
+
+    /**
+     * a menu item with its text taken from the resource bundle.
+     *
+     * @param key
+     *            the resource key of the item text.
+     * @param action
+     *            what the item does when it is chosen.
+     * @return the new item, not attached to a menu yet.
+     */
+    private static JMenuItem menuItem(String key, java.awt.event.ActionListener action) {
+        JMenuItem item = new JMenuItem(I18n.t(key));
+        item.addActionListener(action);
+        return item;
+    }
+
+    /**
+     * Build the menu bar of the window. Nothing here duplicates the logic of a
+     * button handler: an entry that mirrors a control clicks that control, so
+     * that both ways in stay in step by construction. Call after
+     * <code>initComponents()</code>, the controls it refers to have to exist.
+     */
+    private void buildMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        int shortcut = Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx();
+
+        JMenu mnuFile = new JMenu(I18n.t("generatorMain.menu.file"));
+        JMenuItem miGenerate = menuItem("generatorMain.menu.file.generate",
+                e -> btnGenerate.doClick());
+        miGenerate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, shortcut));
+        // the generate button is disabled while a connection is being opened,
+        // mirror that instead of letting the accelerator through meanwhile
+        miGenerate.setEnabled(btnGenerate.isEnabled());
+        btnGenerate.addPropertyChangeListener("enabled",
+                e -> miGenerate.setEnabled(btnGenerate.isEnabled()));
+        mnuFile.add(miGenerate);
+        mnuFile.addSeparator();
+        mnuFile.add(menuItem("generatorMain.menu.file.close",
+                e -> btnClose.doClick()));
+        menuBar.add(mnuFile);
+
+        JMenu mnuTools = new JMenu(I18n.t("generatorMain.menu.tools"));
+        mnuTools.add(menuItem("generatorMain.menu.tools.connectionManager",
+                e -> btnManageConn.doClick()));
+        mnuTools.add(menuItem("generatorMain.menu.tools.driverManager",
+                e -> showDriverManager()));
+        mnuTools.addSeparator();
+        mnuTools.add(menuItem("generatorMain.menu.tools.abbreviationMapper",
+                e -> btnMapper.doClick()));
+        menuBar.add(mnuTools);
+
+        JMenu mnuView = new JMenu(I18n.t("generatorMain.menu.view"));
+        miDarkUI = new JCheckBoxMenuItem(I18n.t("generatorMain.menu.view.darkUI"));
+        miDarkUI.setSelected(chkDarkUI.isSelected());
+        // both directions are guarded by a state comparison, so neither one can
+        // trigger the other again
+        miDarkUI.addActionListener(e -> {
+            if (miDarkUI.isSelected() != chkDarkUI.isSelected())
+                chkDarkUI.doClick();
+        });
+        chkDarkUI.addActionListener(e -> {
+            if (miDarkUI.isSelected() != chkDarkUI.isSelected())
+                miDarkUI.setSelected(chkDarkUI.isSelected());
+        });
+        mnuView.add(miDarkUI);
+        mnuView.add(buildLanguageMenu());
+        menuBar.add(mnuView);
+
+        JMenu mnuHelp = new JMenu(I18n.t("generatorMain.menu.help"));
+        mnuHelp.add(menuItem("generatorMain.menu.help.about", e -> showAbout()));
+        mnuHelp.add(menuItem("generatorMain.menu.help.templateReference",
+                e -> PlatformUtils.openDoc("template-reference.md")));
+        menuBar.add(mnuHelp);
+
+        setJMenuBar(menuBar);
+    }
+
+    /**
+     * the language submenu, one radio entry per entry of
+     * <code>cboLanguage</code>. Choosing one selects that entry in the combo
+     * box, which is what stores the setting and tells the user that it is
+     * applied after a restart.
+     *
+     * @return the language submenu, not attached to a menu yet.
+     */
+    private JMenu buildLanguageMenu() {
+        JMenu mnuLanguage = new JMenu(I18n.t("generatorMain.menu.view.language"));
+        ButtonGroup group = new ButtonGroup();
+        String[] names = languageNames();
+        int selected = languageIndex(conf.getLanguage());
+        for (int i=0; i<names.length; i++) {
+            final int idx = i;
+            JRadioButtonMenuItem item = new JRadioButtonMenuItem(names[i]);
+            item.setSelected(i == selected);
+            item.addActionListener(e -> cboLanguage.setSelectedIndex(idx));
+            group.add(item);
+            mnuLanguage.add(item);
+        }
+        return mnuLanguage;
+    }
+
+    /**
+     * Hide the controls the menu bar took over. They are kept alive and
+     * listened to, because the menu entries work by clicking them.
+     */
+    private void hideMenuDuplicates() {
+        btnMapper.setVisible(false);
+        btnAck.setVisible(false);
+        chkDarkUI.setVisible(false);
+        cboLanguage.setVisible(false);
+    }
+
+    /**
+     * Add the filter field above the table list. This panel is small enough
+     * that it is simpler to rebuild it by hand than to touch the form editor,
+     * so it is re-laid out here instead of in <code>initComponents()</code>:
+     * the label and the show-views tick keep their place, the filter field is
+     * inserted between them and the scroll pane, and the scroll pane keeps
+     * the rest of the panel. Call after <code>initComponents()</code>, the
+     * components it rearranges have to exist already.
+     */
+    private void initTableFilterUI() {
+        txtTableFilter = new javax.swing.JTextField();
+        txtTableFilter.putClientProperty("JTextField.placeholderText",
+                I18n.t("generatorMain.txtTableFilter.placeholder"));
+        txtTableFilter.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) { applyTableFilter(); }
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) { applyTableFilter(); }
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyTableFilter(); }
+        });
+
+        jPanel3.removeAll();
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(chkShowView)
+                    .addComponent(jLabel5))
+                // a zero minimum filler, not a container gap with a minimum:
+                // this panel is the one that yields when the window shrinks,
+                // and a minimum here would push the generation options panel
+                // over the right window edge instead.
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(txtTableFilter)
+            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel5)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(chkShowView)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(txtTableFilter, javax.swing.GroupLayout.PREFERRED_SIZE,
+                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2))
+        );
+        jPanel3.revalidate();
+    }
+
+    /**
+     * Give the table list a "select all" / "clear selection" popup. Both act
+     * on what is currently shown, i.e. on <code>lstTables</code>'s own model,
+     * so they automatically respect whatever the filter field narrowed the
+     * list down to. This listener is added on top of the one the form editor
+     * already attached for the double click, Swing dispatches to every
+     * listener of a component so the two do not interfere with each other.
+     */
+    private void initTableListPopup() {
+        JPopupMenu menu = new JPopupMenu();
+        menu.add(menuItem("generatorMain.lstTables.popup.selectAll", e -> {
+            int size = lstTables.getModel().getSize();
+            if (size > 0)
+                lstTables.setSelectionInterval(0, size - 1);
+        }));
+        menu.add(menuItem("generatorMain.lstTables.popup.clearSelection",
+                e -> lstTables.clearSelection()));
+        lstTables.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                showPopup(e);
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                showPopup(e);
+            }
+            /** the popup trigger is platform dependent, hence both handlers. */
+            private void showPopup(MouseEvent e) {
+                if (e.isPopupTrigger())
+                    menu.show(lstTables, e.getX(), e.getY());
+            }
+        });
+    }
+
+    /**
+     * the tables of <code>tables</code> whose name contains
+     * <code>filterText</code>, matched case-insensitively. This is the only
+     * place the table list filter matches a name, so the list box and its
+     * tests apply exactly the same rule.
+     *
+     * @param tables
+     *            the full table list of the selected schema, may be
+     *            <code>null</code>.
+     * @param filterText
+     *            the text typed into the filter field; every table is kept
+     *            when it is <code>null</code> or blank.
+     * @return the tables that pass the filter, in the order of
+     *         <code>tables</code>. Never <code>null</code>, empty when
+     *         <code>tables</code> is <code>null</code>.
+     */
+    static List<DBTable> filterTables(List<DBTable> tables, String filterText) {
+        List<DBTable> res = new ArrayList<>();
+        if (tables == null)
+            return res;
+        if (StrUtils.isEmpty(filterText)) {
+            res.addAll(tables);
+            return res;
+        }
+        String needle = filterText.toLowerCase();
+        for (DBTable t: tables) {
+            if (t.getTable() != null && t.getTable().toLowerCase().contains(needle))
+                res.add(t);
+        }
+        return res;
+    }
+
+    /**
+     * narrow the table list box to the tables of <code>tables</code> that
+     * pass the current text of {@link #txtTableFilter}, and rebuild
+     * {@link #visibleTables} to match. Every place that resolves a list index
+     * of <code>lstTables</code> - the generate button, the double click, the
+     * hover tooltip - reads <code>visibleTables</code> instead of
+     * <code>tables</code>, since the list box only ever shows this subset.
+     * Call whenever <code>tables</code> changes and whenever the filter text
+     * changes.
+     */
+    private void applyTableFilter() {
+        String filterText = txtTableFilter == null ? null : txtTableFilter.getText();
+        visibleTables = filterTables(tables, filterText);
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        visibleTables.forEach(t -> listModel.addElement(t.getTable()));
+        lstTables.setModel(listModel);
+        lstTables.setCellRenderer(UIUtils.getListCellRenderer(
+                s -> visibleTables.stream()
+                    .filter(t -> s.equals(t.getName()))
+                    .findFirst().orElse(null)));
+    }
+
     /**
      * empty the template table, the variable table, the table list and the
      * author and output directory fields.
@@ -318,8 +650,257 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         UIUtils.addIcon(btnClose, FontAwesome.TIMES);
         UIUtils.addIcon(btnMapper, FontAwesome.BOOK);
         UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
-    }    
-    
+        UIUtils.applyIcon(btnAck, FontAwesome.INFO_CIRCLE);
+    }
+
+    /**
+     * an example of an output file name, shown in the tool tip of the template
+     * table. It is not translated and it is handed to the message as an
+     * argument, because the braces of a template variable are not something a
+     * message pattern can hold literally.
+     */
+    private static final String OUT_TEMPLATE_EXAMPLE = "${name.pascal}.java";
+
+    /**
+     * describe the inputs that are not self explanatory. The template table
+     * itself already shows the row under the mouse, so its explanation goes on
+     * the table header instead of overwriting that.
+     */
+    private void applyTooltips() {
+        tabTemplates.getTableHeader().setToolTipText(
+                I18n.t("generatorMain.tabTemplates.header.toolTipText",
+                        OUT_TEMPLATE_EXAMPLE));
+        tabVars.setToolTipText(I18n.t("generatorMain.tabVars.toolTipText"));
+        txtOutputDir.setToolTipText(I18n.t("generatorMain.txtOutputDir.toolTipText"));
+    }
+
+    /**
+     * remove the selected custom variable, or clear it when it is the only row
+     * left. The table model listener puts the trailing input row back.
+     */
+    private void removeSelectedVar() {
+        int row = tabVars.getSelectedRow();
+        if (row < 0)
+            return;
+        DefaultTableModel model = (DefaultTableModel)tabVars.getModel();
+        if (model.getRowCount() > 1) {
+            model.removeRow(row);
+        } else {
+            for (int i=0; i<model.getColumnCount(); i++)
+                model.setValueAt("", row, i);
+        }
+    }
+
+    /**
+     * Give the template table its popup menu and its double click. The
+     * templates of a connection are edited here and nowhere else, so adding,
+     * editing, removing and the presets all hang off this table.
+     */
+    private void initTemplateActions() {
+        // an empty table is otherwise zero pixels high inside its scroll pane,
+        // and the popup below could never be reached to add the first template
+        tabTemplates.setFillsViewportHeight(true);
+        JPopupMenu menu = new JPopupMenu();
+        menu.add(menuItem("generatorMain.tabTemplates.popup.add", e -> addTemplate()));
+        menu.add(menuItem("generatorMain.tabTemplates.popup.edit", e -> editTemplate()));
+        menu.add(menuItem("generatorMain.tabTemplates.popup.delete", e -> removeTemplate()));
+        menu.addSeparator();
+        menu.add(menuItem("generatorMain.tabTemplates.popup.presets", e -> showPresets()));
+        tabTemplates.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                showPopup(e);
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                showPopup(e);
+            }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                // a click in the tick column is the tick itself, everywhere
+                // else a double click opens the row
+                if (e.getClickCount() == 2 && !e.isPopupTrigger()
+                        && tabTemplates.columnAtPoint(e.getPoint()) > 0)
+                    editTemplate();
+            }
+            /** the popup trigger is platform dependent, hence both handlers. */
+            private void showPopup(MouseEvent e) {
+                if (!e.isPopupTrigger())
+                    return;
+                int row = tabTemplates.rowAtPoint(e.getPoint());
+                if (row > -1)
+                    tabTemplates.setRowSelectionInterval(row, row);
+                else
+                    tabTemplates.clearSelection();
+                menu.show(tabTemplates, e.getX(), e.getY());
+            }
+        });
+        installEmptyTemplateHint();
+    }
+
+    /**
+     * a freshly opened connection has no templates yet, and the only way to
+     * add one is the popup menu above, which a user can't discover just by
+     * looking at an empty table. Wrap the table's view in a {@link JLayer} so
+     * a translucent hint can be painted over it while it is empty; the
+     * {@link JLayer} still delegates {@link Scrollable} to the table, so
+     * scrolling behaves exactly as before.
+     */
+    private void installEmptyTemplateHint() {
+        LayerUI<JTable> hintUI = new LayerUI<JTable>() {
+            @Override
+            public void paint(Graphics g, JComponent c) {
+                super.paint(g, c);
+                if (tabTemplates.getModel().getRowCount() != 0)
+                    return;
+                String hint = I18n.t("generatorMain.tabTemplates.emptyHint");
+                Graphics2D g2 = (Graphics2D) g.create();
+                try {
+                    Object desktopHints = Toolkit.getDefaultToolkit()
+                            .getDesktopProperty("awt.font.desktophints");
+                    if (desktopHints instanceof Map)
+                        g2.setRenderingHints((Map<?, ?>) desktopHints);
+                    g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
+                            RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                    Color fg = UIManager.getColor("Label.disabledForeground");
+                    g2.setColor(fg != null ? fg : Color.GRAY);
+                    g2.setFont(tabTemplates.getFont());
+                    FontMetrics fm = g2.getFontMetrics();
+                    int x = (c.getWidth() - fm.stringWidth(hint)) / 2;
+                    int y = (c.getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+                    g2.drawString(hint, Math.max(x, 0), y);
+                } finally {
+                    g2.dispose();
+                }
+            }
+        };
+        JLayer<JTable> layer = new JLayer<>(tabTemplates, hintUI);
+        jScrollPane3.setViewportView(layer);
+        // repaint the layer explicitly on every model change: it overlays the
+        // table rather than being painted by it, so a plain table repaint is
+        // not guaranteed to reach it in every look and feel.
+        tabTemplates.getModel().addTableModelListener(e -> layer.repaint());
+    }
+
+    /**
+     * ask for a new template and append it to the table, ticked.
+     */
+    private void addTemplate() {
+        JDBTemplate tpl = templateDialog(
+                I18n.t("generatorMain.template.add.title"), null);
+        if (tpl == null)
+            return;
+        DefaultTableModel model = (DefaultTableModel)tabTemplates.getModel();
+        model.addRow(new Object[]{ tpl.isSelected(), tpl.getName(),
+            tpl.getTemplateFile(), tpl.getOutTemplate() });
+        int row = model.getRowCount() - 1;
+        tabTemplates.setRowSelectionInterval(row, row);
+        saveGenerationOptions();
+    }
+
+    /**
+     * edit the selected template. Its tick is left as it is.
+     */
+    private void editTemplate() {
+        int row = tabTemplates.getSelectedRow();
+        if (row < 0)
+            return;
+        DefaultTableModel model = (DefaultTableModel)tabTemplates.getModel();
+        Object sel = model.getValueAt(row, 0);
+        JDBTemplate cur = new JDBTemplate(
+                str(model.getValueAt(row, 1)),
+                str(model.getValueAt(row, 2)),
+                str(model.getValueAt(row, 3)),
+                sel instanceof Boolean && (Boolean)sel);
+        JDBTemplate tpl = templateDialog(
+                I18n.t("generatorMain.template.edit.title"), cur);
+        if (tpl == null)
+            return;
+        model.setValueAt(tpl.getName(), row, 1);
+        model.setValueAt(tpl.getTemplateFile(), row, 2);
+        model.setValueAt(tpl.getOutTemplate(), row, 3);
+        saveGenerationOptions();
+    }
+
+    /**
+     * remove the selected template. Nothing is asked - a template that was
+     * removed by accident is three fields away from being back.
+     */
+    private void removeTemplate() {
+        int row = tabTemplates.getSelectedRow();
+        if (row < 0)
+            return;
+        ((DefaultTableModel)tabTemplates.getModel()).removeRow(row);
+        saveGenerationOptions();
+    }
+
+    /**
+     * open the preset dialog on the template table of this window. The dialog
+     * writes into the table directly, so whatever it left there is stored when
+     * it closes.
+     */
+    private void showPresets() {
+        JDBPresets presets = new JDBPresets(tabTemplates, 1);
+        presets.setModal(true);
+        presets.setLocationRelativeTo(this);
+        presets.setVisible(true);
+        saveGenerationOptions();
+    }
+
+    /**
+     * ask for the three fields of a template. The dialog is repeated until
+     * every field is filled in or the user cancels.
+     *
+     * @param title
+     *            the title of the dialog.
+     * @param current
+     *            the template to edit, or <code>null</code> to describe a new
+     *            one. A new template comes back ticked.
+     * @return the entered template, or <code>null</code> when the dialog was
+     *         cancelled.
+     */
+    private JDBTemplate templateDialog(String title, JDBTemplate current) {
+        JTextField txtName = new JTextField(
+                current == null ? "" : current.getName(), 30);
+        JTextField txtFile = new JTextField(
+                current == null ? "" : current.getTemplateFile(), 30);
+        JTextField txtOut = new JTextField(
+                current == null ? "" : current.getOutTemplate(), 30);
+        JButton btnBrowse = new JButton("...");
+        UIUtils.applyIcon(btnBrowse, FontAwesome.FOLDER_O);
+        btnBrowse.addActionListener(e -> {
+            // the chooser is parented on the button, not on this window: that
+            // makes it a child of the modal dialog it is opened from instead of
+            // a second modal window beside it
+            String path = UIUtils.openFileDlg(btnBrowse,
+                    AppDirs.installResourceFile("templates").getAbsolutePath(), true);
+            if (!StrUtils.isEmpty(path))
+                txtFile.setText(path);
+        });
+        JPanel filePanel = new JPanel(new BorderLayout(4, 0));
+        filePanel.add(txtFile, BorderLayout.CENTER);
+        filePanel.add(btnBrowse, BorderLayout.EAST);
+        Object[] content = {
+            I18n.t("generatorMain.template.name"), txtName,
+            I18n.t("generatorMain.template.file"), filePanel,
+            I18n.t("generatorMain.template.outTemplate"), txtOut
+        };
+        while (true) {
+            int res = JOptionPane.showConfirmDialog(this, content, title,
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (res != JOptionPane.OK_OPTION)
+                return null;
+            if (StrUtils.isEmpty(txtName.getText())
+                    || StrUtils.isEmpty(txtFile.getText())
+                    || StrUtils.isEmpty(txtOut.getText())) {
+                UIUtils.error(this, I18n.t("generatorMain.msg.templateRequired"));
+                continue;
+            }
+            return new JDBTemplate(txtName.getText(), txtFile.getText(),
+                    txtOut.getText(), current == null || current.isSelected());
+        }
+    }
+
     /**
      * while <code>true</code>, a change of the connection combo box does not
      * open a connection. Set while the combo box is being rebuilt, because
@@ -339,13 +920,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     private void applyConnection(JDBConnection conn) {
         suppressCboConnEvent = conn == null;
-        currConn = conn;
         String preName = null;
         if (suppressCboConnEvent)
             preName = (String)cboConnection.getSelectedItem();
-            
+
         connMap.clear();
-        
+
         boolean back = suppressCboConnEvent;
         suppressCboConnEvent = true;
         cboConnection.removeAllItems();
@@ -361,28 +941,115 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             cboConnection.setSelectedItem(preName);
             suppressCboConnEvent = false;
         }
+        // selecting the entry above already ran the combo handler, which shows
+        // the options of the connection it switched to. Doing it again here is
+        // what covers the paths where that handler bailed out early, and it
+        // costs nothing where it did not.
+        currConn = conn;
+        showGenerationOptions(conn);
+    }
+
+    /**
+     * Fill the generation options panel - the templates with their ticks, the
+     * output directory, the author and the custom variables - from a
+     * connection. A <code>null</code> connection empties the panel.
+     *
+     * @param conn
+     *            the connection to show, or <code>null</code> for none.
+     */
+    private void showGenerationOptions(JDBConnection conn) {
         DefaultTableModel tplModel = (DefaultTableModel)tabTemplates.getModel();
         tplModel.setRowCount(0);
         DefaultTableModel cstModel = (DefaultTableModel)tabVars.getModel();
+        autoReset = false;
         cstModel.setRowCount(0);
         if (conn != null) {
-            List<JDBTemplate> tpls = conn.getTemplates();
-            tplModel.setRowCount(tpls.size());
-            for (int row=0; row<tpls.size(); row++) {
-                JDBTemplate t = tpls.get(row);
-                tplModel.setValueAt(t.getName(), row, 1);
-                tplModel.setValueAt(t.getTemplateFile(), row, 2);
-                tplModel.setValueAt(t.getOutTemplate(), row, 3);
-            }
+            fillTemplateTable(tplModel, conn.getTemplates());
             txtAuthor.setText(conn.getAuthor());
             txtOutputDir.setText(conn.getOutputDir());
-            autoReset = false;
-            conn.getCustomVars().forEach((k, v) -> {if (!StrUtils.isEmpty(k)) cstModel.addRow(new String[]{k, v});});
+            if (conn.getCustomVars() != null)
+                conn.getCustomVars().forEach((k, v) -> {if (!StrUtils.isEmpty(k)) cstModel.addRow(new String[]{k, v});});
             cstModel.addRow(new String[]{"", ""});
-            autoReset = true;
+        } else {
+            txtAuthor.setText("");
+            txtOutputDir.setText("");
         }
+        autoReset = true;
     }
-    
+
+    /**
+     * Show the templates of a connection in the four column template table of
+     * this window, ticking the ones the connection has stored as selected.
+     *
+     * @param model
+     *            the model of the template table, emptied first.
+     * @param tpls
+     *            the templates to show, may be <code>null</code>.
+     */
+    static void fillTemplateTable(DefaultTableModel model, List<JDBTemplate> tpls) {
+        model.setRowCount(0);
+        if (tpls == null)
+            return;
+        for (JDBTemplate t: tpls)
+            model.addRow(new Object[]{ t.isSelected(), t.getName(),
+                t.getTemplateFile(), t.getOutTemplate() });
+    }
+
+    /**
+     * Read the four column template table of this window back into template
+     * objects. The table is the whole truth about the templates of the current
+     * connection - it holds every field of them, including the tick - so the
+     * connection's list is rebuilt from it instead of being matched up row by
+     * row.
+     *
+     * @param model
+     *            the model of the template table.
+     * @return the templates shown, in table order. A row without a name is not
+     *         a template and is dropped.
+     */
+    static List<JDBTemplate> readTemplateTable(TableModel model) {
+        List<JDBTemplate> res = new ArrayList<>();
+        for (int i=0; i<model.getRowCount(); i++) {
+            String name = str(model.getValueAt(i, 1));
+            if (StrUtils.isEmpty(name))
+                continue;
+            Object sel = model.getValueAt(i, 0);
+            res.add(new JDBTemplate(name, str(model.getValueAt(i, 2)),
+                    str(model.getValueAt(i, 3)),
+                    sel instanceof Boolean && (Boolean)sel));
+        }
+        return res;
+    }
+
+    /**
+     * the text of a table cell, with a missing value read as the empty string
+     * instead of the word "null".
+     *
+     * @param value
+     *            the cell value, may be <code>null</code>.
+     * @return the value as text.
+     */
+    private static String str(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    /**
+     * Write the generation options panel back into the connection it belongs
+     * to and store the configuration. This is the only place the panel is
+     * saved from, so every way out of it - generating, switching the
+     * connection, opening the connection manager and closing the window - has
+     * to come through here.
+     */
+    private void saveGenerationOptions() {
+        if (currConn == null)
+            return;
+        currConn.setTemplates(readTemplateTable(tabTemplates.getModel()));
+        currConn.setOutputDir(txtOutputDir.getText());
+        currConn.setAuthor(txtAuthor.getText());
+        currConn.setCustomVars(UIUtils.applyTableToMap(tabVars.getModel()));
+        JDBGenConfig.saveInstance(this);
+    }
+
     /**
      * Build the catalog/schema node hierarchy. This queries the database, so it
      * must NOT be called on the EDT. The returned nodes are not attached to any
@@ -993,14 +1660,24 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * Fill the language combo. Only the system entry is translated - a
-     * language is named in itself, so that it can be found whatever the user
-     * interface currently speaks.
+     * the shown name of every entry of <code>LANGUAGES</code>, in the same
+     * order. Only the system entry is translated - a language is named in
+     * itself, so that it can be found whatever the user interface currently
+     * speaks.
+     *
+     * @return the entry names of the language combo and of the language menu.
+     */
+    private static String[] languageNames() {
+        return new String[] {
+            I18n.t("common.language.system"), "English",
+            "한국어", "Español", "日本語", "简体中文" };
+    }
+
+    /**
+     * Fill the language combo with {@link #languageNames()}.
      */
     private void initLanguageCombo() {
-        cboLanguage.setModel(new DefaultComboBoxModel<>(new String[] {
-            I18n.t("common.language.system"), "English",
-            "한국어", "Español", "日本語", "简体中文" }));
+        cboLanguage.setModel(new DefaultComboBoxModel<>(languageNames()));
         cboLanguage.setToolTipText(I18n.t("common.language.tooltip"));
         cboLanguage.setSelectedIndex(languageIndex(conf.getLanguage()));
     }
@@ -1034,6 +1711,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         if (idx < 0 || idx >= conf.getConnections().size())
             return;
         JDBConnection jcc = conf.getConnections().get(idx);
+        if (jcc != currConn) {
+            // the panel still shows the connection being left: store its edits
+            // before the panel is refilled from the new one
+            saveGenerationOptions();
+            currConn = jcc;
+            showGenerationOptions(jcc);
+        }
         JDBDriver jdr = null;
         for (JDBDriver drv:conf.getDrivers()) {
             if (drv.getName().equals(jcc.getDriverType())) {
@@ -1053,6 +1737,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * open the connection manager and apply the connection it returns.
      */
     private void btnManageConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageConnActionPerformed
+        // the manager edits the same connection objects, so hand it whatever
+        // is currently in the generation options panel
+        saveGenerationOptions();
         JDBConnectionManager cm = JDBConnectionManager.getInstance();
         cm.setModal(true);
         cm.setLocationRelativeTo(this);
@@ -1084,13 +1771,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 DBSchema schema = (DBSchema)uobj;
                 try {
                     tables = dbmeta.getTables(schema, chkShowView.isSelected());
-                    DefaultListModel listModel = new DefaultListModel();
-                    tables.forEach(t -> listModel.addElement(t.getTable()));
-                    this.lstTables.setModel(listModel);
-                    this.lstTables.setCellRenderer(UIUtils.getListCellRenderer(
-                            s -> tables.stream()
-                                .filter(t -> s.equals(t.getName()))
-                                .findFirst().orElse(null)));
+                    // the filter field is kept across a schema switch or a
+                    // show-views toggle, so re-apply it to the freshly read list
+                    applyTableFilter();
                 } catch (Exception ex) {
                     log.error("cannot get tables", ex);
                     UIUtils.error(this, I18n.t("generatorMain.msg.getTablesFailed",
@@ -1105,6 +1788,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     @SuppressWarnings("UseSpecificCatch")
     private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+        saveGenerationOptions();
         if (dbmeta != null)
             try { dbmeta.close(); } catch(Exception ignored) {}
         System.exit(0);
@@ -1223,35 +1907,33 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             return;
         }
         // snapshot every UI value here, on the EDT - the worker below runs on a
-        // background thread and must not read Swing components.
+        // background thread and must not read Swing components. The indices are
+        // resolved against visibleTables, not tables: the list box only ever
+        // shows the tables the filter field let through.
         int tidxs[] = lstTables.getSelectedIndices();
         List<DBTable> selTables = new ArrayList<>();
-        if (tables != null) {
+        if (visibleTables != null) {
             for (int idx: tidxs) {
-                if (idx > -1 && idx < tables.size())
-                    selTables.add(tables.get(idx));
+                if (idx > -1 && idx < visibleTables.size())
+                    selTables.add(visibleTables.get(idx));
             }
         }
         if (selTables.isEmpty()) {
             UIUtils.error(this, I18n.t("generatorMain.msg.selectTable"));
             return;
         }
-        DefaultTableModel tplModel = (DefaultTableModel)tabTemplates.getModel();
         List<JDBTemplate> tpls = new ArrayList<>();
-        for (int i=0; i<tplModel.getRowCount(); i++) {
-            Object val = tplModel.getValueAt(i, 0);
-            if (val != null && (boolean)val) {
-                tpls.add(new JDBTemplate(
-                        String.valueOf(tplModel.getValueAt(i, 1)),
-                        String.valueOf(tplModel.getValueAt(i, 2)),
-                        String.valueOf(tplModel.getValueAt(i, 3))
-                ));
-            }
+        for (JDBTemplate t: readTemplateTable(tabTemplates.getModel())) {
+            if (t.isSelected())
+                tpls.add(t);
         }
         if (tpls.isEmpty()) {
             UIUtils.error(this, I18n.t("generatorMain.msg.selectTemplate"));
             return;
         }
+        // what is generated from is also what is kept: the options panel is the
+        // one place these values are edited, so store them before the run
+        saveGenerationOptions();
         Map<String, String> custVars = UIUtils.applyTableToMap(tabVars.getModel());
         custVars.put("author", txtAuthor.getText());
         // the configured value names a directory relative to the user data
@@ -1281,11 +1963,11 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     private void lstTablesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseClicked
         if (evt.getClickCount() == 2) {
-            if (dbmeta == null || tables == null)
+            if (dbmeta == null || visibleTables == null)
                 return;
             int idx = lstTables.getSelectedIndex();
-            if (idx > -1 && idx < tables.size()) {
-                DBTable table = tables.get(idx);
+            if (idx > -1 && idx < visibleTables.size()) {
+                DBTable table = visibleTables.get(idx);
                 try {
                     dbmeta.getTableColumns(table);
                     JDBTableView tview = new JDBTableView(this, table);
@@ -1318,9 +2000,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * show the full name of the hovered table as a tooltip.
      */
     private void lstTablesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseMoved
-        int idx = tables == null ? -1 : lstTables.locationToIndex(evt.getPoint());
-        if (idx > -1 && idx < tables.size()) {
-            DBTable table = tables.get(idx);
+        int idx = visibleTables == null ? -1 : lstTables.locationToIndex(evt.getPoint());
+        if (idx > -1 && idx < visibleTables.size()) {
+            DBTable table = visibleTables.get(idx);
             lstTables.setToolTipText(table.getName());
         } else {
             lstTables.setToolTipText(null);

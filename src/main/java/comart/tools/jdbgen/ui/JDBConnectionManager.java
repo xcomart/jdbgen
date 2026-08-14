@@ -51,9 +51,10 @@ import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * connection management dialog. It lists the configured database connections
- * and edits the selected one: driver, url, credentials, keep-alive, output
- * directory, JDBC connection properties, code templates and custom template
- * variables.
+ * and edits how the selected one is reached: driver, url, credentials,
+ * keep-alive and JDBC connection properties. What a connection generates - its
+ * templates, its output directory, its author and its custom variables - is
+ * edited in the generation options panel of the main window instead.
  * <p>
  * The dialog is a singleton that is reused for the whole lifetime of the
  * application, see {@link #getInstance()}. It is shown modally both at start up
@@ -71,6 +72,13 @@ public class JDBConnectionManager extends JDialog {
     private static JDBConnectionManager INSTANCE = null;
 
     /**
+     * where a connection writes its generated files when nothing else was
+     * chosen. It names a directory below the user data directory, see
+     * <code>AppDirs.resolveOutputDir</code>.
+     */
+    private static final String DEFAULT_OUTPUT_DIR = "output";
+
+    /**
      * the single instance of this dialog, created on first use. The returned
      * instance is refreshed for the current look and feel and its
      * {@link #selectedConnection} is cleared, so that a caller can tell a
@@ -86,6 +94,9 @@ public class JDBConnectionManager extends JDialog {
         UIUtils.setApplicationIcon(INSTANCE);
 
         INSTANCE.updateComponents();
+        // the driver manager can be reached from the main window as well, so
+        // the driver list may have changed since this dialog was last shown
+        INSTANCE.refreshDrivers();
         INSTANCE.selectedConnection = null;
         return INSTANCE;
     }
@@ -159,10 +170,12 @@ public class JDBConnectionManager extends JDialog {
     @SuppressWarnings("OverridableMethodCallInConstructor")
     private JDBConnectionManager() {
         initComponents();
+        hideGenerationOptions();
         setModal(true);
-        
+
         conf = JDBGenConfig.getInstance();
         applyIcons();
+        applyTooltips();
         applyColumnHeaders();
         eventSetup();
         propsModel = (DefaultTableModel)tabProps.getModel();
@@ -224,6 +237,22 @@ public class JDBConnectionManager extends JDialog {
     }
     
     /**
+     * Take the templates tab and the options tab off the tab pane. What a
+     * connection generates - its templates, its output directory, its author
+     * and its custom variables - is edited in the generation options panel of
+     * the main window, this dialog is about reaching the database.
+     * <p>
+     * The two panels themselves are kept alive and are still filled from the
+     * selected connection and read back when it is saved, so that a value this
+     * dialog no longer shows survives being saved here. Only their tabs are
+     * gone.
+     */
+    private void hideGenerationOptions() {
+        jTabbedPane1.remove(jPanel5);
+        jTabbedPane1.remove(jPanel6);
+    }
+
+    /**
      * show the selected template of the template table in the editor fields
      * below it. Registered as the selection listener of that table; the
      * intermediate events of an ongoing selection change are ignored.
@@ -278,6 +307,16 @@ public class JDBConnectionManager extends JDialog {
     }
 
     /**
+     * describe the inputs whose accepted values are not obvious. The template
+     * table is left alone, it shows the row under the mouse instead.
+     */
+    private void applyTooltips() {
+        txtIcon.setToolTipText(I18n.t("connectionManager.txtIcon.toolTipText"));
+        tabProps.setToolTipText(I18n.t("connectionManager.tabProps.toolTipText"));
+        tabVars.setToolTipText(I18n.t("connectionManager.tabVars.toolTipText"));
+    }
+
+    /**
      * The column titles come from the form designer, which cannot hold a
      * translated string: name them here instead.
      */
@@ -327,24 +366,34 @@ public class JDBConnectionManager extends JDialog {
     
     /**
      * rebuild the driver combo box from the configuration, keeping the driver
-     * that was selected before if it still exists.
+     * that was selected before if it still exists. Rebuilding the combo box
+     * changes its selection on the way, which must not be taken for the user
+     * picking a driver - that would overwrite the url and the properties of the
+     * connection being edited with the defaults of whatever driver happens to
+     * come first.
      */
     private void refreshDrivers() {
-        String dname = (String)cboDriver.getSelectedItem();
-        int idx = -1;
-        cboDriver.removeAllItems();
-        // the driver list may have been added to/renamed/removed meanwhile,
-        // so rebuild the lookup map together with the combo box.
-        driverMap.clear();
-        drivers = conf.getDrivers();
-        for (int i=0; i<drivers.size(); i++) {
-            JDBDriver d = drivers.get(i);
-            driverMap.put(d.getName(), d);
-            cboDriver.addItem(d.getName());
-            if (dname != null && dname.equals(d.getName()))
-                idx = i;
+        boolean back = autoReset;
+        autoReset = false;
+        try {
+            String dname = (String)cboDriver.getSelectedItem();
+            int idx = -1;
+            cboDriver.removeAllItems();
+            // the driver list may have been added to/renamed/removed meanwhile,
+            // so rebuild the lookup map together with the combo box.
+            driverMap.clear();
+            drivers = conf.getDrivers();
+            for (int i=0; i<drivers.size(); i++) {
+                JDBDriver d = drivers.get(i);
+                driverMap.put(d.getName(), d);
+                cboDriver.addItem(d.getName());
+                if (dname != null && dname.equals(d.getName()))
+                    idx = i;
+            }
+            cboDriver.setSelectedIndex(idx);
+        } finally {
+            autoReset = back;
         }
-        cboDriver.setSelectedIndex(idx);
     }
     
     /**
@@ -1228,19 +1277,55 @@ public class JDBConnectionManager extends JDialog {
     }
     
     /**
-     * convert the rows of the template table into template objects.
+     * convert the rows of the template table into template objects. The table
+     * has no column for the tick of the main window, so that flag is carried
+     * over from the templates the connection already has instead of being reset
+     * every time this dialog saves.
      *
+     * @param target
+     *            the connection being saved, whose stored templates the ticks
+     *            are taken from. May be <code>null</code> for a connection that
+     *            does not exist yet.
      * @return the templates currently shown, in table order.
      */
-    private List<JDBTemplate> applyToTplList() {
+    private List<JDBTemplate> applyToTplList(JDBConnection target) {
+        List<JDBTemplate> prev = target == null ? null : target.getTemplates();
         List<JDBTemplate> tpls = new ArrayList<>();
         for (int i=0; i<tplModel.getRowCount(); i++) {
             String name = (String)tplModel.getValueAt(i, 0);
             String tplf = (String)tplModel.getValueAt(i, 1);
             String otpl = (String)tplModel.getValueAt(i, 2);
-            tpls.add(new JDBTemplate(name, tplf, otpl));
+            tpls.add(new JDBTemplate(name, tplf, otpl,
+                    wasSelected(prev, i, name)));
         }
         return tpls;
+    }
+
+    /**
+     * whether the template of a row was ticked for generation. The table is
+     * filled from the stored list in order, so the row index is the first
+     * candidate; a row that was moved or inserted is looked up by name instead.
+     *
+     * @param prev
+     *            the stored templates of the connection, may be
+     *            <code>null</code>.
+     * @param row
+     *            index of the row in the template table.
+     * @param name
+     *            name of the template in that row.
+     * @return the stored tick of that template, <code>false</code> when it is
+     *         not among the stored ones.
+     */
+    private static boolean wasSelected(List<JDBTemplate> prev, int row, String name) {
+        if (prev == null || name == null)
+            return false;
+        if (row < prev.size() && name.equals(prev.get(row).getName()))
+            return prev.get(row).isSelected();
+        for (JDBTemplate t: prev) {
+            if (name.equals(t.getName()))
+                return t.isSelected();
+        }
+        return false;
     }
     
     /**
@@ -1288,9 +1373,6 @@ public class JDBConnectionManager extends JDialog {
         } else if (StrUtils.isEmpty(txtKeepAliveSec.getText()) && chkKeepAlive.isSelected()) {
             UIUtils.error(this, I18n.t("connectionManager.msg.keepAliveSecRequired"));
             txtKeepAliveSec.requestFocusInWindow();
-        } else if (StrUtils.isEmpty(txtOutputDir.getText())) {
-            UIUtils.error(this, I18n.t("connectionManager.msg.outputDirRequired"));
-            txtOutputDir.requestFocusInWindow();
         } else if (!driver.validate()) {
             UIUtils.error(this, I18n.t("connectionManager.msg.driverIncomplete"));
             manageDrivers(cboDriver.getSelectedIndex());
@@ -1303,14 +1385,19 @@ public class JDBConnectionManager extends JDialog {
             target.setKeepAliveQuery(txtKeepAliveQuery.getText());
             target.setKeepAliveSec(txtKeepAliveSec.getText());
             target.setName(txtName.getText());
-            target.setOutputDir(txtOutputDir.getText());
+            // the output directory is edited in the main window and is only
+            // passed through here. A connection that has none yet - a new one -
+            // must still be saveable, so it is given the default instead of
+            // being rejected for a field this dialog does not show.
+            target.setOutputDir(StrUtils.isEmpty(txtOutputDir.getText()) ?
+                    DEFAULT_OUTPUT_DIR : txtOutputDir.getText());
             target.setUserPassword(new String(txtPassword.getPassword()));
             target.setUserName(txtUser.getText());
             target.setUseKeepAlive(chkKeepAlive.isSelected());
             target.setDriverType((String)cboDriver.getSelectedItem());
             target.setConnectionProps(applyToPropsMap());
             target.setCustomVars(applyToVarsMap());
-            target.setTemplates(applyToTplList());
+            target.setTemplates(applyToTplList(idx == -1 ? null : target));
 
             connMap.put(target.getName(), target);
             

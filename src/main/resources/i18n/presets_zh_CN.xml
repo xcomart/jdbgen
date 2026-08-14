@@ -11,17 +11,18 @@
   <entry key="presets.jLabel3.text">预设名称：</entry>
   <entry key="presets.tabTemplates.column.templateName">模板名称</entry>
   <entry key="presets.tabTemplates.column.templateFile">模板文件</entry>
-  <entry key="presets.tabTemplates.column.outTemplate">输出模板</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">输出文件名</entry>
   <entry key="presets.btnNewTemplate.text">新建</entry>
   <entry key="presets.btnDelTemplate.text">删除</entry>
   <entry key="presets.btnSaveTemplate.text">应用</entry>
   <entry key="presets.jLabel9.text">模板名称：</entry>
   <entry key="presets.jLabel8.text">模板文件：</entry>
-  <entry key="presets.jLabel13.text">输出文件名模板：</entry>
+  <entry key="presets.jLabel13.text">输出文件名：</entry>
 
   <!-- bottom bar -->
-  <entry key="presets.btnNewFromConn.text">从当前连接新建预设</entry>
-  <entry key="presets.btnApply.text">应用到当前连接</entry>
+  <entry key="presets.btnNewFromConn.text">从连接导入</entry>
+  <entry key="presets.btnApply.text">应用到连接</entry>
+  <entry key="presets.btnApply.toolTipText">用该预设的模板替换当前连接的模板列表。原有列表不会合并，而是被丢弃。</entry>
   <entry key="presets.btnSave.text">保存</entry>
   <entry key="presets.btnCancel.text">取消</entry>
 

@@ -32,16 +32,18 @@
   <entry key="connectionManager.jLabel6.text">사용자 비밀번호:</entry>
   <entry key="connectionManager.jLabel12.text">아이콘:</entry>
   <entry key="connectionManager.btnBrowseIcon.toolTipText">아이콘 파일 찾아보기</entry>
+  <entry key="connectionManager.txtIcon.toolTipText">연결 목록에 표시할 아이콘입니다. 내장 아이콘은 stock:이름.png, Font Awesome 아이콘은 fa:아이콘명, 색상 점은 color:색이름, 그 밖에 http URL이나 이미지 파일 경로를 쓸 수 있습니다.</entry>
   <entry key="connectionManager.jLabel7.text">접속 속성:</entry>
   <entry key="connectionManager.tabProps.col.key">키</entry>
   <entry key="connectionManager.tabProps.col.value">값</entry>
-  <entry key="connectionManager.chkKeepAlive.text">아래 구문으로 연결 유지, 실행 간격</entry>
-  <entry key="connectionManager.jLabel15.text">초.</entry>
+  <entry key="connectionManager.tabProps.toolTipText">JDBC 드라이버에 전달할 속성입니다. 마지막 빈 행에 입력하면 새 행이 추가됩니다.</entry>
+  <entry key="connectionManager.chkKeepAlive.text">연결 유지를 위해 아래 문장을</entry>
+  <entry key="connectionManager.jLabel15.text">초마다 실행</entry>
 
   <!-- templates tab -->
   <entry key="connectionManager.tabTemplates.col.name">이름</entry>
   <entry key="connectionManager.tabTemplates.col.templateFile">템플릿 파일</entry>
-  <entry key="connectionManager.tabTemplates.col.outTemplate">출력 템플릿</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">출력 파일명</entry>
   <entry key="connectionManager.btnTemplateHelp.toolTipText">템플릿 도움말</entry>
   <entry key="connectionManager.btnPresets.text">프리셋</entry>
   <entry key="connectionManager.btnPresets.toolTipText">템플릿 프리셋 관리</entry>
@@ -56,8 +58,8 @@
   <entry key="connectionManager.jLabel8.text">템플릿 파일:</entry>
   <entry key="connectionManager.txtTemplateFile.toolTipText">템플릿 파일 위치</entry>
   <entry key="connectionManager.btnBrowseTemplate.toolTipText">템플릿 파일 찾아보기</entry>
-  <entry key="connectionManager.jLabel13.text">출력 파일명 템플릿:</entry>
-  <entry key="connectionManager.txtOutTemplate.toolTipText">출력 파일 이름 템플릿</entry>
+  <entry key="connectionManager.jLabel13.text">출력 파일명:</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">이 템플릿으로 생성될 파일의 이름입니다. 템플릿 변수를 쓸 수 있습니다.</entry>
 
   <!-- options tab -->
   <entry key="connectionManager.jLabel11.text">출력 디렉터리:</entry>
@@ -65,6 +67,7 @@
   <entry key="connectionManager.jLabel16.text">사용자 변수:</entry>
   <entry key="connectionManager.tabVars.col.name">이름</entry>
   <entry key="connectionManager.tabVars.col.value">값</entry>
+  <entry key="connectionManager.tabVars.toolTipText">템플릿에서 사용할 사용자 변수입니다. 마지막 빈 행에 입력하면 새 행이 추가됩니다.</entry>
 
   <!-- default names of newly created connections -->
   <entry key="connectionManager.msg.newConnection">새 연결</entry>
@@ -79,7 +82,6 @@
   <entry key="connectionManager.msg.passwordRequired">데이터베이스 사용자 비밀번호를 입력하세요.</entry>
   <entry key="connectionManager.msg.keepAliveQueryRequired">연결 유지에 사용할 SQL 구문을 입력하세요.</entry>
   <entry key="connectionManager.msg.keepAliveSecRequired">연결 유지 구문의 실행 간격을 입력하세요.</entry>
-  <entry key="connectionManager.msg.outputDirRequired">출력 디렉터리를 입력하세요.</entry>
   <entry key="connectionManager.msg.driverIncomplete">드라이버 정보가 완전하지 않습니다.</entry>
 
   <!-- removing a connection -->

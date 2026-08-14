@@ -6,9 +6,9 @@
   <entry key="abbreviationMapper.jLabel1.text">缩写映射</entry>
   <entry key="abbreviationMapper.tblMapping.toolTipText">应用于对象（表、列）名称的缩写映射规则。</entry>
   <entry key="abbreviationMapper.tblMapping.column.apply">应用</entry>
-  <entry key="abbreviationMapper.tblMapping.column.totalName">全称</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">仅整名匹配</entry>
   <entry key="abbreviationMapper.tblMapping.column.abbreviation">缩写</entry>
-  <entry key="abbreviationMapper.tblMapping.column.replaceTo">替换为</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">替换结果</entry>
   <entry key="abbreviationMapper.btnDel.toolTipText">删除所选映射</entry>
   <entry key="abbreviationMapper.btnOk.text">确定</entry>
 

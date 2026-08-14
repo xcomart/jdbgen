@@ -32,16 +32,18 @@
   <entry key="connectionManager.jLabel6.text">用户密码：</entry>
   <entry key="connectionManager.jLabel12.text">图标：</entry>
   <entry key="connectionManager.btnBrowseIcon.toolTipText">浏览图标文件</entry>
+  <entry key="connectionManager.txtIcon.toolTipText">此连接的图标。内置图标使用 stock:名称.png，Font Awesome 图标使用 fa:名称，彩色圆点使用 color:颜色名，也可以使用 http URL 或图像文件路径。</entry>
   <entry key="connectionManager.jLabel7.text">连接属性：</entry>
   <entry key="connectionManager.tabProps.col.key">键</entry>
   <entry key="connectionManager.tabProps.col.value">值</entry>
-  <entry key="connectionManager.chkKeepAlive.text">使用下面的语句保持连接，间隔</entry>
-  <entry key="connectionManager.jLabel15.text">秒。</entry>
+  <entry key="connectionManager.tabProps.toolTipText">传递给 JDBC 驱动的属性。在最后一个空行中输入即可新增一行。</entry>
+  <entry key="connectionManager.chkKeepAlive.text">为保持连接，每隔</entry>
+  <entry key="connectionManager.jLabel15.text">秒执行下面的语句。</entry>
 
   <!-- templates tab -->
   <entry key="connectionManager.tabTemplates.col.name">名称</entry>
   <entry key="connectionManager.tabTemplates.col.templateFile">模板文件</entry>
-  <entry key="connectionManager.tabTemplates.col.outTemplate">输出模板</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">输出文件名</entry>
   <entry key="connectionManager.btnTemplateHelp.toolTipText">模板帮助</entry>
   <entry key="connectionManager.btnPresets.text">预设</entry>
   <entry key="connectionManager.btnPresets.toolTipText">管理模板预设</entry>
@@ -56,8 +58,8 @@
   <entry key="connectionManager.jLabel8.text">模板文件：</entry>
   <entry key="connectionManager.txtTemplateFile.toolTipText">模板文件位置</entry>
   <entry key="connectionManager.btnBrowseTemplate.toolTipText">浏览模板文件</entry>
-  <entry key="connectionManager.jLabel13.text">输出文件名模板：</entry>
-  <entry key="connectionManager.txtOutTemplate.toolTipText">输出文件名的模板</entry>
+  <entry key="connectionManager.jLabel13.text">输出文件名：</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">由该模板生成的文件名。可以使用模板变量。</entry>
 
   <!-- options tab -->
   <entry key="connectionManager.jLabel11.text">输出目录：</entry>
@@ -65,6 +67,7 @@
   <entry key="connectionManager.jLabel16.text">自定义变量：</entry>
   <entry key="connectionManager.tabVars.col.name">名称</entry>
   <entry key="connectionManager.tabVars.col.value">值</entry>
+  <entry key="connectionManager.tabVars.toolTipText">可在模板中使用的自定义变量。在最后一个空行中输入即可新增一行。</entry>
 
   <!-- default names of newly created connections -->
   <entry key="connectionManager.msg.newConnection">新建连接</entry>
@@ -79,7 +82,6 @@
   <entry key="connectionManager.msg.passwordRequired">请输入数据库用户密码。</entry>
   <entry key="connectionManager.msg.keepAliveQueryRequired">请输入用于保持连接的 SQL 语句。</entry>
   <entry key="connectionManager.msg.keepAliveSecRequired">请输入保持连接语句的执行间隔。</entry>
-  <entry key="connectionManager.msg.outputDirRequired">请输入输出目录。</entry>
   <entry key="connectionManager.msg.driverIncomplete">驱动信息不完整。</entry>
 
   <!-- removing a connection -->

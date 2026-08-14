@@ -11,17 +11,18 @@
   <entry key="presets.jLabel3.text">Nombre del preajuste:</entry>
   <entry key="presets.tabTemplates.column.templateName">Nombre de la plantilla</entry>
   <entry key="presets.tabTemplates.column.templateFile">Archivo de plantilla</entry>
-  <entry key="presets.tabTemplates.column.outTemplate">Plantilla de salida</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">Nombre del archivo de salida</entry>
   <entry key="presets.btnNewTemplate.text">Nueva</entry>
   <entry key="presets.btnDelTemplate.text">Eliminar</entry>
   <entry key="presets.btnSaveTemplate.text">Aplicar</entry>
   <entry key="presets.jLabel9.text">Nombre de la plantilla:</entry>
   <entry key="presets.jLabel8.text">Archivo de plantilla:</entry>
-  <entry key="presets.jLabel13.text">Plantilla del nombre de salida:</entry>
+  <entry key="presets.jLabel13.text">Nombre del archivo de salida:</entry>
 
   <!-- bottom bar -->
-  <entry key="presets.btnNewFromConn.text">Nuevo preajuste a partir de la conexión actual</entry>
-  <entry key="presets.btnApply.text">Aplicar a la conexión actual</entry>
+  <entry key="presets.btnNewFromConn.text">Importar de la conexión</entry>
+  <entry key="presets.btnApply.text">Aplicar a la conexión</entry>
+  <entry key="presets.btnApply.toolTipText">Sustituye la lista de plantillas de la conexión actual por las plantillas de este preajuste. La lista existente no se combina, se descarta.</entry>
   <entry key="presets.btnSave.text">Guardar</entry>
   <entry key="presets.btnCancel.text">Cancelar</entry>
 

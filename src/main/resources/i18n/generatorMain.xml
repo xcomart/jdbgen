@@ -6,11 +6,26 @@
   <!-- window chrome -->
   <entry key="generatorMain.title">JDBGen Main</entry>
 
+  <!-- menu bar -->
+  <entry key="generatorMain.menu.file">File</entry>
+  <entry key="generatorMain.menu.file.generate">Generate</entry>
+  <entry key="generatorMain.menu.file.close">Close</entry>
+  <entry key="generatorMain.menu.tools">Tools</entry>
+  <entry key="generatorMain.menu.tools.connectionManager">Connection Manager…</entry>
+  <entry key="generatorMain.menu.tools.driverManager">Driver Manager…</entry>
+  <entry key="generatorMain.menu.tools.abbreviationMapper">Abbreviation Mapper…</entry>
+  <entry key="generatorMain.menu.view">View</entry>
+  <entry key="generatorMain.menu.view.darkUI">Dark UI</entry>
+  <entry key="generatorMain.menu.view.language">Language</entry>
+  <entry key="generatorMain.menu.help">Help</entry>
+  <entry key="generatorMain.menu.help.about">About JDBGen</entry>
+  <entry key="generatorMain.menu.help.templateReference">Template Reference</entry>
+
   <!-- connection bar -->
   <entry key="generatorMain.jLabel2.text">Connection</entry>
   <entry key="generatorMain.btnManageConn.text">Manage</entry>
   <entry key="generatorMain.btnMapper.text">Abbreviation Mapper</entry>
-  <entry key="generatorMain.btnAck.toolTipText">About of this program</entry>
+  <entry key="generatorMain.btnAck.toolTipText">About JDBGen</entry>
 
   <!-- catalog/schema pane -->
   <entry key="generatorMain.jLabel1.text">Catalogs/Schemas</entry>
@@ -19,21 +34,37 @@
   <!-- table pane -->
   <entry key="generatorMain.jLabel5.text">Tables</entry>
   <entry key="generatorMain.chkShowView.text">Show Views</entry>
+  <entry key="generatorMain.txtTableFilter.placeholder">Filter tables…</entry>
+  <entry key="generatorMain.lstTables.popup.selectAll">Select All</entry>
+  <entry key="generatorMain.lstTables.popup.clearSelection">Clear Selection</entry>
 
   <!-- generation options -->
   <entry key="generatorMain.jLabel4.text">Generation Options</entry>
   <entry key="generatorMain.jLabel6.text">Templates</entry>
+  <entry key="generatorMain.tabTemplates.emptyHint">Right-click to add a template</entry>
   <entry key="generatorMain.tabTemplates.column.select">Select</entry>
   <entry key="generatorMain.tabTemplates.column.name">Name</entry>
   <entry key="generatorMain.tabTemplates.column.templateFile">Template File</entry>
-  <entry key="generatorMain.tabTemplates.column.outTemplate">Out Template</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">Output File Name</entry>
+  <entry key="generatorMain.tabTemplates.header.toolTipText">Templates run for every selected table. The output file name column takes template variables, for example {0}. Right click the list to add, edit or remove a template.</entry>
+  <entry key="generatorMain.tabTemplates.popup.add">Add Template…</entry>
+  <entry key="generatorMain.tabTemplates.popup.edit">Edit Template…</entry>
+  <entry key="generatorMain.tabTemplates.popup.delete">Delete Template</entry>
+  <entry key="generatorMain.tabTemplates.popup.presets">Template Presets…</entry>
+  <entry key="generatorMain.template.add.title">Add Template</entry>
+  <entry key="generatorMain.template.edit.title">Edit Template</entry>
+  <entry key="generatorMain.template.name">Name:</entry>
+  <entry key="generatorMain.template.file">Template File:</entry>
+  <entry key="generatorMain.template.outTemplate">Output File Name:</entry>
   <entry key="generatorMain.jLabel11.text">Output Directory:</entry>
+  <entry key="generatorMain.txtOutputDir.toolTipText">Directory the generated files are written to. A relative path is resolved below the user data directory, or below the installation directory when it exists there.</entry>
   <entry key="generatorMain.jLabel14.text">Author Name:</entry>
   <entry key="generatorMain.jLabel15.text">Abbreviation:</entry>
   <entry key="generatorMain.chkApplyAbbr.text">Apply abbreviation rule to all name fields.</entry>
   <entry key="generatorMain.jLabel16.text">Custom Variables:</entry>
   <entry key="generatorMain.tabVars.column.name">Name</entry>
   <entry key="generatorMain.tabVars.column.value">Value</entry>
+  <entry key="generatorMain.tabVars.toolTipText">Custom variables available in the templates. Typing into the last empty row adds another one.</entry>
 
   <!-- bottom bar -->
   <entry key="generatorMain.chkDarkUI.text">Dark UI</entry>
@@ -50,6 +81,7 @@
   <entry key="generatorMain.msg.connectFirst">Please connect to a database first.</entry>
   <entry key="generatorMain.msg.selectTable">Please select at least one table to generate.</entry>
   <entry key="generatorMain.msg.selectTemplate">Please select at least one template to generate.</entry>
+  <entry key="generatorMain.msg.templateRequired">Name, template file and output file name are all required.</entry>
   <entry key="generatorMain.msg.complete.title">Process Complete</entry>
   <entry key="generatorMain.msg.complete">Process complete successfully!&#10;Do you want open output directory?</entry>
   <entry key="generatorMain.msg.failed">Process failed!</entry>

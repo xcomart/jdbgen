@@ -11,17 +11,18 @@
   <entry key="presets.jLabel3.text">プリセット名:</entry>
   <entry key="presets.tabTemplates.column.templateName">テンプレート名</entry>
   <entry key="presets.tabTemplates.column.templateFile">テンプレートファイル</entry>
-  <entry key="presets.tabTemplates.column.outTemplate">出力テンプレート</entry>
+  <entry key="presets.tabTemplates.column.outTemplate">出力ファイル名</entry>
   <entry key="presets.btnNewTemplate.text">新規</entry>
   <entry key="presets.btnDelTemplate.text">削除</entry>
   <entry key="presets.btnSaveTemplate.text">適用</entry>
   <entry key="presets.jLabel9.text">テンプレート名:</entry>
   <entry key="presets.jLabel8.text">テンプレートファイル:</entry>
-  <entry key="presets.jLabel13.text">出力ファイル名テンプレート:</entry>
+  <entry key="presets.jLabel13.text">出力ファイル名:</entry>
 
   <!-- bottom bar -->
-  <entry key="presets.btnNewFromConn.text">現在の接続からプリセットを作成</entry>
-  <entry key="presets.btnApply.text">現在の接続に適用</entry>
+  <entry key="presets.btnNewFromConn.text">接続から取り込む</entry>
+  <entry key="presets.btnApply.text">接続に適用</entry>
+  <entry key="presets.btnApply.toolTipText">現在の接続のテンプレート一覧を、このプリセットのテンプレートで置き換えます。既存の一覧は統合されず破棄されます。</entry>
   <entry key="presets.btnSave.text">保存</entry>
   <entry key="presets.btnCancel.text">キャンセル</entry>
 

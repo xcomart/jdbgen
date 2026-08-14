@@ -6,11 +6,26 @@
   <!-- window chrome -->
   <entry key="generatorMain.title">JDBGen メイン</entry>
 
+  <!-- menu bar -->
+  <entry key="generatorMain.menu.file">ファイル</entry>
+  <entry key="generatorMain.menu.file.generate">生成</entry>
+  <entry key="generatorMain.menu.file.close">閉じる</entry>
+  <entry key="generatorMain.menu.tools">ツール</entry>
+  <entry key="generatorMain.menu.tools.connectionManager">接続の管理…</entry>
+  <entry key="generatorMain.menu.tools.driverManager">ドライバーの管理…</entry>
+  <entry key="generatorMain.menu.tools.abbreviationMapper">略語マッパー…</entry>
+  <entry key="generatorMain.menu.view">表示</entry>
+  <entry key="generatorMain.menu.view.darkUI">ダークテーマ</entry>
+  <entry key="generatorMain.menu.view.language">言語</entry>
+  <entry key="generatorMain.menu.help">ヘルプ</entry>
+  <entry key="generatorMain.menu.help.about">JDBGen について</entry>
+  <entry key="generatorMain.menu.help.templateReference">テンプレートリファレンス</entry>
+
   <!-- connection bar -->
   <entry key="generatorMain.jLabel2.text">接続</entry>
   <entry key="generatorMain.btnManageConn.text">管理</entry>
   <entry key="generatorMain.btnMapper.text">略語マッパー</entry>
-  <entry key="generatorMain.btnAck.toolTipText">このプログラムについて</entry>
+  <entry key="generatorMain.btnAck.toolTipText">JDBGen について</entry>
 
   <!-- catalog/schema pane -->
   <entry key="generatorMain.jLabel1.text">カタログ/スキーマ</entry>
@@ -19,21 +34,37 @@
   <!-- table pane -->
   <entry key="generatorMain.jLabel5.text">テーブル</entry>
   <entry key="generatorMain.chkShowView.text">ビューを表示</entry>
+  <entry key="generatorMain.txtTableFilter.placeholder">テーブルを絞り込み…</entry>
+  <entry key="generatorMain.lstTables.popup.selectAll">すべて選択</entry>
+  <entry key="generatorMain.lstTables.popup.clearSelection">選択解除</entry>
 
   <!-- generation options -->
   <entry key="generatorMain.jLabel4.text">生成オプション</entry>
   <entry key="generatorMain.jLabel6.text">テンプレート</entry>
+  <entry key="generatorMain.tabTemplates.emptyHint">右クリックしてテンプレートを追加してください</entry>
   <entry key="generatorMain.tabTemplates.column.select">選択</entry>
   <entry key="generatorMain.tabTemplates.column.name">名前</entry>
   <entry key="generatorMain.tabTemplates.column.templateFile">テンプレートファイル</entry>
-  <entry key="generatorMain.tabTemplates.column.outTemplate">出力テンプレート</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">出力ファイル名</entry>
+  <entry key="generatorMain.tabTemplates.header.toolTipText">選択したテーブルごとに実行されるテンプレートです。出力ファイル名の列には {0} のようなテンプレート変数を使えます。一覧を右クリックするとテンプレートの追加・編集・削除ができます。</entry>
+  <entry key="generatorMain.tabTemplates.popup.add">テンプレートを追加…</entry>
+  <entry key="generatorMain.tabTemplates.popup.edit">テンプレートを編集…</entry>
+  <entry key="generatorMain.tabTemplates.popup.delete">テンプレートを削除</entry>
+  <entry key="generatorMain.tabTemplates.popup.presets">テンプレートプリセット…</entry>
+  <entry key="generatorMain.template.add.title">テンプレートの追加</entry>
+  <entry key="generatorMain.template.edit.title">テンプレートの編集</entry>
+  <entry key="generatorMain.template.name">名前:</entry>
+  <entry key="generatorMain.template.file">テンプレートファイル:</entry>
+  <entry key="generatorMain.template.outTemplate">出力ファイル名:</entry>
   <entry key="generatorMain.jLabel11.text">出力ディレクトリ:</entry>
+  <entry key="generatorMain.txtOutputDir.toolTipText">生成されたファイルを書き出すディレクトリです。相対パスはユーザーデータディレクトリを基準に解決され、そこに無い場合はインストールディレクトリを基準にします。</entry>
   <entry key="generatorMain.jLabel14.text">作成者名:</entry>
   <entry key="generatorMain.jLabel15.text">略語:</entry>
   <entry key="generatorMain.chkApplyAbbr.text">すべての名前項目に略語ルールを適用します。</entry>
   <entry key="generatorMain.jLabel16.text">カスタム変数:</entry>
   <entry key="generatorMain.tabVars.column.name">名前</entry>
   <entry key="generatorMain.tabVars.column.value">値</entry>
+  <entry key="generatorMain.tabVars.toolTipText">テンプレートで使えるユーザー変数です。最後の空行に入力すると行が追加されます。</entry>
 
   <!-- bottom bar -->
   <entry key="generatorMain.chkDarkUI.text">ダークテーマ</entry>
@@ -50,6 +81,7 @@
   <entry key="generatorMain.msg.connectFirst">先にデータベースへ接続してください。</entry>
   <entry key="generatorMain.msg.selectTable">生成するテーブルを 1 つ以上選択してください。</entry>
   <entry key="generatorMain.msg.selectTemplate">生成するテンプレートを 1 つ以上選択してください。</entry>
+  <entry key="generatorMain.msg.templateRequired">名前・テンプレートファイル・出力ファイル名をすべて入力してください。</entry>
   <entry key="generatorMain.msg.complete.title">処理完了</entry>
   <entry key="generatorMain.msg.complete">処理が正常に完了しました!&#10;出力ディレクトリを開きますか?</entry>
   <entry key="generatorMain.msg.failed">処理に失敗しました!</entry>

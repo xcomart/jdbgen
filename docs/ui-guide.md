@@ -69,9 +69,9 @@ When you do accept the default configuration:
 
 ![Connection manager window](images/connection_manager.png "Connection Manager Window")
 
-Window title: **`Connection Manager`**. This is where a database connection, the templates it generates, and its output options are defined. It opens automatically at startup and can be reopened at any time from the `Manage` button of the [Generator main window](#generator-main-window).
+Window title: **`Connection Manager`**. This is where a database connection is defined — how the database is reached. What a connection *generates* — its templates, output directory, author and custom variables — is edited in the [Generator main window](#generator-main-window) instead. It opens automatically at startup and can be reopened at any time from the `Manage` button of the main window, or from its `Tools ▸ Connection Manager…` menu entry.
 
-The left pane, headed **`Connections`**, lists every configured connection; the right pane is a three-tab editor for the selected one. Double-clicking a connection in the list is a shortcut for `Connect`.
+The left pane, headed **`Connections`**, lists every configured connection; the right pane is the editor for the selected one. Double-clicking a connection in the list is a shortcut for `Connect`.
 
 ### Connections list buttons
 
@@ -121,45 +121,11 @@ Buttons on this tab:
 3. **clears and refills the `Connection Props:` table** from the driver's properties — any per-connection property you typed there is lost;
 4. disables `User Name:` and `User Password:` when the driver has *Authentication is not required for this driver* checked.
 
-### Templates tab
+### Templates and generation options
 
-![Connection manager templates](images/connection_templates.png "Connection Manager Templates Tab")
+The templates a connection generates, its output directory, its author and its custom variables are **not** edited here. They live in the [`Generation Options`](#generation-options) panel of the main window, which is also where they are saved from — the two-places-to-edit-the-same-thing of earlier versions is gone.
 
-The templates listed here are the ones offered for generation when this connection is active. The table columns are `Name`, `Template FIle` and `Out Template`, and all three are editable in place; the fields underneath edit the selected row.
-
-| Field | Setting | Format / constraints | Default |
-|:---|:---|:---|:---|
-| `Template Name:` | Label shown in the generator's template list | Free text | *(empty)* |
-| `Template File:` | Path to the template file | Stored relative to the [user data directory or the installation](installation.md#where-jdbgen-keeps-its-data) when the file is picked underneath one of them, absolute otherwise; see [Template Reference](template-reference.md) | *(empty)* |
-| `Output Name Template:` | Template that produces the output file name | A template expression, e.g. `${name.suffix.pascal}Model.java` | *(empty)* |
-
-| Button | Tooltip | Action |
-|:---:|:---|:---|
-| `?` | Template Help | Opens the template documentation for the running version in your browser. |
-| `Presets` | Manage Template Presets | Opens the [Template Presets](#template-presets) window, handing it this table. |
-| `New` | Create New Template | Clears the table selection and the three fields, ready for a new entry. |
-| `Delete` | Remove Current Template | Removes the selected row from the table. |
-| `Apply` | Apply Selected Template Modification | Writes the three fields back into the selected row — **or appends them as a new row when nothing is selected**. |
-| `...` | Browse Template File | File chooser starting in the `templates` directory; stores a path relative to the user data directory or the installation when the file sits below one of them. |
-
-Hovering a row shows a tooltip with the full `Template Name`, `Template File` and `Output Template`, which is useful when the columns are too narrow.
-
-> The `Template FIle` and `Out Template` column headers are misspelled/abbreviated in the UI. They are reproduced here exactly as they appear on screen.
-
-### Options tab
-
-![Connection manager options](images/connection_options.png "Connection Manager Options Tab")
-
-| Field | Setting | Format / constraints | Default |
-|:---|:---|:---|:---|
-| `Output Directory:` | Where generated files are written | Required. An absolute path is written to as it is; a relative one is taken relative to the [user data directory](installation.md#where-jdbgen-keeps-its-data), or to the installation when it names an existing directory there — the same rule as for every other path in the configuration, and what the `...` button stores. The directory is created if it does not exist. The default configuration uses `output` below the user data directory | `output` |
-| `Author Name:` | Value of `${author}` in templates | Free text, e.g. `John Doe <john.doe@abc.com>` | *(empty)* |
-| `Custom Variables:` | User-defined `item`-style variables usable in templates | Two-column `Name` / `Value` table | *(empty)* |
-
-| Button | Action |
-|:---:|:---|
-| `...` | Directory chooser for `Output Directory:` (this one works). |
-| `-` | Removes the selected custom-variable row (the last remaining row is cleared instead). |
+A connection that has never been given an output directory — a brand new one — is saved with the default `output`, a directory below the [user data directory](installation.md#where-jdbgen-keeps-its-data). Change it in the main window.
 
 ### Window buttons and saving
 
@@ -169,7 +135,7 @@ Hovering a row shows a tooltip with the full `Template Name`, `Template File` an
 | `Connect` | Runs the same `Save`, and closes the window on success so the generator can open the connection. |
 | `Cancel` | Closes the window without saving the current form. At startup this **exits the program**. |
 
-Validation happens in order and stops at the first problem, focusing the offending field: duplicate name → empty name → empty connection URL → no driver selected → empty user name (unless *no auth*) → empty password (unless *no auth*) → keep-alive SQL / interval missing while keep-alive is checked → empty output directory → incomplete driver definition (which reopens the Driver Manager).
+Validation happens in order and stops at the first problem, focusing the offending field: duplicate name → empty name → empty connection URL → no driver selected → empty user name (unless *no auth*) → empty password (unless *no auth*) → keep-alive SQL / interval missing while keep-alive is checked → incomplete driver definition (which reopens the Driver Manager).
 
 **Key/Value table rules** (they apply to `Connection Props:`, `Custom Variables:` and the driver's property table alike): a trailing empty row is always kept so you can type a new pair; rows whose key *or* value is empty are dropped on save; insertion order is preserved; and a cell being edited is committed when the table loses focus, so you do not have to press <kbd>Enter</kbd>.
 
@@ -179,7 +145,7 @@ Validation happens in order and stops at the first problem, focusing the offendi
 
 ![Driver manager window](images/driver_manager.png "Driver Manager Window")
 
-Window title: **`Driver Manager`**. Reached from the `Manage` button on the Connection Manager's General tab. It defines the JDBC jar, driver class, URL template and metadata queries for each database product. The left pane is headed **`Drivers`**.
+Window title: **`Driver Manager`**. Reached from the `Manage` button of the Connection Manager, or from `Tools ▸ Driver Manager…` in the main window; a driver added there is in the Connection Manager's `Driver:` combo the next time it opens. It defines the JDBC jar, driver class, URL template and metadata queries for each database product. The left pane is headed **`Drivers`**.
 
 ### Drivers list buttons
 
@@ -279,7 +245,7 @@ The download opens a [progress window](#progress) that reports bytes received, s
 
 ![Template preset window](images/template_preset.png "Template Presets Window")
 
-Opened from the `Presets` button on the Connection Manager's Templates tab. A preset is a named, reusable set of templates — a "Java model" set, a "MyBatis" set, and so on — that can be pushed into any connection.
+Opened from `Template Presets…` in the right-click menu of the template list in the [main window](#templates). A preset is a named, reusable set of templates — a "Java model" set, a "MyBatis" set, and so on — that can be pushed into any connection.
 
 The left pane, **`Template Presets`**, lists the presets. The right pane, **`Preset Detail`**, edits the selected one.
 
@@ -308,7 +274,7 @@ The left pane, **`Template Presets`**, lists the presets. The right pane, **`Pre
 | `Delete` | Removes the selected template row. |
 | `Apply` | Writes the three fields into the selected row, or appends a new row when nothing is selected. All three must be filled in. |
 | `New Preset from Current Connection` | **Creates a brand-new preset** and copies the current connection's templates into it. |
-| `Apply to Current Connection` | Replaces the Connection Manager's Templates table with this preset's templates. |
+| `Apply to Current Connection` | Replaces the main window's template list with this preset's templates, all of them ticked. |
 | `Save` | Commits any pending template edit, validates the preset name, saves the preset and writes `config.json`. |
 | `Cancel` | Closes the window. |
 
@@ -316,7 +282,7 @@ The left pane, **`Template Presets`**, lists the presets. The right pane, **`Pre
 > `New Preset from Current Connection` does **not** copy into the preset you have selected. It always creates a new preset — named `New Preset`, or `New Preset - 2` and so on if that name is taken — and never asks you for a name. Rename it in `Preset Name:` and press `Save`, otherwise nothing is written to disk.
 
 > **Note**
-> `Apply to Current Connection` only rewrites the *in-memory* table in the Connection Manager. Nothing is persisted until you go back and press `Save` or `Connect` there.
+> `Apply to Current Connection` replaces the template list of the connection you are working with. The old list is discarded, not merged, and the new one is stored with the connection as soon as the preset window closes.
 
 > **Note**
 > As with the other list panes, `+`, `C` and `New Preset from Current Connection` add entries to the shared configuration immediately; `Cancel` does not remove them.
@@ -333,9 +299,9 @@ Window title: **`JDBGen Main`**. This is where generation actually happens: pick
 
 | Control | Purpose | Notes |
 |:---|:---|:---|
-| `Connection` combo | Selects the active connection | **Changing it connects.** The database is opened on a background thread; while that runs the combo, `Manage` and `Generate` are disabled and the cursor becomes a wait cursor. |
+| `Connection` combo | Selects the active connection | **Changing it connects.** The generation options of the connection you are leaving are saved first, then the panel is refilled from the new one. The database is opened on a background thread; while that runs the combo, `Manage` and `Generate` are disabled and the cursor becomes a wait cursor. |
 | connection URL label | Shows the URL of the current connection | Deliberately clipped to the first 20 characters so a long URL cannot push the panels off screen. Cleared when a connection fails. |
-| `Manage` | Opens the [Connection Manager](#connection-manager) modally, preselecting the current connection | On return the connection list and the current connection's templates/options are reloaded. |
+| `Manage` | Opens the [Connection Manager](#connection-manager) modally, preselecting the current connection | The generation options are saved into the current connection first, so the manager sees them; on return the connection list and the generation options are reloaded. |
 | `A` | Tooltip *About of this program*; opens the [About](#about--acknowledgements) dialog | On macOS the application menu's *About* item does the same. |
 
 If the connection fails, an error box names the connection and the underlying cause, the schema tree and table list are cleared, and the combo selection is reset so that re-picking the same entry retries.
@@ -364,19 +330,30 @@ Hovering a table shows its name as a tooltip. **Double-clicking a table** reads 
 
 | Column | Purpose |
 |:---|:---|
-| `Select` | Tick the templates to run. **Clicking the `Select` column header toggles every row on or off.** |
-| `Name` | Template name (read-only here) |
-| `Template File` | Template file path (read-only here) |
-| `Out Template` | Output file name template (read-only here) |
+| `Select` | Tick the templates to run. **Clicking the `Select` column header toggles every row on or off.** The ticks are stored with the connection, so the next start offers the same ones again. |
+| `Name` | Template name (edited through the dialog below, not in the cell) |
+| `Template File` | Template file path (likewise) |
+| `Output File Name` | Output file name template (likewise) |
 
-The rows come from the current connection; edit them in the Connection Manager's Templates tab. Hovering a row shows a tooltip with all three values in full.
+The rows are the templates of the current connection, and this is where they are edited. **Right-clicking the list** opens a menu:
+
+| Entry | Action |
+|:---|:---|
+| `Add Template…` | Asks for `Name:`, `Template File:` and `Output File Name:` in a small dialog and appends the template, ticked. All three are required. |
+| `Edit Template…` | The same dialog for the selected row; its tick is left as it is. **Double-clicking a row** (outside the `Select` column) does the same. |
+| `Delete Template` | Removes the selected row. Nothing is asked. |
+| `Template Presets…` | Opens the [Template Presets](#template-presets) window on this list. |
+
+The `...` button of the dialog opens a file chooser starting in the `templates` directory and stores a path relative to the user data directory or the installation when the file sits below one of them.
+
+Every one of these changes is written to `config.json` straight away. Hovering a row shows a tooltip with all three values in full.
 
 ### `Generation Options`
 
 | Field | Setting | Format / constraints | Default |
 |:---|:---|:---|:---|
-| `Output Directory:` | Where files are written for this run | Free text, resolved like the connection's own setting: an absolute path as it is, a relative one below the user data directory or the installation. An empty value writes the file names of the templates as they are, relative to the working directory | The connection's output directory |
-| `Author Name:` | Value of `${author}` for this run | Free text | The connection's author |
+| `Output Directory:` | Where files are written | Free text, resolved like every other path in the configuration: an absolute path as it is, a relative one below the user data directory or the installation. An empty value writes the file names of the templates as they are, relative to the working directory | The connection's output directory |
+| `Author Name:` | Value of `${author}` | Free text | The connection's author |
 | `Custom Variables:` | `Name` / `Value` pairs usable as `item` variables | Same table rules as elsewhere: trailing empty row, blank rows dropped | The connection's custom variables |
 | `Abbreviation:` `Apply abbreviation rule to all name fields.` | Applies abbreviation mapping automatically | Checkbox. Ticking or unticking it saves the configuration immediately | Restored from the saved configuration |
 
@@ -387,7 +364,7 @@ The rows come from the current connection; edit them in the Connection Manager's
 | `Abbreviation Mapper` | Opens the [Abbreviation Mapping](#abbreviation-mapping) window. Independent of the checkbox — the rules can be edited whether or not the checkbox is set. |
 
 > **Note**
-> Values you change here — `Output Directory:`, `Author Name:` and `Custom Variables:` — apply to **this generation run only**. They are never written back to the connection. Edit them in the Connection Manager's Options tab to make them stick.
+> This panel **is** the connection's generation settings — the templates and their ticks, `Output Directory:`, `Author Name:` and `Custom Variables:`. What you type here is written back into the connection and saved to `config.json` whenever you generate, switch the connection, open the Connection Manager or close the window. There is no second place to edit them and nothing to press to make them stick.
 
 **What the abbreviation checkbox really does.** When ticked, every `item` reference whose *first* key is `name` gets an implicit `abbr` decorator, even when the template does not write `.abbr`. Consequently:
 

@@ -66,6 +66,11 @@ configurations {
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 
+    // the H2 driver the documentation screenshots open their sample database
+    // with. Resolved instead of taken from the user's driver directory, so that
+    // 'gradlew docShots' never reads anything of the user's installation.
+    docShotsDrivers
+
     // the JDBC driver jars, copied into build/int-drivers so that the tests can
     // point a JDBDriver definition at a real jar file the way the application
     // does. Only the driver jars themselves - whatever they need on top of that
@@ -101,6 +106,9 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+
+    // the sample database of the documentation screenshots
+    docShotsDrivers('com.h2database:h2:2.3.232') { transitive = false }
 
     // --- database integration tests -----------------------------------------
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
@@ -213,6 +221,54 @@ tasks.register('integrationTest', Test) {
     testLogging {
         events 'passed', 'skipped', 'failed'
         exceptionFormat = 'full'
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Documentation screenshots
+// ---------------------------------------------------------------------------
+// 'gradlew docShots' retakes every screenshot below docs/images by starting the
+// real application windows and photographing them with java.awt.Robot. See
+// src/test/java/comart/tools/jdbgen/docs/ScreenshotTool.java.
+//
+// The run needs a desktop session - the windows really do appear on screen for
+// a moment - and it must never touch the configuration of the user running it,
+// which is why it points 'jdbgen.dataDir' at a throwaway directory below build/
+// and refuses to start when that has not happened. Override the location with
+// '-PshotsHome=<dir>' and the destination with '-PshotsOut=<dir>'.
+def docShotsHome = { ->
+    (project.findProperty('shotsHome') ?:
+            layout.buildDirectory.dir('doc-shots').get().asFile.absolutePath).toString()
+}
+
+tasks.register('docShots', JavaExec) {
+    group = 'documentation'
+    description = 'Retakes the screenshots of docs/images from the real application windows.'
+
+    mainClass = 'comart.tools.jdbgen.docs.ScreenshotTool'
+    classpath = sourceSets.test.runtimeClasspath
+
+    def home = docShotsHome()
+    def out = (project.findProperty('shotsOut') ?:
+            layout.projectDirectory.dir('docs/images').asFile.absolutePath).toString()
+
+    workingDir = file(home)
+
+    // the sandbox the application writes into - never the real user data
+    // directory, see AppDirs.DATA_DIR_PROPERTY
+    systemProperty 'jdbgen.dataDir', home
+    // 'templates/', 'resource/' and the sample database are read out of the
+    // working copy, the way a development run does
+    systemProperty 'jdbgen.resourceBase', projectDir.absolutePath
+    systemProperty 'jdbgen.shots.out', out
+    // the screenshots are documentation, and the documentation is English
+    systemProperty 'user.language', 'en'
+    systemProperty 'user.country', 'US'
+
+    doFirst {
+        file(home).mkdirs()
+        systemProperty 'jdbgen.shots.h2jar',
+                configurations.docShotsDrivers.singleFile.absolutePath
     }
 }
 

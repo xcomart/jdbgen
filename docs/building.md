@@ -36,6 +36,7 @@ On Windows use `gradlew.bat` in place of `./gradlew`.
 | `./gradlew test` | Runs the JUnit 5 (Jupiter 5.10.2) suite. HTML report at `build/reports/tests/test/index.html`. |
 | `./gradlew run` | Launches the application straight from the source class path. The user interface language comes from `config.json`, see [Translations](#translations). |
 | `./gradlew javadoc` | API documentation in `build/docs/javadoc/`. |
+| `./gradlew docShots` | Retakes the screenshots in `docs/images/`; see [Documentation screenshots](#documentation-screenshots). Needs a desktop session. |
 | `./gradlew clean` | Deletes `build/`. |
 
 > **`./gradlew run` uses your real configuration.** The application writes into the user data directory of the operating system (`%APPDATA%\jdbgen`, `~/Library/Application Support/jdbgen`, `~/.config/jdbgen`), so a development run shares `config.json`, the master password and `drivers/` with an installed jdbgen. Add a `systemProperty 'jdbgen.dataDir', …` line to the `run` task if you would rather have it write into a scratch directory. The read-only side resolves against the project root, because there is no jar to sit next to: `resource/icon.png`, `resource/loading.gif` and `templates/` are already there, so the icon, the busy indicator and the sample templates work as they do in a real installation.
@@ -276,6 +277,46 @@ Run everything with `./gradlew test`, or a single class with:
 ```
 
 The tests are headless and need no database or network.
+
+## Documentation screenshots
+
+Every screenshot below `docs/images/` is generated, not taken by hand:
+
+```bash
+./gradlew docShots
+```
+
+The task runs `src/test/java/comart/tools/jdbgen/docs/ScreenshotTool.java`, which
+opens the real application windows, fills them with a fixed sample configuration
+and lets each window paint itself into a PNG. Painting the window rather than
+grabbing the screen is what keeps the result independent of the desktop it runs
+on — no other window, no drop shadow and no display scaling ends up in the
+picture — and it works because FlatLaf draws the title bar itself, so the whole
+window is Swing. The windows still appear on screen for a moment, so the task
+needs a desktop session and cannot run on the CI runner.
+
+What it sets up:
+
+* a throwaway data directory (`build/doc-shots` by default, `-PshotsHome=<dir>`
+  to move it) handed to the application as `jdbgen.dataDir`. **Your own
+  `config.json`, master password and driver jars are never touched**, and the
+  tool refuses to start when that property names the real user data directory.
+* `jdbgen.resourceBase` pointing at the working copy, so `templates/` and
+  `resource/` resolve the way they do in an installation.
+* the H2 driver resolved from Maven Central into the sandbox `drivers/`, and a
+  freshly created sample database with the two `T_SAMPLE_*` tables the shots
+  show.
+* English, the light theme and the sample connection, preset and abbreviation
+  rules of the pictures.
+
+The master password prompt never appears: the configuration is built from the
+bundled defaults with `JDBGenConfig.getInstance(true)`, which neither reads nor
+writes a configuration file.
+
+`maven_repository.png` is the one shot that needs the network. `search.maven.org`
+throttles, so the search is retried three times before the run reports
+`WARNING maven_repository.png: …` and keeps the picture it has. Write somewhere
+else than `docs/images` with `-PshotsOut=<dir>` while you are trying things out.
 
 ## Continuous integration
 

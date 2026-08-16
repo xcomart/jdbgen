@@ -43,14 +43,17 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.plaf.LayerUI;
 import javax.swing.plaf.basic.BasicLabelUI;
 import javax.swing.table.DefaultTableModel;
@@ -62,6 +65,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeSelectionModel;
 import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
+import net.miginfocom.swing.MigLayout;
 
 /**
  * main window of the application. It opens the connection chosen in the
@@ -132,9 +136,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * the stored <code>language</code> value of every entry of
-     * <code>cboLanguage</code>, in the order the entries appear.
-     * <code>null</code> is the operating system locale.
+     * the stored <code>language</code> value of every entry of the language
+     * menu, in the order the entries appear. <code>null</code> is the
+     * operating system locale.
      */
     private static final String[] LANGUAGES = { null, "en", "ko", "es", "ja", "zh-CN" };
 
@@ -173,14 +177,6 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     private List<DBTable> visibleTables;
     /**
-     * the filter field placed above the table list at runtime, see
-     * {@link #initTableFilterUI()}. Not part of the NetBeans generated code,
-     * because the generator only adds new controls to the panel it owns
-     * through the form editor, and this panel is instead rebuilt by hand so
-     * that its content stays free-form.
-     */
-    private javax.swing.JTextField txtTableFilter;
-    /**
      * guard against feedback while the variable table is being filled
      * programmatically. While <code>false</code>, the table model listener does
      * not append a trailing empty row.
@@ -206,43 +202,16 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
     
     /**
-     * Creates new form JDBGeneratorMain. Restores the stored settings, asks for
-     * a connection through the connection manager - the application exits when
+     * Build the main window. Restores the stored settings, asks for a
+     * connection through the connection manager - the application exits when
      * that dialog is cancelled - and registers the platform handlers for the
      * about menu entry.
      */
     public JDBGeneratorMain() {
         initComponents();
-        // freeze the schema pane's preferred width: the enclosing layout pins
-        // this panel at preferred size, so without this a long tree item would
-        // widen the panel and push the right-hand panels off screen.
-        jScrollPane1.setPreferredSize(jScrollPane1.getPreferredSize());
-        // the generation options panel is pinned the same way, and these two
-        // fields grow their preferred width with the text they hold - a long
-        // output path would widen the panel until it is pushed over the right
-        // window edge. A column count keeps their preferred width constant.
-        txtOutputDir.setColumns(20);
-        txtAuthor.setColumns(20);
-        // the custom variables label and its delete button form their own
-        // trailing sub group, which is only as wide as its two members and
-        // therefore hugs the left of the label column. Linking the label to
-        // the other labels widens that group to the full column, so both of
-        // them right-align with the labels above.
-        ((javax.swing.GroupLayout)jPanel4.getLayout()).linkSize(
-                javax.swing.SwingConstants.HORIZONTAL, jLabel11, jLabel14, jLabel16);
-        // hiding the toolbar duplicates of the menu entries makes the layout
-        // drop the container gap at the right window edge together with them,
-        // so every row would end flush with the window border. The border
-        // below puts that gap back for all of them at once.
-        ((javax.swing.JComponent)getContentPane()).setBorder(
-                javax.swing.BorderFactory.createEmptyBorder(0, 0, 0, 6));
         conf = JDBGenConfig.getInstance();
-        chkDarkUI.setSelected(conf.isDarkUI());
-        initLanguageCombo();
         chkApplyAbbr.setSelected(conf.isApplyAbbr());
         buildMenuBar();
-        hideMenuDuplicates();
-        initTableFilterUI();
         initTableListPopup();
         treSchemas.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         UIUtils.setApplicationIcon(this);
@@ -257,25 +226,24 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 System.exit(0);
             applyConnection(cm.selectedConnection);
         });
-        
+
         initTemplates();
         applyIcons();
         applyTooltips();
         clearContents();
-        
+
         tabVars.getModel().addTableModelListener((evt) -> {
             if (autoReset) {
                 UIUtils.tableSetLastEmpty(tabVars.getModel());
             }
         });
         UIUtils.setCommitOnLostFocus(tabVars);
-        btnDelVar.addActionListener(e -> removeSelectedVar());
         initTemplateActions();
         // the window is EXIT_ON_CLOSE, and this runs before it exits: the
         // generation options are stored whichever way the window is left
-        addWindowListener(new java.awt.event.WindowAdapter() {
+        addWindowListener(new WindowAdapter() {
             @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
+            public void windowClosing(WindowEvent e) {
                 saveGenerationOptions();
             }
         });
@@ -284,13 +252,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         log.info("before pack");
         this.pack();
         log.info("after pack");
-        // below its minimum the layout does not shrink any further, it pushes
-        // the right-hand panel over the window edge instead: do not let the
-        // window be resized to where that happens. The computed minimum has
-        // been measured to come out one layout gap short of what actually
-        // fits, hence the extra slack on top of it.
-        java.awt.Dimension minSize = getMinimumSize();
-        setMinimumSize(new java.awt.Dimension(minSize.width + 12, minSize.height));
+        // below its minimum the table list is squeezed to nothing and the
+        // panels beside it start losing their content: do not let the window
+        // be resized to where that happens. The computed minimum has been
+        // measured to come out one layout gap short of what actually fits,
+        // hence the extra slack on top of it.
+        Dimension minSize = getMinimumSize();
+        setMinimumSize(new Dimension(minSize.width + 12, minSize.height));
         INSTANCE = this;
     }
     
@@ -313,8 +281,16 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * the dark user interface entry of the view menu, kept in step with
-     * <code>chkDarkUI</code>. <code>null</code> until the menu bar is built.
+     * open the abbreviation mapper on top of this window.
+     */
+    private void showAbbreviationMapper() {
+        JDBAbbreviationMapper.getInstance(this).setVisible(true);
+    }
+
+    /**
+     * the dark user interface entry of the view menu. It is the one place the
+     * flag is shown and switched, so it is also what its state is read from.
+     * <code>null</code> until the menu bar is built.
      */
     private JCheckBoxMenuItem miDarkUI;
 
@@ -334,10 +310,10 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * Build the menu bar of the window. Nothing here duplicates the logic of a
-     * button handler: an entry that mirrors a control clicks that control, so
-     * that both ways in stay in step by construction. Call after
-     * <code>initComponents()</code>, the controls it refers to have to exist.
+     * Build the menu bar of the window. Every entry calls the same method the
+     * control it belongs to calls, so that both ways in stay in step by
+     * construction. Call after <code>initComponents()</code> and after
+     * <code>conf</code> has been read, both are used here.
      */
     private void buildMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -345,7 +321,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
         JMenu mnuFile = new JMenu(I18n.t("generatorMain.menu.file"));
         JMenuItem miGenerate = menuItem("generatorMain.menu.file.generate",
-                e -> btnGenerate.doClick());
+                e -> generate());
         miGenerate.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_G, shortcut));
         // the generate button is disabled while a connection is being opened,
         // mirror that instead of letting the accelerator through meanwhile
@@ -355,32 +331,23 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         mnuFile.add(miGenerate);
         mnuFile.addSeparator();
         mnuFile.add(menuItem("generatorMain.menu.file.close",
-                e -> btnClose.doClick()));
+                e -> closeApplication()));
         menuBar.add(mnuFile);
 
         JMenu mnuTools = new JMenu(I18n.t("generatorMain.menu.tools"));
         mnuTools.add(menuItem("generatorMain.menu.tools.connectionManager",
-                e -> btnManageConn.doClick()));
+                e -> showConnectionManager()));
         mnuTools.add(menuItem("generatorMain.menu.tools.driverManager",
                 e -> showDriverManager()));
         mnuTools.addSeparator();
         mnuTools.add(menuItem("generatorMain.menu.tools.abbreviationMapper",
-                e -> btnMapper.doClick()));
+                e -> showAbbreviationMapper()));
         menuBar.add(mnuTools);
 
         JMenu mnuView = new JMenu(I18n.t("generatorMain.menu.view"));
         miDarkUI = new JCheckBoxMenuItem(I18n.t("generatorMain.menu.view.darkUI"));
-        miDarkUI.setSelected(chkDarkUI.isSelected());
-        // both directions are guarded by a state comparison, so neither one can
-        // trigger the other again
-        miDarkUI.addActionListener(e -> {
-            if (miDarkUI.isSelected() != chkDarkUI.isSelected())
-                chkDarkUI.doClick();
-        });
-        chkDarkUI.addActionListener(e -> {
-            if (miDarkUI.isSelected() != chkDarkUI.isSelected())
-                miDarkUI.setSelected(chkDarkUI.isSelected());
-        });
+        miDarkUI.setSelected(conf.isDarkUI());
+        miDarkUI.addActionListener(e -> applyDarkUI(miDarkUI.isSelected()));
         mnuView.add(miDarkUI);
         mnuView.add(buildLanguageMenu());
         menuBar.add(mnuView);
@@ -395,15 +362,15 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * the language submenu, one radio entry per entry of
-     * <code>cboLanguage</code>. Choosing one selects that entry in the combo
-     * box, which is what stores the setting and tells the user that it is
-     * applied after a restart.
+     * the language submenu, one radio entry per supported language. It is the
+     * only place the language is chosen, so the radio group is also what shows
+     * which one is stored.
      *
      * @return the language submenu, not attached to a menu yet.
      */
     private JMenu buildLanguageMenu() {
         JMenu mnuLanguage = new JMenu(I18n.t("generatorMain.menu.view.language"));
+        mnuLanguage.setToolTipText(I18n.t("common.language.tooltip"));
         ButtonGroup group = new ButtonGroup();
         String[] names = languageNames();
         int selected = languageIndex(conf.getLanguage());
@@ -411,7 +378,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             final int idx = i;
             JRadioButtonMenuItem item = new JRadioButtonMenuItem(names[i]);
             item.setSelected(i == selected);
-            item.addActionListener(e -> cboLanguage.setSelectedIndex(idx));
+            item.addActionListener(e -> applyLanguage(idx));
             group.add(item);
             mnuLanguage.add(item);
         }
@@ -419,78 +386,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * Hide the controls the menu bar took over. They are kept alive and
-     * listened to, because the menu entries work by clicking them.
-     */
-    private void hideMenuDuplicates() {
-        btnMapper.setVisible(false);
-        btnAck.setVisible(false);
-        chkDarkUI.setVisible(false);
-        cboLanguage.setVisible(false);
-    }
-
-    /**
-     * Add the filter field above the table list. This panel is small enough
-     * that it is simpler to rebuild it by hand than to touch the form editor,
-     * so it is re-laid out here instead of in <code>initComponents()</code>:
-     * the label and the show-views tick keep their place, the filter field is
-     * inserted between them and the scroll pane, and the scroll pane keeps
-     * the rest of the panel. Call after <code>initComponents()</code>, the
-     * components it rearranges have to exist already.
-     */
-    private void initTableFilterUI() {
-        txtTableFilter = new javax.swing.JTextField();
-        txtTableFilter.putClientProperty("JTextField.placeholderText",
-                I18n.t("generatorMain.txtTableFilter.placeholder"));
-        txtTableFilter.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            @Override
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { applyTableFilter(); }
-            @Override
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { applyTableFilter(); }
-            @Override
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { applyTableFilter(); }
-        });
-
-        jPanel3.removeAll();
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(chkShowView)
-                    .addComponent(jLabel5))
-                // a zero minimum filler, not a container gap with a minimum:
-                // this panel is the one that yields when the window shrinks,
-                // and a minimum here would push the generation options panel
-                // over the right window edge instead.
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addComponent(txtTableFilter)
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkShowView)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtTableFilter, javax.swing.GroupLayout.PREFERRED_SIZE,
-                        javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2))
-        );
-        jPanel3.revalidate();
-    }
-
-    /**
      * Give the table list a "select all" / "clear selection" popup. Both act
      * on what is currently shown, i.e. on <code>lstTables</code>'s own model,
      * so they automatically respect whatever the filter field narrowed the
-     * list down to. This listener is added on top of the one the form editor
-     * already attached for the double click, Swing dispatches to every
-     * listener of a component so the two do not interfere with each other.
+     * list down to. This listener is added on top of the one the list already
+     * has for the double click, Swing dispatches to every listener of a
+     * component so the two do not interfere with each other.
      */
     private void initTableListPopup() {
         JPopupMenu menu = new JPopupMenu();
@@ -561,8 +462,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * changes.
      */
     private void applyTableFilter() {
-        String filterText = txtTableFilter == null ? null : txtTableFilter.getText();
-        visibleTables = filterTables(tables, filterText);
+        visibleTables = filterTables(tables, txtTableFilter.getText());
         DefaultListModel<String> listModel = new DefaultListModel<>();
         visibleTables.forEach(t -> listModel.addElement(t.getTable()));
         lstTables.setModel(listModel);
@@ -585,8 +485,8 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * The column names of a generated table model are the untranslated
-     * placeholders of the form editor, the shown ones are set here.
+     * The column names a table model is built with are untranslated
+     * placeholders, the shown ones are set here.
      *
      * @param table
      *            the table whose column headers are replaced.
@@ -648,9 +548,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         UIUtils.applyIcon(btnDelVar, FontAwesome.MINUS);
         UIUtils.addIcon(btnGenerate, FontAwesome.COGS);
         UIUtils.addIcon(btnClose, FontAwesome.TIMES);
-        UIUtils.addIcon(btnMapper, FontAwesome.BOOK);
         UIUtils.applyIcon(btnBrowseOutput, FontAwesome.FOLDER_O);
-        UIUtils.applyIcon(btnAck, FontAwesome.INFO_CIRCLE);
     }
 
     /**
@@ -775,7 +673,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             }
         };
         JLayer<JTable> layer = new JLayer<>(tabTemplates, hintUI);
-        jScrollPane3.setViewportView(layer);
+        scrTemplates.setViewportView(layer);
         // repaint the layer explicitly on every model change: it overlays the
         // table rather than being painted by it, so a plain table repaint is
         // not guaranteed to reach it in every look and feel.
@@ -1204,429 +1102,327 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 jcc.getName(), cause.getLocalizedMessage()));
     }
 
+    // -----------------------------------------------------------------------
+    // layout
+    //
+    // The window is laid out with MigLayout. Six pixels is the gap the look
+    // and feel puts between neighbouring controls and at the edge of a
+    // container, and the value the previous layout asked for by name - it is
+    // spelled out in the constraints below so that the window keeps its
+    // spacing whatever MigLayout's own platform defaults are.
+    // -----------------------------------------------------------------------
+
     /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * Build the window: the connection bar on top, the three work panels
+     * below it and the two action buttons at the bottom. Called from the
+     * constructor, before anything that reads the configuration.
      */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
-        btnClose = new javax.swing.JButton();
-        jPanel1 = new javax.swing.JPanel();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel1 = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        treSchemas = new javax.swing.JTree();
-        jPanel3 = new javax.swing.JPanel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        lstTables = new javax.swing.JList<>();
-        chkShowView = new javax.swing.JCheckBox();
-        jLabel5 = new javax.swing.JLabel();
-        jPanel4 = new javax.swing.JPanel();
-        jLabel4 = new javax.swing.JLabel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        tabTemplates = new javax.swing.JTable();
-        txtOutputDir = new javax.swing.JTextField();
-        jLabel11 = new javax.swing.JLabel();
-        btnBrowseOutput = new javax.swing.JButton();
-        jLabel14 = new javax.swing.JLabel();
-        txtAuthor = new javax.swing.JTextField();
-        jLabel16 = new javax.swing.JLabel();
-        jScrollPane4 = new javax.swing.JScrollPane();
-        tabVars = new javax.swing.JTable();
-        jLabel6 = new javax.swing.JLabel();
-        btnDelVar = new javax.swing.JButton();
-        chkApplyAbbr = new javax.swing.JCheckBox();
-        jLabel15 = new javax.swing.JLabel();
-        chkDarkUI = new javax.swing.JCheckBox();
-        cboLanguage = new javax.swing.JComboBox<>();
-        btnGenerate = new javax.swing.JButton();
-        cboConnection = new javax.swing.JComboBox<>();
-        jLabel2 = new javax.swing.JLabel();
-        btnManageConn = new javax.swing.JButton();
-        lblConnectionInfo = new javax.swing.JLabel();
-        btnAck = new javax.swing.JButton();
-        btnMapper = new javax.swing.JButton();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setTitle(I18n.t("generatorMain.title"));
 
-        btnClose.setText(I18n.t("generatorMain.btnClose.text"));
-        btnClose.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCloseActionPerformed(evt);
-            }
+        JPanel content = new JPanel(new MigLayout(
+                "insets 6, gap 6 6, fill",
+                "[grow,fill]",
+                // only the work area in the middle takes the height the
+                // window has over the two bars
+                "[][grow,fill][]"));
+        content.add(buildConnectionBar(), "growx, wrap");
+        content.add(buildWorkArea(), "grow, wrap");
+        content.add(buildActionBar(), "growx");
+        setContentPane(content);
+    }
+
+    /**
+     * the top row: the connection to work with, the way to the connection
+     * manager and the url of the open connection.
+     *
+     * @return the connection bar, not attached to the window yet.
+     */
+    private JPanel buildConnectionBar() {
+        JLabel lblConnection = new JLabel(I18n.t("generatorMain.jLabel2.text"));
+
+        cboConnection = new JComboBox<>();
+        cboConnection.addActionListener(e -> connectionSelected());
+
+        btnManageConn = new JButton(I18n.t("generatorMain.btnManageConn.text"));
+        btnManageConn.addActionListener(e -> showConnectionManager());
+
+        lblConnectionInfo = new JLabel("Connection Information Placeholder");
+        lblConnectionInfo.setLabelFor(cboConnection);
+
+        JPanel bar = new JPanel(new MigLayout("insets 0, gap 6, fillx",
+                "[][][][grow,fill]", "[]"));
+        bar.add(lblConnection);
+        bar.add(cboConnection);
+        bar.add(btnManageConn);
+        // the url takes whatever is left of the row and is the only part of
+        // it that yields when the window gets narrower
+        bar.add(lblConnectionInfo, "growx, wmin 0");
+        return bar;
+    }
+
+    /**
+     * the middle of the window: the schema tree, the table list and the
+     * generation options, side by side.
+     *
+     * @return the work area, not attached to the window yet.
+     */
+    private JPanel buildWorkArea() {
+        JPanel work = new JPanel(new MigLayout("insets 0, gap 6 0, fill",
+                // the schema tree and the generation options keep their
+                // preferred width, the table list between them is what grows
+                // with the window and what yields when it shrinks
+                "[shrink 0][grow,fill][shrink 0]", "[grow,fill]"));
+        work.add(buildSchemaPanel(), "growy");
+        work.add(buildTableListPanel(), "grow, wmin 0");
+        work.add(buildOptionsPanel(), "growy");
+        return work;
+    }
+
+    /**
+     * the catalog and schema tree of the open connection.
+     *
+     * @return the schema panel, not attached to the work area yet.
+     */
+    private JPanel buildSchemaPanel() {
+        JLabel lblSchemas = new JLabel(I18n.t("generatorMain.jLabel1.text"));
+        lblSchemas.setFont(headerFont(lblSchemas));
+
+        treSchemas = new JTree(new DefaultTreeModel(
+                new DefaultMutableTreeNode("root")));
+        treSchemas.addTreeSelectionListener(e -> reloadTableList());
+
+        JScrollPane scrSchemas = new JScrollPane(treSchemas);
+        // freeze the preferred width at what the empty tree asks for: this
+        // panel is laid out at its preferred size, so without this a long
+        // schema name would widen it and push the panels on its right off
+        // the window.
+        scrSchemas.setPreferredSize(scrSchemas.getPreferredSize());
+
+        JPanel panel = new JPanel(new MigLayout("insets 6 6 0 0, gap 6, fill, wrap 1",
+                "[grow,fill]", "[][grow,fill]"));
+        // the heading keeps a wide gap on its right, so that a narrow tree
+        // still leaves room beside it
+        panel.add(lblSchemas, "gapright 25");
+        panel.add(scrSchemas);
+        return panel;
+    }
+
+    /**
+     * the tables of the selected schema, with the show-views tick and the
+     * filter field above them.
+     *
+     * @return the table list panel, not attached to the work area yet.
+     */
+    private JPanel buildTableListPanel() {
+        JLabel lblTables = new JLabel(I18n.t("generatorMain.jLabel5.text"));
+        lblTables.setFont(headerFont(lblTables));
+
+        chkShowView = new JCheckBox(I18n.t("generatorMain.chkShowView.text"));
+        chkShowView.addActionListener(e -> reloadTableList());
+
+        txtTableFilter = new JTextField();
+        txtTableFilter.putClientProperty("JTextField.placeholderText",
+                I18n.t("generatorMain.txtTableFilter.placeholder"));
+        txtTableFilter.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) { applyTableFilter(); }
+            @Override
+            public void removeUpdate(DocumentEvent e) { applyTableFilter(); }
+            @Override
+            public void changedUpdate(DocumentEvent e) { applyTableFilter(); }
         });
 
-        jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText(I18n.t("generatorMain.jLabel1.text"));
-
-        javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
-        treSchemas.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
-        treSchemas.addTreeSelectionListener(new javax.swing.event.TreeSelectionListener() {
-            public void valueChanged(javax.swing.event.TreeSelectionEvent evt) {
-                treSchemasValueChanged(evt);
+        lstTables = new JList<>();
+        lstTables.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                tableListClicked(e);
             }
         });
-        jScrollPane1.setViewportView(treSchemas);
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addContainerGap(25, Short.MAX_VALUE))))
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1))
-        );
-
-        lstTables.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
-                lstTablesMouseMoved(evt);
+        lstTables.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                showTableTooltip(e);
             }
         });
-        lstTables.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                lstTablesMouseClicked(evt);
+        JScrollPane scrTables = new JScrollPane(lstTables);
+
+        JPanel panel = new JPanel(new MigLayout("insets 6 0 0 0, gap 6, fill, wrap 1",
+                "[grow,fill]", "[][][][grow,fill]"));
+        panel.add(lblTables);
+        panel.add(chkShowView);
+        panel.add(txtTableFilter, "growx, wmin 0");
+        // the list is 224 wide by preference and may be squeezed down to
+        // nothing: this is the panel that yields when the window shrinks
+        panel.add(scrTables, "grow, w 0:224:");
+        return panel;
+    }
+
+    /**
+     * the right hand panel: the templates to apply and the values they are
+     * applied with.
+     *
+     * @return the generation options panel, not attached to the work area yet.
+     */
+    private JPanel buildOptionsPanel() {
+        JLabel lblOptions = new JLabel(I18n.t("generatorMain.jLabel4.text"));
+        lblOptions.setFont(headerFont(lblOptions));
+        JLabel lblTemplates = new JLabel(I18n.t("generatorMain.jLabel6.text"));
+
+        tabTemplates = new JTable(new DefaultTableModel(
+                new Object[]{ "Select", "Name", "Template File", "Out Template" }, 0) {
+            private final Class<?>[] types = { Boolean.class, String.class,
+                String.class, String.class };
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return types[columnIndex];
             }
-        });
-        jScrollPane2.setViewportView(lstTables);
-
-        chkShowView.setText(I18n.t("generatorMain.chkShowView.text"));
-        chkShowView.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkShowViewActionPerformed(evt);
-            }
-        });
-
-        jLabel5.setFont(jLabel5.getFont().deriveFont(jLabel5.getFont().getStyle() | java.awt.Font.BOLD, jLabel5.getFont().getSize()+4));
-        jLabel5.setText(I18n.t("generatorMain.jLabel5.text"));
-
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(chkShowView)
-                    .addComponent(jLabel5))
-                .addContainerGap(128, Short.MAX_VALUE))
-            .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 224, Short.MAX_VALUE)
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel5)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkShowView)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2))
-        );
-
-        jLabel4.setFont(jLabel4.getFont().deriveFont(jLabel4.getFont().getStyle() | java.awt.Font.BOLD, jLabel4.getFont().getSize()+4));
-        jLabel4.setText(I18n.t("generatorMain.jLabel4.text"));
-
-        tabTemplates.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "Select", "Name", "Template File", "Out Template"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
-            };
-            boolean[] canEdit = new boolean [] {
-                true, false, false, false
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-
+            @Override
             public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+                // only the tick is edited in the table itself, the three texts
+                // are edited in the template dialog
+                return columnIndex == 0;
             }
         });
         tabTemplates.getTableHeader().setReorderingAllowed(false);
-        tabTemplates.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
-                tabTemplatesMouseMoved(evt);
+        tabTemplates.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                UIUtils.templateTooltip(tabTemplates, 1, e);
             }
         });
-        jScrollPane3.setViewportView(tabTemplates);
+        scrTemplates = new JScrollPane(tabTemplates);
 
-        txtOutputDir.setText("output");
+        JPanel panel = new JPanel(new MigLayout("insets 6 0 6 0, gap 6, fill, wrap 1",
+                "[grow,fill]",
+                // the template table takes the height the panel has over its
+                // headings and the fields below it
+                "[][][grow,fill][]"));
+        panel.add(lblOptions);
+        panel.add(lblTemplates);
+        // a table asks its scroll pane for a viewport of a default 400 pixels,
+        // which would make the window pack that much taller: the table gets
+        // whatever height is left over instead, however little that is.
+        panel.add(scrTemplates, "grow, h 0:0:");
+        panel.add(buildOptionFields(), "growx");
+        return panel;
+    }
 
-        jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel11.setText(I18n.t("generatorMain.jLabel11.text"));
+    /**
+     * the labelled fields below the template table: the output directory, the
+     * author, the abbreviation tick and the custom variables.
+     *
+     * @return the field block, not attached to the options panel yet.
+     */
+    private JPanel buildOptionFields() {
+        JLabel lblOutputDir = new JLabel(
+                I18n.t("generatorMain.jLabel11.text"), SwingConstants.TRAILING);
+        JLabel lblAuthor = new JLabel(
+                I18n.t("generatorMain.jLabel14.text"), SwingConstants.TRAILING);
+        JLabel lblAbbr = new JLabel(
+                I18n.t("generatorMain.jLabel15.text"), SwingConstants.TRAILING);
+        JLabel lblVars = new JLabel(
+                I18n.t("generatorMain.jLabel16.text"), SwingConstants.TRAILING);
 
-        btnBrowseOutput.setText("...");
-        btnBrowseOutput.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrowseOutputActionPerformed(evt);
+        txtOutputDir = new JTextField("output");
+        // the panel around this one is laid out at its preferred width, and a
+        // text field grows its preferred width with the text it holds: a long
+        // output path would widen the panel until it is pushed over the right
+        // window edge. A fixed column count keeps the preferred width constant.
+        txtOutputDir.setColumns(20);
+
+        btnBrowseOutput = new JButton("...");
+        btnBrowseOutput.addActionListener(e -> browseOutputDir());
+
+        txtAuthor = new JTextField();
+        txtAuthor.setColumns(20);
+
+        chkApplyAbbr = new JCheckBox(I18n.t("generatorMain.chkApplyAbbr.text"));
+        chkApplyAbbr.addActionListener(e -> storeApplyAbbr());
+
+        tabVars = new JTable(new DefaultTableModel(
+                new Object[]{ "Name", "Value" }, 0) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return String.class;
             }
         });
+        JScrollPane scrVars = new JScrollPane(tabVars);
 
-        jLabel14.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel14.setText(I18n.t("generatorMain.jLabel14.text"));
+        btnDelVar = new JButton("-");
+        btnDelVar.addActionListener(e -> removeSelectedVar());
 
-        jLabel16.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel16.setText(I18n.t("generatorMain.jLabel16.text"));
+        JPanel panel = new JPanel(new MigLayout("insets 0 6 0 0, gap 6, fillx",
+                // one label column that every label right-aligns in - 107 is
+                // the width the window was designed with, which keeps the
+                // fields lined up where a translation has shorter labels -
+                // then the input column that takes the rest of the row, and
+                // last the browse button
+                "[107::,right][grow,fill][]",
+                // the custom variables row is taller than its label and its
+                // delete button, which stay at its top
+                "[][][][top]"));
+        panel.add(lblOutputDir);
+        panel.add(txtOutputDir, "growx, wmin 0, sgy field");
+        panel.add(btnBrowseOutput, "sgy field, wrap");
+        panel.add(lblAuthor);
+        panel.add(txtAuthor, "spanx 2, growx, wmin 0, wrap");
+        panel.add(lblAbbr);
+        panel.add(chkApplyAbbr, "spanx 2, growx, wrap");
+        // the label and the delete button share the label column, stacked
+        panel.add(lblVars, "split 2, flowy");
+        panel.add(btnDelVar, "sgy field");
+        // the same default viewport width of a table would widen the whole
+        // panel: the variable table takes what the fields above it need, and
+        // it keeps the height the window was designed with
+        panel.add(scrVars, "spanx 2, growx, w 0:0:, h 103");
+        return panel;
+    }
 
-        tabVars.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null}
-            },
-            new String [] {
-                "Name", "Value"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
-            };
+    /**
+     * the bottom row: generate and close, both at the right window edge.
+     *
+     * @return the action bar, not attached to the window yet.
+     */
+    private JPanel buildActionBar() {
+        btnGenerate = new JButton(I18n.t("generatorMain.btnGenerate.text"));
+        btnGenerate.addActionListener(e -> generate());
 
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
-            }
-        });
-        jScrollPane4.setViewportView(tabVars);
+        btnClose = new JButton(I18n.t("generatorMain.btnClose.text"));
+        btnClose.addActionListener(e -> closeApplication());
 
-        jLabel6.setText(I18n.t("generatorMain.jLabel6.text"));
+        // the space in front of the buttons is what grows, so both of them
+        // stay at the right edge
+        JPanel bar = new JPanel(new MigLayout("insets 0, gap 6, fillx",
+                "push[][]", "[]"));
+        bar.add(btnGenerate);
+        bar.add(btnClose);
+        return bar;
+    }
 
-        btnDelVar.setText("-");
-
-        chkApplyAbbr.setText(I18n.t("generatorMain.chkApplyAbbr.text"));
-        chkApplyAbbr.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkApplyAbbrActionPerformed(evt);
-            }
-        });
-
-        jLabel15.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel15.setText(I18n.t("generatorMain.jLabel15.text"));
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel6))
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel11)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtOutputDir)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseOutput))
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(jLabel14, javax.swing.GroupLayout.DEFAULT_SIZE, 107, Short.MAX_VALUE)
-                                .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                            .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                .addComponent(jLabel16)
-                                .addComponent(btnDelVar)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addComponent(chkApplyAbbr, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtAuthor)))))
-        );
-
-        jPanel4Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel11, jLabel14});
-
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel6)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel11)
-                    .addComponent(btnBrowseOutput)
-                    .addComponent(txtOutputDir, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtAuthor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel14))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkApplyAbbr)
-                    .addComponent(jLabel15))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel4Layout.createSequentialGroup()
-                        .addComponent(jLabel16)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnDelVar))
-                    .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap())
-        );
-
-        jPanel4Layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {btnBrowseOutput, btnDelVar, txtOutputDir});
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-
-        chkDarkUI.setText(I18n.t("generatorMain.chkDarkUI.text"));
-        chkDarkUI.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkDarkUIActionPerformed(evt);
-            }
-        });
-
-        cboLanguage.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3" }));
-        cboLanguage.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboLanguageActionPerformed(evt);
-            }
-        });
-
-        btnGenerate.setText(I18n.t("generatorMain.btnGenerate.text"));
-        btnGenerate.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnGenerateActionPerformed(evt);
-            }
-        });
-
-        cboConnection.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
-        cboConnection.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cboConnectionActionPerformed(evt);
-            }
-        });
-
-        jLabel2.setText(I18n.t("generatorMain.jLabel2.text"));
-
-        btnManageConn.setText(I18n.t("generatorMain.btnManageConn.text"));
-        btnManageConn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnManageConnActionPerformed(evt);
-            }
-        });
-
-        lblConnectionInfo.setLabelFor(cboConnection);
-        lblConnectionInfo.setText("Connection Information Placeholder");
-
-        btnAck.setText("A");
-        btnAck.setToolTipText(I18n.t("generatorMain.btnAck.toolTipText"));
-        btnAck.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAckActionPerformed(evt);
-            }
-        });
-
-        btnMapper.setText(I18n.t("generatorMain.btnMapper.text"));
-        btnMapper.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnMapperActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(chkDarkUI)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboLanguage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnGenerate)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnClose))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(cboConnection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnManageConn)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblConnectionInfo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnMapper)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnAck)))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(cboConnection, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2)
-                    .addComponent(btnManageConn)
-                    .addComponent(lblConnectionInfo)
-                    .addComponent(btnAck)
-                    .addComponent(btnMapper))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnClose)
-                    .addComponent(chkDarkUI)
-                    .addComponent(cboLanguage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnGenerate))
-                .addContainerGap())
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
+    /**
+     * the font of the panel headings: the label's own font, bold and four
+     * points larger.
+     *
+     * @param label
+     *            the heading label the font is derived for.
+     * @return the heading font.
+     */
+    private static Font headerFont(JLabel label) {
+        Font font = label.getFont();
+        return font.deriveFont(font.getStyle() | Font.BOLD, font.getSize() + 4f);
+    }
 
     /**
      * switch between the dark and the light look and feel and store the choice.
+     *
+     * @param dark
+     *            <code>true</code> for the dark look and feel.
      */
-    private void chkDarkUIActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkDarkUIActionPerformed
-        if (this.chkDarkUI.isSelected()) {
+    private void applyDarkUI(boolean dark) {
+        if (dark) {
             UIUtils.setFlatDarkLaf();
         } else {
             UIUtils.setFlatLightLaf();
@@ -1634,18 +1430,18 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
 
         SwingUtilities.updateComponentTreeUI(this);
         applyConnectionInfoUI();
-        conf.setDarkUI(this.chkDarkUI.isSelected());
+        conf.setDarkUI(dark);
         JDBGenConfig.saveInstance(this);
-    }//GEN-LAST:event_chkDarkUIActionPerformed
+    }
 
     /**
-     * the entry of <code>cboLanguage</code> a stored language setting selects.
+     * the entry of the language menu a stored language setting selects.
      * Anything unknown falls back to the system default entry.
      *
      * @param language
      *            the stored language tag, or <code>null</code> for the
      *            operating system locale.
-     * @return the index into <code>cboLanguage</code>, <code>0</code> for the
+     * @return the index into <code>LANGUAGES</code>, <code>0</code> for the
      *         system default entry.
      */
     static int languageIndex(String language) {
@@ -1665,7 +1461,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * itself, so that it can be found whatever the user interface currently
      * speaks.
      *
-     * @return the entry names of the language combo and of the language menu.
+     * @return the entry names of the language menu.
      */
     private static String[] languageNames() {
         return new String[] {
@@ -1674,21 +1470,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     }
 
     /**
-     * Fill the language combo with {@link #languageNames()}.
-     */
-    private void initLanguageCombo() {
-        cboLanguage.setModel(new DefaultComboBoxModel<>(languageNames()));
-        cboLanguage.setToolTipText(I18n.t("common.language.tooltip"));
-        cboLanguage.setSelectedIndex(languageIndex(conf.getLanguage()));
-    }
-
-    /**
      * store the chosen interface language, which takes effect on the next start.
+     *
+     * @param idx
+     *            the index into <code>LANGUAGES</code> of the chosen entry.
      */
-    private void cboLanguageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboLanguageActionPerformed
-        int idx = cboLanguage.getSelectedIndex();
-        // filling the combo in the constructor selects the stored entry, and
-        // re-selecting the current one is not a change either
+    private void applyLanguage(int idx) {
+        // re-selecting the entry that is already stored is not a change
         if (idx < 0 || idx == languageIndex(conf.getLanguage()))
             return;
         conf.setLanguage(LANGUAGES[idx]);
@@ -1696,13 +1484,13 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         // switching the language live would have to rebuild every open window,
         // so it is left to the next start.
         UIUtils.info(this, I18n.t("common.language.restartRequired"));
-    }//GEN-LAST:event_cboLanguageActionPerformed
+    }
 
     /**
      * open the connection chosen in the combo box, after looking up the driver
      * it refers to.
      */
-    private void cboConnectionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cboConnectionActionPerformed
+    private void connectionSelected() {
         // ignore while a connection is already being opened - the combo is
         // disabled meanwhile, this is just a second line of defense.
         if (suppressCboConnEvent || connecting)
@@ -1731,12 +1519,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
             return;
         }
         connectAsync(jdr, jcc);
-    }//GEN-LAST:event_cboConnectionActionPerformed
+    }
 
     /**
      * open the connection manager and apply the connection it returns.
      */
-    private void btnManageConnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnManageConnActionPerformed
+    private void showConnectionManager() {
         // the manager edits the same connection objects, so hand it whatever
         // is currently in the generation options panel
         saveGenerationOptions();
@@ -1747,19 +1535,14 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         cm.setVisible(true);
         if (cm.selectedConnection != null)
             applyConnection(cm.selectedConnection);
-    }//GEN-LAST:event_btnManageConnActionPerformed
+    }
 
     /**
-     * reload the table list for the schema selected in the tree.
+     * reload the table list of the schema selected in the tree, with or
+     * without views. Both the tree selection and the show-views tick end up
+     * here.
      */
-    private void treSchemasValueChanged(javax.swing.event.TreeSelectionEvent evt) {//GEN-FIRST:event_treSchemasValueChanged
-        chkShowViewActionPerformed(null);
-    }//GEN-LAST:event_treSchemasValueChanged
-
-    /**
-     * reload the table list of the selected schema, with or without views.
-     */
-    private void chkShowViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkShowViewActionPerformed
+    private void reloadTableList() {
         // dbmeta is null while a connection is being opened (or after a failure)
         if (dbmeta == null)
             return;
@@ -1781,18 +1564,18 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 }
             }
         }
-    }//GEN-LAST:event_chkShowViewActionPerformed
+    }
 
     /**
      * close the database connection and terminate the application.
      */
     @SuppressWarnings("UseSpecificCatch")
-    private void btnCloseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloseActionPerformed
+    private void closeApplication() {
         saveGenerationOptions();
         if (dbmeta != null)
             try { dbmeta.close(); } catch(Exception ignored) {}
         System.exit(0);
-    }//GEN-LAST:event_btnCloseActionPerformed
+    }
 
     /**
      * Immutable snapshot of everything the generation worker needs. Taken on the
@@ -1901,7 +1684,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * in a modal progress dialog, and offer to open the output directory
      * afterwards.
      */
-    private void btnGenerateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGenerateActionPerformed
+    private void generate() {
         if (dbmeta == null) {
             UIUtils.error(this, I18n.t("generatorMain.msg.connectFirst"));
             return;
@@ -1956,12 +1739,15 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         } else {
             UIUtils.info(this, I18n.t("generatorMain.msg.failed"));
         }
-    }//GEN-LAST:event_btnGenerateActionPerformed
+    }
 
     /**
      * open the column view of a table on a double click.
+     *
+     * @param evt
+     *            the mouse event on the table list.
      */
-    private void lstTablesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseClicked
+    private void tableListClicked(MouseEvent evt) {
         if (evt.getClickCount() == 2) {
             if (dbmeta == null || visibleTables == null)
                 return;
@@ -1980,26 +1766,15 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
                 }
             }
         }
-    }//GEN-LAST:event_lstTablesMouseClicked
-
-    /**
-     * show the about dialog.
-     */
-    private void btnAckActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAckActionPerformed
-        showAbout();
-    }//GEN-LAST:event_btnAckActionPerformed
-
-    /**
-     * show the template of the hovered row as a tooltip.
-     */
-    private void tabTemplatesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabTemplatesMouseMoved
-        UIUtils.templateTooltip(tabTemplates, 1, evt);
-    }//GEN-LAST:event_tabTemplatesMouseMoved
+    }
 
     /**
      * show the full name of the hovered table as a tooltip.
+     *
+     * @param evt
+     *            the mouse event on the table list.
      */
-    private void lstTablesMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstTablesMouseMoved
+    private void showTableTooltip(MouseEvent evt) {
         int idx = visibleTables == null ? -1 : lstTables.locationToIndex(evt.getPoint());
         if (idx > -1 && idx < visibleTables.size()) {
             DBTable table = visibleTables.get(idx);
@@ -2007,84 +1782,56 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         } else {
             lstTables.setToolTipText(null);
         }
-    }//GEN-LAST:event_lstTablesMouseMoved
-
-    /**
-     * open the abbreviation mapper.
-     */
-    private void btnMapperActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMapperActionPerformed
-        JDBAbbreviationMapper.getInstance(this).setVisible(true);
-    }//GEN-LAST:event_btnMapperActionPerformed
+    }
 
     /**
      * store whether the abbreviation mapping is applied when generating.
      */
-    private void chkApplyAbbrActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkApplyAbbrActionPerformed
+    private void storeApplyAbbr() {
         conf.setApplyAbbr(chkApplyAbbr.isSelected());
         JDBGenConfig.saveInstance(this);
-    }//GEN-LAST:event_chkApplyAbbrActionPerformed
+    }
 
     /**
      * pick the directory the generated files are written to.
      */
-    private void btnBrowseOutputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseOutputActionPerformed
+    private void browseOutputDir() {
         String path = UIUtils.openDirDlg(this, "", true);
         if (!StrUtils.isEmpty(path))
             this.txtOutputDir.setText(path);
-    }//GEN-LAST:event_btnBrowseOutputActionPerformed
-
-    /**
-     * show this window alone for development purposes. The regular entry point
-     * of the application is <code>comart.tools.jdbgen.JDBGenerator</code>.
-     *
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        UIUtils.setFlatDarkLaf();
-        EventQueue.invokeLater(() -> {
-            JDBGeneratorMain gm = new JDBGeneratorMain();
-            gm.setLocationRelativeTo(null);
-            gm.setVisible(true);
-            System.exit(0);
-        });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnAck;
-    private javax.swing.JButton btnBrowseOutput;
-    private javax.swing.JButton btnClose;
-    private javax.swing.JButton btnDelVar;
-    private javax.swing.JButton btnGenerate;
-    private javax.swing.JButton btnManageConn;
-    private javax.swing.JButton btnMapper;
-    private javax.swing.JComboBox<String> cboConnection;
-    private javax.swing.JComboBox<String> cboLanguage;
-    private javax.swing.JCheckBox chkApplyAbbr;
-    private javax.swing.JCheckBox chkDarkUI;
-    private javax.swing.JCheckBox chkShowView;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel14;
-    private javax.swing.JLabel jLabel15;
-    private javax.swing.JLabel jLabel16;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
-    private javax.swing.JLabel jLabel6;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JLabel lblConnectionInfo;
-    private javax.swing.JList<String> lstTables;
-    private javax.swing.JTable tabTemplates;
-    private javax.swing.JTable tabVars;
-    private javax.swing.JTree treSchemas;
-    private javax.swing.JTextField txtAuthor;
-    private javax.swing.JTextField txtOutputDir;
-    // End of variables declaration//GEN-END:variables
+    /** the connection to work with, and the way to the connection manager. */
+    private JComboBox<String> cboConnection;
+    private JButton btnManageConn;
+    /** the url of the open connection, see {@link #applyConnectionInfoUI()}. */
+    private JLabel lblConnectionInfo;
+
+    /** the catalog and schema tree of the open connection. */
+    private JTree treSchemas;
+
+    /** the tables of the selected schema, and what narrows them down. */
+    private JList<String> lstTables;
+    private JCheckBox chkShowView;
+    /**
+     * the filter field above the table list. What is typed into it narrows
+     * the list down to the matching tables, see {@link #applyTableFilter()}.
+     */
+    private JTextField txtTableFilter;
+
+    /** the templates of the current connection, and their scroll pane. */
+    private JTable tabTemplates;
+    private JScrollPane scrTemplates;
+
+    /** the values the templates are applied with. */
+    private JTextField txtOutputDir;
+    private JButton btnBrowseOutput;
+    private JTextField txtAuthor;
+    private JCheckBox chkApplyAbbr;
+    private JTable tabVars;
+    private JButton btnDelVar;
+
+    /** the two actions of the window. */
+    private JButton btnGenerate;
+    private JButton btnClose;
 }

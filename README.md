@@ -166,8 +166,8 @@ and the default configuration includes a `Sample H2 Embedded` connection that
 uses them, so you can generate something on the first run without setting up a
 database.
 
-JDBC drivers are not bundled. jdbgen can download them from Maven Central for
-you — see the [User Interface Guide](docs/ui-guide.md).
+The other JDBC drivers are not bundled. jdbgen downloads them from Maven Central
+for you — see the [User Interface Guide](docs/ui-guide.md).
 
 ## Documentation
 

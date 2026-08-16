@@ -63,6 +63,36 @@ public class SearchResponseItem implements HasTitle {
     String[] tags;
     
     /**
+     * a version match built from a Maven coordinate written as
+     * <code>groupId:artifactId:version</code>, which is what the shipped
+     * drivers carry so that their jar can be downloaded without searching for
+     * it first. Only the three fields {@link #getFilePath()} needs are filled
+     * in.
+     *
+     * @param coordinate
+     *            the coordinate, may be <code>null</code> or empty.
+     * @return the item, or <code>null</code> when <code>coordinate</code> is
+     *         not three non empty parts separated by <code>':'</code>.
+     */
+    public static SearchResponseItem ofCoordinate(String coordinate) {
+        if (StrUtils.isEmpty(coordinate))
+            return null;
+        String[] parts = coordinate.trim().split(":");
+        if (parts.length != 3)
+            return null;
+        for (String p: parts) {
+            if (StrUtils.isEmpty(p))
+                return null;
+        }
+        SearchResponseItem res = new SearchResponseItem();
+        res.setG(parts[0].trim());
+        res.setA(parts[1].trim());
+        res.setV(parts[2].trim());
+        res.setId(res.getG() + ":" + res.getA() + ":" + res.getV());
+        return res;
+    }
+
+    /**
      * label of this match in the search result list.
      *
      * @return the version when this is a version match, the identifier of the

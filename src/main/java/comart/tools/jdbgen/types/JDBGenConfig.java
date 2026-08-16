@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -45,9 +46,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
@@ -236,9 +239,8 @@ public class JDBGenConfig {
 
             if (INSTANCE == null) {
                 log.info("config file not found or not loadable, creating default one.");
-                try (InputStreamReader ir = new InputStreamReader(
-                        JDBGenConfig.class.getResourceAsStream("/defaultConfig.json"), StandardCharsets.UTF_8)) {
-                    INSTANCE = (JDBGenConfig)gson.fromJson(ir, JDBGenConfig.class);
+                try {
+                    INSTANCE = loadBundledDefaults();
                     INSTANCE.connections = new ArrayList<>(Arrays.asList(createSampleConnection()));
                 } catch (Exception e) {
                     UIUtils.error(null, I18n.t("common.config.default.loadFailed", describe(e)));
@@ -260,6 +262,80 @@ public class JDBGenConfig {
         }
 
         return INSTANCE;
+    }
+
+    /**
+     * the configuration shipped with the release, read from
+     * <code>/defaultConfig.json</code> on the class path.
+     *
+     * @return the parsed bundled configuration, never <code>null</code>.
+     * @throws IOException if the resource is missing, unreadable or not the
+     *                     configuration it is expected to be.
+     */
+    static JDBGenConfig loadBundledDefaults() throws IOException {
+        InputStream is = JDBGenConfig.class.getResourceAsStream("/defaultConfig.json");
+        if (is == null)
+            throw new IOException("'/defaultConfig.json' is not on the class path");
+        try (InputStreamReader ir = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+            JDBGenConfig res = new Gson().fromJson(ir, JDBGenConfig.class);
+            if (res == null)
+                throw new IOException("'/defaultConfig.json' is empty");
+            return res;
+        }
+    }
+
+    /**
+     * the drivers shipped with the release, by name.
+     *
+     * @return an empty map when the bundled configuration cannot be read; a
+     *         missing default is worth a log line, but never worth failing a
+     *         start over.
+     */
+    private static Map<String, JDBDriver> bundledDrivers() {
+        try {
+            List<JDBDriver> drivers = loadBundledDefaults().getDrivers();
+            if (drivers == null)
+                return Collections.emptyMap();
+            Map<String, JDBDriver> res = new HashMap<>();
+            drivers.forEach(d -> {
+                if (!StrUtils.isEmpty(d.getName()))
+                    res.put(d.getName(), d);
+            });
+            return res;
+        } catch (Exception e) {
+            log.warn("cannot read the bundled default configuration: {}",
+                    e.getLocalizedMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    /**
+     * carry the Maven coordinate of a shipped driver over into a configuration
+     * written by a release that did not know it yet, so that its download
+     * button fetches the jar instead of opening the search dialog.
+     *
+     * <p>Only the drivers marked as stock items are filled in, and only where
+     * the coordinate is missing: whatever the user has put there stays.</p>
+     *
+     * @param drivers the configured drivers, may be <code>null</code>.
+     */
+    static void fillStockMavenArtifacts(List<JDBDriver> drivers) {
+        if (drivers == null)
+            return;
+        boolean needed = drivers.stream()
+                .anyMatch(d -> d.isStockItem() && StrUtils.isEmpty(d.getMavenArtifact()));
+        if (!needed)
+            return;
+        Map<String, JDBDriver> defaults = bundledDrivers();
+        if (defaults.isEmpty())
+            return;
+        drivers.forEach(d -> {
+            if (!d.isStockItem() || !StrUtils.isEmpty(d.getMavenArtifact()))
+                return;
+            JDBDriver stock = defaults.get(d.getName());
+            if (stock != null && !StrUtils.isEmpty(stock.getMavenArtifact()))
+                d.setMavenArtifact(stock.getMavenArtifact());
+        });
     }
 
     /**
@@ -439,7 +515,9 @@ public class JDBGenConfig {
      *
      * <p>The lists of the configuration itself and the collections of every
      * connection, driver and preset in them are replaced by empty ones where
-     * they are missing.</p>
+     * they are missing. The Maven coordinate of the shipped drivers is carried
+     * over from the bundled defaults as well, see
+     * {@link #fillStockMavenArtifacts(List)}.</p>
      *
      * @param conf the configuration to fill in, may be <code>null</code>.
      */
@@ -458,6 +536,7 @@ public class JDBGenConfig {
         conf.drivers.forEach(d -> {
             if (d.getProps() == null) d.setProps(new LinkedHashMap<>());
         });
+        fillStockMavenArtifacts(conf.drivers);
         conf.presets.forEach(p -> {
             if (p.getTemplates() == null) p.setTemplates(new ArrayList<>());
         });

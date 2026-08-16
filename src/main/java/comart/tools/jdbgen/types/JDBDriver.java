@@ -55,6 +55,15 @@ public class JDBDriver extends JDBListBase {
     private String driverClass;
     /** Maven search term proposed when the driver jar is downloaded. */
     private String defaultQuery;
+    /**
+     * the exact Maven Central coordinate of the driver jar, written as
+     * <code>groupId:artifactId:version</code>. When it is there the jar is
+     * fetched straight from the repository instead of asking the user to
+     * search for it; the drivers without one - a hand made driver, or a
+     * database whose driver is not published on Maven Central - fall back to
+     * {@link #defaultQuery} and the search dialog.
+     */
+    private String mavenArtifact;
     /** default connection properties offered to connections of this driver. */
     private Map<String, String> props;
     /** whether the database takes no user name and password. */

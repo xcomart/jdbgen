@@ -32,6 +32,7 @@ import comart.utils.MavenREST;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -429,17 +430,19 @@ public class MavenExplorer extends JDialog {
      * build the background task which downloads the jar of the given version.
      * The task resolves the download link, streams the jar into the drivers
      * directory below the user data directory, reports its progress and stores
-     * the relative location in <code>saveLocation</code> while setting
-     * <code>changed</code> on success. Failures are logged, published to the
-     * progress log and reported through <code>errHolder</code>.
+     * the location it was saved at - relative to the user data directory - in
+     * <code>locHolder</code>. Failures are logged, published to the progress
+     * log and reported through <code>errHolder</code>.
      *
      * @param sitem the version selected on the EDT by the caller
      * @param errHolder receives the failure message, read by the caller on the EDT
+     * @param locHolder receives the stored location, read by the caller on the EDT
      * @return a worker returning <code>true</code> when the jar was stored,
      *         <code>false</code> otherwise.
      */
-    private ProcessProgress.Worker getProgressWorker(
-            final SearchResponseItem sitem, final String[] errHolder) {
+    private static ProcessProgress.Worker getProgressWorker(
+            final SearchResponseItem sitem, final String[] errHolder,
+            final String[] locHolder) {
         return new ProcessProgress.Worker() {
             /**
              * stream the jar of the snapshotted version into the drivers
@@ -485,8 +488,7 @@ public class MavenExplorer extends JDialog {
                                 publish(I18n.t("mavenExplorer.progress.received", curlen, totallen));
                             }
                         }
-                        saveLocation = stored;
-                        changed = true;
+                        locHolder[0] = stored;
                         publish(I18n.t("mavenExplorer.progress.complete"));
                         return true;
                     }
@@ -500,30 +502,55 @@ public class MavenExplorer extends JDialog {
         };
     }
 
-    /** download the selected version while a modal progress dialog is shown. */
+    /**
+     * download the jar of one artifact version into the drivers directory,
+     * showing the progress in a modal dialog and reporting the outcome the way
+     * the download button of this dialog does. Usable without this dialog: the
+     * driver manager downloads the jar of a shipped driver straight from its
+     * configured Maven coordinate.
+     *
+     * <p>Has to be called on the event dispatch thread; it returns once the
+     * download has finished, failed or was cancelled.</p>
+     *
+     * @param owner the window the progress and message dialogs are centered on
+     * @param sitem the artifact version to download, its group, artifact and
+     *              version fields are the ones that matter
+     * @return the location the jar was stored at, relative to the user data
+     *         directory, or <code>null</code> when it was not downloaded.
+     */
     @SuppressWarnings("UseSpecificCatch")
+    public static String downloadJar(Component owner, SearchResponseItem sitem) {
+        final String[] err = new String[1];
+        final String[] loc = new String[1];
+        // We need to show modal dialog in front of another modal dialog.
+        JFrame dummy = new JFrame();
+        ProcessProgress pp = new ProcessProgress(dummy, true, getProgressWorker(sitem, err, loc));
+        pp.setModal(true);
+        pp.setLocationRelativeTo(owner);
+        pp.start();
+        // modal - returns once the worker's done() hides the dialog
+        pp.setVisible(true);
+        if (pp.result && loc[0] != null) {
+            UIUtils.info(owner, I18n.t("mavenExplorer.msg.downloadComplete"));
+            return loc[0];
+        }
+        UIUtils.error(owner, err[0] == null
+                ? I18n.t("mavenExplorer.msg.downloadFailed") : err[0]);
+        return null;
+    }
+
+    /** download the selected version while a modal progress dialog is shown. */
     private void btnDownloadActionPerformed(ActionEvent evt) {
         int vidx = lstVersion.getSelectedIndex();
         if (vidx < 0 || vidx >= versionItems.size()) {
             UIUtils.error(this, I18n.t("mavenExplorer.msg.selectVersion"));
             return;
         }
-        SearchResponseItem sitem = versionItems.get(vidx);
-        final String[] err = new String[1];
-        // We need to show modal dialog in front of another modal dialog.
-        JFrame dummy = new JFrame();
-        ProcessProgress pp = new ProcessProgress(dummy, true, getProgressWorker(sitem, err));
-        pp.setModal(true);
-        pp.setLocationRelativeTo(this);
-        pp.start();
-        // modal - returns once the worker's done() hides the dialog
-        pp.setVisible(true);
-        if (pp.result) {
-            UIUtils.info(this, I18n.t("mavenExplorer.msg.downloadComplete"));
+        String stored = downloadJar(this, versionItems.get(vidx));
+        if (stored != null) {
+            saveLocation = stored;
+            changed = true;
             setVisible(false);
-        } else {
-            UIUtils.error(this, err[0] == null
-                    ? I18n.t("mavenExplorer.msg.downloadFailed") : err[0]);
         }
     }
 

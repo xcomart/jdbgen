@@ -25,12 +25,15 @@ package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.types.maven.SearchResponseItem;
 import comart.utils.AppDirs;
 import comart.utils.ClassUtils;
 import comart.utils.I18n;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -59,6 +62,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -87,6 +91,12 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Slf4j
 public class JDBDriverManager extends JDialog {
+
+    /**
+     * color of the "driver required" hint of the driver list when the theme
+     * defines none of its own.
+     */
+    private static final Color FALLBACK_MISSING_JAR_COLOR = new Color(0xD9534F);
 
     /**
      * the live driver list of the configuration. Every edit of this dialog
@@ -207,10 +217,83 @@ public class JDBDriverManager extends JDialog {
         SwingUtilities.updateComponentTreeUI(this);
         btnDownJdbc.setBorder((Border)null);
         btnDownJdbc.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
-        lstDrivers.setCellRenderer(UIUtils.getListCellRenderer(
-                s -> drivers.stream()
-                        .filter(d -> s.equals(d.getName()))
-                        .findFirst().orElse(null)));
+        lstDrivers.setCellRenderer(driverListRenderer());
+    }
+
+    /**
+     * the driver a name in the driver list belongs to.
+     *
+     * @param name the name shown in the list
+     * @return the driver, or <code>null</code> when no driver carries the name.
+     */
+    private JDBDriver driverByName(Object name) {
+        return drivers.stream()
+                .filter(d -> d.getName() != null && d.getName().equals(name))
+                .findFirst().orElse(null);
+    }
+
+    /**
+     * whether the jar of a driver cannot be used: none is configured, or the
+     * configured one is not there. Such a driver opens no connection, which is
+     * what the driver list marks.
+     *
+     * @param driver the driver to check
+     * @return <code>true</code> when the driver jar is missing.
+     */
+    private static boolean isJarMissing(JDBDriver driver) {
+        if (StrUtils.isEmpty(driver.getJdbcJar()))
+            return true;
+        File jar = AppDirs.resolve(driver.getJdbcJar());
+        return jar == null || !jar.exists();
+    }
+
+    /**
+     * the renderer of the driver list: the icon and the name of the driver,
+     * followed by a red hint for every driver whose jar is missing, so that a
+     * fresh installation shows at a glance which drivers still need their jar
+     * downloaded.
+     *
+     * @return the renderer, rebuilt on every look and feel change so that it
+     *         picks up the colors of the current theme.
+     */
+    private ListCellRenderer<? super String> driverListRenderer() {
+        ListCellRenderer<String> base = UIUtils.getListCellRenderer(this::driverByName);
+        return (list, value, index, isSelected, cellHasFocus) -> {
+            Component comp = base.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+            JDBDriver driver = driverByName(value);
+            if (driver != null && comp instanceof JLabel && isJarMissing(driver)) {
+                // html, so that the hint keeps its own color whatever the
+                // selection paints the rest of the cell in
+                ((JLabel)comp).setText("<html>" + escapeHtml(driver.getName())
+                        + " <span style='color:" + missingJarColor() + "'>("
+                        + escapeHtml(I18n.t("driverManager.list.driverRequired"))
+                        + ")</span></html>");
+            }
+            return comp;
+        };
+    }
+
+    /**
+     * @return the color of the "driver required" hint as a css value, taken
+     *         from the theme where it defines one so that it stays readable in
+     *         the light and in the dark theme.
+     */
+    private static String missingJarColor() {
+        Color col = UIManager.getColor("Actions.Red");
+        if (col == null)
+            col = UIManager.getColor("Component.error.focusedBorderColor");
+        return String.format("#%06x",
+                (col == null ? FALLBACK_MISSING_JAR_COLOR : col).getRGB() & 0xFFFFFF);
+    }
+
+    /**
+     * @param text the text to place into the html of a list cell
+     * @return <code>text</code> with the characters html reads as markup escaped.
+     */
+    private static String escapeHtml(String text) {
+        return text == null ? "" : text.replace("&", "&amp;")
+                .replace("<", "&lt;").replace(">", "&gt;");
     }
 
     /**
@@ -632,6 +715,8 @@ public class JDBDriverManager extends JDialog {
                 // name may have been changed, keep the list model in sync
                 listModel.set(idx, target.getName());
             }
+            // the jar of the driver may have changed with it
+            lstDrivers.repaint();
 
             JDBGenConfig.saveInstance(this);
             changed = true;
@@ -798,25 +883,47 @@ public class JDBDriverManager extends JDialog {
     }
 
     /**
-     * download the JDBC jar of this driver through the maven explorer, using
-     * the driver's default query as the initial search.
+     * download the JDBC jar of the selected driver.
+     *
+     * <p>A driver that carries a Maven coordinate - every driver shipped with
+     * the application whose driver is published on Maven Central - is fetched
+     * straight from the repository, so that a fresh installation is one click
+     * away from a working connection. Everything else opens the maven explorer
+     * with the driver's default query as the initial search.</p>
      */
     private void btnDownJdbcActionPerformed(ActionEvent evt) {
-        MavenExplorer me = MavenExplorer.getInstance();
-        EventQueue.invokeLater(() -> {
+        EventQueue.invokeLater(() -> updateDriver(d -> {
+            SearchResponseItem item = SearchResponseItem.ofCoordinate(d.getMavenArtifact());
+            if (item != null) {
+                String stored = MavenExplorer.downloadJar(this, item);
+                if (stored != null)
+                    applyDownloadedJar(d, stored);
+                return;
+            }
+            MavenExplorer me = MavenExplorer.getInstance();
             me.setModal(true);
             me.setLocationRelativeTo(this);
-            updateDriver(d -> {
-                String query = d.getDefaultQuery();
-                if (!StrUtils.isEmpty(query))
-                    me.setQuery(d.getDefaultQuery());
-                me.setVisible(true);
-                if (me.changed) {
-                    txtJarFile.setText(me.saveLocation);
-                    d.setJdbcJar(me.saveLocation);
-                }
-            });
-        });
+            String query = d.getDefaultQuery();
+            if (!StrUtils.isEmpty(query))
+                me.setQuery(query);
+            me.setVisible(true);
+            if (me.changed)
+                applyDownloadedJar(d, me.saveLocation);
+        }));
+    }
+
+    /**
+     * store the jar a download produced in the driver and show it in the
+     * editor. The driver list is repainted as well: the driver has stopped
+     * missing its jar.
+     *
+     * @param driver the driver the jar belongs to
+     * @param stored the location of the jar, relative to the user data directory
+     */
+    private void applyDownloadedJar(JDBDriver driver, String stored) {
+        txtJarFile.setText(stored);
+        driver.setJdbcJar(stored);
+        lstDrivers.repaint();
     }
 
     /**
@@ -855,6 +962,8 @@ public class JDBDriverManager extends JDialog {
             String relative = AppDirs.relativize(fc.getSelectedFile().getAbsolutePath());
             this.txtJarFile.setText(relative);
             updateDriver(d -> d.setJdbcJar(relative));
+            // the driver may just have stopped missing its jar
+            lstDrivers.repaint();
         }
     }
 

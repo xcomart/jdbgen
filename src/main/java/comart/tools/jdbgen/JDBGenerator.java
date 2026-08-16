@@ -69,7 +69,10 @@ public class JDBGenerator {
         }
         UIManager.put("ToolTip.font", new Font("Monospaced", Font.PLAIN, 13));
         JDBGeneratorMain win = new JDBGeneratorMain();
-        win.setLocationRelativeTo(null);
+        // the window puts itself back where it was last closed; it is only
+        // centered when there is no usable stored position.
+        if (!win.isLocationRestored())
+            win.setLocationRelativeTo(null);
         win.setVisible(true);
     }
 }

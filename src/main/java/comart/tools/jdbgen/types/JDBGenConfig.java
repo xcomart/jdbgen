@@ -92,6 +92,12 @@ public class JDBGenConfig {
      * a language tag such as <code>"en"</code> or <code>"ko"</code>.
      */
     private String language = null;
+    /**
+     * size, position, maximized state and divider positions the main window is
+     * restored to, see {@link WindowState}. Never <code>null</code> once the
+     * configuration has been normalized.
+     */
+    private WindowState mainWindow;
 
     /**
      * the configuration singleton, loading it from the configuration file on
@@ -532,7 +538,8 @@ public class JDBGenConfig {
      * connection, driver and preset in them are replaced by empty ones where
      * they are missing. The Maven coordinate of the shipped drivers is carried
      * over from the bundled defaults as well, see
-     * {@link #fillStockMavenArtifacts(List)}.</p>
+     * {@link #fillStockMavenArtifacts(List)}. The stored window state is filled
+     * in the same way, with one that has nothing stored in it.</p>
      *
      * @param conf the configuration to fill in, may be <code>null</code>.
      */
@@ -543,6 +550,7 @@ public class JDBGenConfig {
         if (conf.drivers == null) conf.drivers = new ArrayList<>();
         if (conf.presets == null) conf.presets = new ArrayList<>();
         if (conf.abbrs == null) conf.abbrs = new ArrayList<>();
+        if (conf.mainWindow == null) conf.mainWindow = new WindowState();
         conf.connections.forEach(c -> {
             if (c.getTemplates() == null) c.setTemplates(new ArrayList<>());
             if (c.getCustomVars() == null) c.setCustomVars(new LinkedHashMap<>());

@@ -102,6 +102,60 @@ public class ConfigRoundTripTest {
     }
 
     /**
+     * Where the main window was and how it was divided: the next start has to
+     * come up the same way.
+     */
+    @Test
+    public void theWindowStateSurvivesRestart() {
+        StrUtils.setMaster("pw");
+
+        JDBGenConfig conf = new JDBGenConfig();
+        WindowState state = new WindowState();
+        state.setWidth(1200);
+        state.setHeight(800);
+        state.setX(-40);
+        state.setY(120);
+        state.setMaximized(true);
+        state.setSchemaDivider(210);
+        state.setOptionsDivider(640);
+        conf.setMainWindow(state);
+
+        String json = new GsonBuilder().setPrettyPrinting().create().toJson(conf);
+
+        StrUtils.setMaster("pw");
+
+        WindowState back = new Gson().fromJson(json, JDBGenConfig.class).getMainWindow();
+        assertNotNull(back);
+        assertEquals(1200, back.getWidth());
+        assertEquals(800, back.getHeight());
+        assertEquals(-40, back.getX(), "a screen left of the primary one keeps its negative x");
+        assertEquals(120, back.getY());
+        assertTrue(back.isMaximized());
+        assertEquals(210, back.getSchemaDivider());
+        assertEquals(640, back.getOptionsDivider());
+        assertTrue(back.hasBounds());
+    }
+
+    /**
+     * A configuration written before the window state was stored has no such
+     * entry. It has to read back as "nothing stored" so that the window keeps
+     * its packed size and its default dividers.
+     */
+    @Test
+    public void aConfigWithoutTheWindowStateKeepsTheDefaults() {
+        WindowState fresh = new WindowState();
+        assertFalse(fresh.hasBounds());
+        assertFalse(fresh.isMaximized());
+        assertTrue(fresh.getSchemaDivider() <= 0);
+        assertTrue(fresh.getOptionsDivider() <= 0);
+
+        WindowState back = new Gson().fromJson("{}", WindowState.class);
+        assertFalse(back.hasBounds());
+        assertTrue(back.getSchemaDivider() <= 0, "an absent divider must not be applied");
+        assertTrue(back.getOptionsDivider() <= 0, "an absent divider must not be applied");
+    }
+
+    /**
      * The bundled default configuration has to survive the very first save,
      * otherwise no config.json is ever written and every launch asks to set up
      * a new master password again.

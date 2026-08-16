@@ -29,6 +29,7 @@ import comart.tools.jdbgen.types.JDBConnection;
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBTemplate;
+import comart.tools.jdbgen.types.WindowState;
 import comart.tools.jdbgen.types.db.DBMeta;
 import comart.tools.jdbgen.types.db.DBSchema;
 import comart.tools.jdbgen.types.db.DBTable;
@@ -184,6 +185,12 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private boolean autoReset = true;
     /** true while a connection is being opened on a background thread */
     private boolean connecting = false;
+    /**
+     * whether the stored window position was restored while the window was
+     * built, see {@link #isLocationRestored()}. When it was not, the caller
+     * that shows the window centers it.
+     */
+    private boolean locationRestored = false;
     
     /**
      * the main window, assigned at the end of its construction so that the
@@ -240,11 +247,18 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         UIUtils.setCommitOnLostFocus(tabVars);
         initTemplateActions();
         // the window is EXIT_ON_CLOSE, and this runs before it exits: the
-        // generation options are stored whichever way the window is left
+        // generation options and the window geometry are stored whichever way
+        // the window is left. The dividers can only be placed once the window
+        // is on screen, which windowOpened is the first moment of.
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                saveGenerationOptions();
+                saveOnExit();
+            }
+
+            @Override
+            public void windowOpened(WindowEvent e) {
+                applyStoredDividers();
             }
         });
 
@@ -259,6 +273,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         // hence the extra slack on top of it.
         Dimension minSize = getMinimumSize();
         setMinimumSize(new Dimension(minSize.width + 12, minSize.height));
+        // whatever the last run left behind wins over the packed size; without
+        // a stored geometry nothing here changes the window.
+        locationRestored = restoreWindowState();
         INSTANCE = this;
     }
     
@@ -939,13 +956,160 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      * to come through here.
      */
     private void saveGenerationOptions() {
-        if (currConn == null)
+        if (!applyGenerationOptions())
             return;
+        JDBGenConfig.saveInstance(this);
+    }
+
+    /**
+     * Write the generation options panel back into the connection it belongs
+     * to, without storing the configuration - the caller does that.
+     *
+     * @return <code>true</code> when the options were taken over,
+     *         <code>false</code> while no connection has been chosen yet and
+     *         there is nothing to write them into.
+     */
+    private boolean applyGenerationOptions() {
+        if (currConn == null)
+            return false;
         currConn.setTemplates(readTemplateTable(tabTemplates.getModel()));
         currConn.setOutputDir(txtOutputDir.getText());
         currConn.setAuthor(txtAuthor.getText());
         currConn.setCustomVars(UIUtils.applyTableToMap(tabVars.getModel()));
+        return true;
+    }
+
+    /**
+     * Store everything the next start restores and write the configuration
+     * once. Unlike {@link #saveGenerationOptions()} this also runs when no
+     * connection has been chosen yet: the window geometry is worth keeping
+     * either way.
+     */
+    private void saveOnExit() {
+        applyGenerationOptions();
+        storeWindowState();
         JDBGenConfig.saveInstance(this);
+    }
+
+    /**
+     * Take the geometry of the window and the positions of the two work area
+     * dividers over into the configuration.
+     *
+     * <p>While the window is maximized its bounds are the ones of the screen,
+     * which is not what restoring it down has to come back to: only the
+     * maximized flag is updated then, the stored size and position stay at the
+     * values the user last chose.</p>
+     */
+    private void storeWindowState() {
+        WindowState state = conf.getMainWindow();
+        if (state == null) {
+            state = new WindowState();
+            conf.setMainWindow(state);
+        }
+        boolean maximized = (getExtendedState() & MAXIMIZED_BOTH) == MAXIMIZED_BOTH;
+        state.setMaximized(maximized);
+        if (!maximized) {
+            Rectangle bounds = getBounds();
+            state.setWidth(bounds.width);
+            state.setHeight(bounds.height);
+            state.setX(bounds.x);
+            state.setY(bounds.y);
+        }
+        if (splSchema != null)
+            state.setSchemaDivider(splSchema.getDividerLocation());
+        if (splOptions != null)
+            state.setOptionsDivider(splOptions.getDividerLocation());
+    }
+
+    /**
+     * Bring the window back to where it was left, right after
+     * <code>pack()</code> has settled its default size.
+     *
+     * <p>A stored size below the minimum of the window is raised to it, and a
+     * stored position is only taken when it still lies on one of the screens
+     * currently attached - a window restored onto a monitor that is gone would
+     * be invisible. The dividers are not touched here: they are applied once
+     * the window has been shown, see {@link #applyStoredDividers()}.</p>
+     *
+     * @return <code>true</code> when the position was restored, so that the
+     *         caller knows it must not center the window any more.
+     */
+    private boolean restoreWindowState() {
+        WindowState state = conf.getMainWindow();
+        if (state == null)
+            return false;
+        boolean located = false;
+        if (state.hasBounds()) {
+            Dimension min = getMinimumSize();
+            setSize(Math.max(state.getWidth(), min.width),
+                    Math.max(state.getHeight(), min.height));
+            if (isOnAnyScreen(new Rectangle(state.getX(), state.getY(),
+                    getWidth(), getHeight()))) {
+                setLocation(state.getX(), state.getY());
+                located = true;
+            }
+        }
+        if (state.isMaximized())
+            setExtendedState(getExtendedState() | MAXIMIZED_BOTH);
+        return located;
+    }
+
+    /**
+     * whether a window would be visible at all with the given bounds.
+     *
+     * @param bounds
+     *            the bounds a window is about to be restored to.
+     * @return <code>true</code> when they overlap one of the screens currently
+     *         attached; <code>false</code> without a screen to ask, in which
+     *         case the caller keeps the default position.
+     */
+    private static boolean isOnAnyScreen(Rectangle bounds) {
+        try {
+            if (GraphicsEnvironment.isHeadless())
+                return false;
+            for (GraphicsDevice gd : GraphicsEnvironment
+                    .getLocalGraphicsEnvironment().getScreenDevices()) {
+                if (gd.getDefaultConfiguration().getBounds().intersects(bounds))
+                    return true;
+            }
+        } catch (Exception e) {
+            log.warn("cannot read the screen configuration: {}", e.getLocalizedMessage());
+        }
+        return false;
+    }
+
+    /**
+     * Put the two work area dividers back where they were left. This runs once
+     * the window has been shown: before that the split panes have no width yet
+     * and the layout would move the dividers again. Positions that were never
+     * stored are left alone, which keeps the default split of a fresh
+     * configuration.
+     */
+    private void applyStoredDividers() {
+        WindowState state = conf.getMainWindow();
+        if (state == null)
+            return;
+        if (state.getSchemaDivider() > 0 && splSchema != null)
+            splSchema.setDividerLocation(state.getSchemaDivider());
+        if (state.getOptionsDivider() > 0 && splOptions != null) {
+            // moving the outer divider resizes the inner split, and the layout
+            // that follows moves the inner divider along with it. That layout
+            // is scheduled on the event queue, so the inner position is put
+            // back behind it - setting it right here would be overwritten.
+            EventQueue.invokeLater(
+                    () -> splOptions.setDividerLocation(state.getOptionsDivider()));
+        }
+    }
+
+    /**
+     * whether the window came up at the position it was last closed at.
+     *
+     * @return <code>true</code> when the stored position was restored, so that
+     *         the caller must not center the window itself.
+     * @see #restoreWindowState()
+     */
+    public boolean isLocationRestored() {
+        return locationRestored;
     }
 
     /**
@@ -1174,9 +1338,9 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
         // and the one between the table list and the generation options. Both
         // outer panels keep their width when the window is resized, the table
         // list in the middle is what grows and what yields.
-        JSplitPane inner = workSplit(buildTableListPanel(), buildOptionsPanel(), 1.0);
-        JSplitPane outer = workSplit(buildSchemaPanel(), inner, 0.0);
-        return outer;
+        splOptions = workSplit(buildTableListPanel(), buildOptionsPanel(), 1.0);
+        splSchema = workSplit(buildSchemaPanel(), splOptions, 0.0);
+        return splSchema;
     }
 
     /**
@@ -1593,7 +1757,7 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      */
     @SuppressWarnings("UseSpecificCatch")
     private void closeApplication() {
-        saveGenerationOptions();
+        saveOnExit();
         if (dbmeta != null)
             try { dbmeta.close(); } catch(Exception ignored) {}
         System.exit(0);
@@ -1828,6 +1992,15 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
     private JButton btnManageConn;
     /** the url of the open connection, see {@link #applyConnectionInfoUI()}. */
     private JLabel lblConnectionInfo;
+
+    /**
+     * the two nested splits of the work area: <code>splSchema</code> divides
+     * the schema tree from the rest, <code>splOptions</code> the table list
+     * from the generation options. Their divider positions are stored in the
+     * configuration, see {@link #storeWindowState()}.
+     */
+    private JSplitPane splSchema;
+    private JSplitPane splOptions;
 
     /** the catalog and schema tree of the open connection. */
     private JTree treSchemas;

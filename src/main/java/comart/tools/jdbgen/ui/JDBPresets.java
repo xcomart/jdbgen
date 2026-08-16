@@ -258,12 +258,11 @@ public class JDBPresets extends JDialog {
         btnSave.setText(I18n.t("presets.btnSave.text"));
         btnSave.addActionListener(this::btnSaveActionPerformed);
 
-        // the split pane fills the dialog, the buttons are pushed to the right
-        // of the row below it. The width of the dialog is the one of that row,
-        // the split pane itself does not ask for any.
+        // the split pane fills the dialog and sets its width, the buttons are
+        // pushed to the right of the row below it.
         getContentPane().setLayout(new MigLayout(
                 "insets dialog, fill", "[grow]", "[grow][]"));
-        getContentPane().add(splPreset, "grow, push, w 0:0:, wrap");
+        getContentPane().add(splPreset, "grow, push, wrap");
         getContentPane().add(btnNewFromConn, "split 4, gapbefore push");
         getContentPane().add(btnApply);
         getContentPane().add(btnSave);
@@ -432,14 +431,15 @@ public class JDBPresets extends JDialog {
         // button. The name of the preset spans all three, so its label keeps
         // its own width, while the three labels of the template fields share
         // the label column and are right aligned in it. Only the template
-        // table grows, and it does not ask for any width of its own.
+        // table grows; it asks for a modest width instead of the viewport a
+        // table wants by default.
         jPanel4.setLayout(new MigLayout("insets 0, fill", "[][grow][]",
                 "[baseline][grow][][baseline][baseline][baseline]"));
         jPanel4.add(jLabel3, "span 3, split 2");
         jPanel4.add(txtPresetName, "growx, wrap");
-        jPanel4.add(jScrollPane3, "span 3, grow, push, w 0:0:, h :235:, wrap");
+        jPanel4.add(jScrollPane3, "span 3, grow, push, w 0:300:, h :235:, wrap");
         jPanel4.add(btnTemplateHelp, "span 3, split 4");
-        jPanel4.add(btnNewTemplate, "gapbefore rel:257:push");
+        jPanel4.add(btnNewTemplate, "gapbefore push");
         jPanel4.add(btnDelTemplate);
         jPanel4.add(btnSaveTemplate, "wrap");
         jPanel4.add(jLabel9, "growx");

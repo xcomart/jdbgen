@@ -487,23 +487,25 @@ public class JDBConnectionManager extends JDialog {
         jScrollPane3 = new JScrollPane(txtKeepAliveQuery);
 
         // a right aligned label column, an editor column that takes the width
-        // left over, and two columns for the trailing buttons
+        // left over, and a column for the manage button beside the driver
         JPanel panel = new JPanel(new MigLayout("fillx, insets dialog",
-                "[right][grow, fill][][]", "[]"));
+                "[right][grow, fill][]", "[]"));
         panel.add(jLabel2);
-        panel.add(txtName, "spanx 3, wrap");
+        panel.add(txtName, "spanx 2, wrap");
         panel.add(jLabel3);
         panel.add(cboDriver);
-        panel.add(btnManage, "spanx 2, wrap");
+        panel.add(btnManage, "wrap");
         panel.add(jLabel4);
-        panel.add(txtConnUrl, "spanx 3, wrap");
+        panel.add(txtConnUrl, "spanx 2, wrap");
         panel.add(jLabel5);
-        panel.add(txtUser, "spanx 3, wrap");
+        panel.add(txtUser, "spanx 2, wrap");
         panel.add(jLabel6);
-        panel.add(txtPassword, "spanx 3, wrap");
-        // the browse and help buttons keep the height of the field they follow
+        panel.add(txtPassword, "spanx 2, wrap");
+        // the icon field and its two buttons share the editor width, so the
+        // help button ends flush with the fields above; the buttons keep the
+        // height of the field they follow
         panel.add(jLabel12);
-        panel.add(txtIcon, "sgy iconrow");
+        panel.add(txtIcon, "spanx 2, split 3, growx, sgy iconrow");
         panel.add(btnBrowseIcon, "sgy iconrow");
         panel.add(btnIconHelp, "sgy iconrow, wrap");
         // the property table takes the height left over, its heading and its
@@ -511,13 +513,13 @@ public class JDBConnectionManager extends JDialog {
         panel.add(jLabel7, "aligny top");
         // the table asks for a viewport of its own that would blow the dialog
         // up, it is given a share of the height and grows with the window
-        panel.add(jScrollPane1, "spanx 3, spany 2, grow, h 240, wrap");
+        panel.add(jScrollPane1, "spanx 2, spany 2, grow, h 240, wrap");
         panel.add(btnDelProp, "aligny top, sgy iconrow, pushy, wrap");
-        panel.add(chkKeepAlive, "spanx 4, split 3, align left");
+        panel.add(chkKeepAlive, "spanx 3, split 3, align left");
         panel.add(txtKeepAliveSec, "w 35!");
         panel.add(jLabel15, "wrap");
         // the keep alive query is indented below the check box that turns it on
-        panel.add(jScrollPane3, "spanx 4, growx, h 64!, gapleft 21");
+        panel.add(jScrollPane3, "spanx 3, growx, h 64!, gapleft 21");
         return panel;
     }
 

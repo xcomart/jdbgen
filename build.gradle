@@ -90,7 +90,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.21.0'
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'ch.qos.logback:logback-classic:1.5.23'
-    implementation 'org.netbeans.external:AbsoluteLayout:RELEASE280'
+    implementation 'com.miglayout:miglayout-swing:11.4.2'
 
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"

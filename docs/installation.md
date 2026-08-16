@@ -161,7 +161,7 @@ java -Djdbgen.dataDir=/media/usb/jdbgen-data -jar jdbgen-<version>.jar
    | Templates | `Java Model`, `MyBatis mapper`, `PHP CI Model`, as absolute paths into the installation's `templates/` |
    | Author | your OS login name |
 
-   The paths are absolute, so the sample works from anywhere. Building the default configuration copies the release's `sample_h2.db.mv.db` into the user data directory first, because an embedded H2 database has to be writable — the copy in the installation is left alone. You still need the H2 driver jar — download it with the Maven Repository Explorer (search for `h2database`), then pick a schema, tick the templates and press **Generate**. Files land in the output directory. See [ui-guide.md](ui-guide.md) for a walkthrough of the windows.
+   The paths are absolute, so the sample works from anywhere. Building the default configuration copies the release's `sample_h2.db.mv.db` into the user data directory first, because an embedded H2 database has to be writable — the copy in the installation is left alone. The H2 driver jar ships with the release below `drivers/` of the installation, so nothing has to be downloaded first: pick a schema, tick the templates and press **Generate**. Files land in the output directory. See [ui-guide.md](ui-guide.md) for a walkthrough of the windows.
 
 ## Where jdbgen keeps its data
 

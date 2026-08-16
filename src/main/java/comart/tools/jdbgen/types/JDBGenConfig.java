@@ -312,10 +312,13 @@ public class JDBGenConfig {
     /**
      * carry the Maven coordinate of a shipped driver over into a configuration
      * written by a release that did not know it yet, so that its download
-     * button fetches the jar instead of opening the search dialog.
+     * button fetches the jar instead of opening the search dialog, and point a
+     * shipped driver without a jar at the jar bundled with the installation
+     * where there is one.
      *
      * <p>Only the drivers marked as stock items are filled in, and only where
-     * the coordinate is missing: whatever the user has put there stays.</p>
+     * the coordinate or the jar is missing: whatever the user has put there
+     * stays.</p>
      *
      * @param drivers the configured drivers, may be <code>null</code>.
      */
@@ -323,18 +326,30 @@ public class JDBGenConfig {
         if (drivers == null)
             return;
         boolean needed = drivers.stream()
-                .anyMatch(d -> d.isStockItem() && StrUtils.isEmpty(d.getMavenArtifact()));
+                .anyMatch(d -> d.isStockItem() && (StrUtils.isEmpty(d.getMavenArtifact())
+                        || StrUtils.isEmpty(d.getJdbcJar())));
         if (!needed)
             return;
         Map<String, JDBDriver> defaults = bundledDrivers();
         if (defaults.isEmpty())
             return;
         drivers.forEach(d -> {
-            if (!d.isStockItem() || !StrUtils.isEmpty(d.getMavenArtifact()))
+            if (!d.isStockItem())
                 return;
             JDBDriver stock = defaults.get(d.getName());
-            if (stock != null && !StrUtils.isEmpty(stock.getMavenArtifact()))
+            if (stock == null)
+                return;
+            if (StrUtils.isEmpty(d.getMavenArtifact()) && !StrUtils.isEmpty(stock.getMavenArtifact()))
                 d.setMavenArtifact(stock.getMavenArtifact());
+            // the jar of a driver shipped with the release - the H2 driver of
+            // the sample database - is only taken over when it is actually
+            // there: an older installation does not carry it, and a jar the
+            // user has downloaded is never replaced.
+            if (StrUtils.isEmpty(d.getJdbcJar()) && !StrUtils.isEmpty(stock.getJdbcJar())) {
+                File jar = AppDirs.resolve(stock.getJdbcJar());
+                if (jar != null && jar.isFile())
+                    d.setJdbcJar(stock.getJdbcJar());
+            }
         });
     }
 

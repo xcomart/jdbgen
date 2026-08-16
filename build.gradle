@@ -66,10 +66,14 @@ configurations {
     integrationTestImplementation.extendsFrom implementation
     integrationTestRuntimeOnly.extendsFrom runtimeOnly
 
-    // the H2 driver the documentation screenshots open their sample database
-    // with. Resolved instead of taken from the user's driver directory, so that
+    // the JDBC driver jars shipped with the application below 'drivers/': the
+    // H2 driver of the sample database, so that the sample connection works
+    // out of the box. The stock driver definitions of defaultConfig.json name
+    // these jars by file name, so the version there has to match the one here.
+    // The documentation screenshots open their sample database with the same
+    // jar - resolved instead of taken from the user's driver directory, so that
     // 'gradlew docShots' never reads anything of the user's installation.
-    docShotsDrivers
+    bundledDrivers
 
     // the JDBC driver jars, copied into build/int-drivers so that the tests can
     // point a JDBDriver definition at a real jar file the way the application
@@ -107,8 +111,9 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
 
-    // the sample database of the documentation screenshots
-    docShotsDrivers('com.h2database:h2:2.3.232') { transitive = false }
+    // the H2 driver shipped below 'drivers/', see the bundledDrivers
+    // configuration; keep in step with the H2 entries of defaultConfig.json
+    bundledDrivers('com.h2database:h2:2.4.240') { transitive = false }
 
     // --- database integration tests -----------------------------------------
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
@@ -268,7 +273,7 @@ tasks.register('docShots', JavaExec) {
     doFirst {
         file(home).mkdirs()
         systemProperty 'jdbgen.shots.h2jar',
-                configurations.docShotsDrivers.singleFile.absolutePath
+                configurations.bundledDrivers.singleFile.absolutePath
     }
 }
 
@@ -289,6 +294,9 @@ tasks.register('distZip', Zip) {
         }
         into('lib') {
             from(configurations.runtimeClasspath)
+        }
+        into('drivers') {
+            from(configurations.bundledDrivers)
         }
         from(tasks.named('jar'))
         from('shells/jdbgen.cmd')
@@ -494,6 +502,9 @@ tasks.register('jpackageInput', Sync) {
     into('lib') {
         from(configurations.runtimeClasspath)
     }
+    into('drivers') {
+        from(configurations.bundledDrivers)
+    }
     from(tasks.named('jar'))
     from('sample_h2.db.mv.db')
 }
@@ -633,9 +644,20 @@ tasks.register('jpackage', Exec) {
     }
 }
 
+// A development run reads 'drivers/' of the working copy the way an
+// installation reads its own, so the shipped drivers are copied there first.
+// The directory is ignored by git.
+tasks.register('copyBundledDrivers', Copy) {
+    group = 'application'
+    description = 'Copies the JDBC drivers shipped with the application into drivers/ of the working copy.'
+    from configurations.bundledDrivers
+    into layout.projectDirectory.dir('drivers')
+}
+
 tasks.register('run', JavaExec) {
     group = 'application'
     description = "Runs ${mainClassName}."
+    dependsOn tasks.named('copyBundledDrivers')
     mainClass = mainClassName
     classpath = sourceSets.main.runtimeClasspath
     // the user interface language is the 'language' entry of config.json,

@@ -2,8 +2,12 @@ package comart.tools.jdbgen.types;
 
 import comart.tools.jdbgen.types.maven.SearchResponseItem;
 import comart.utils.StrUtils;
+import comart.utils.AppDirs;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,6 +106,64 @@ public class StockDriverArtifactsTest {
                 "a coordinate the user changed is never overwritten");
         assertNull(own.getMavenArtifact(), "a driver of the user's own is left alone");
         assertNull(unknown.getMavenArtifact());
+    }
+
+    /**
+     * the shipped H2 driver names the jar bundled below the installation, and
+     * the file name of that jar carries the version of its Maven coordinate -
+     * build.gradle copies exactly that artifact into 'drivers/'.
+     */
+    @Test
+    public void theShippedH2DriversNameTheBundledJar() throws Exception {
+        int seen = 0;
+        for (JDBDriver d: bundledDrivers()) {
+            if (!"org.h2.Driver".equals(d.getDriverClass()))
+                continue;
+            seen++;
+            SearchResponseItem item = SearchResponseItem.ofCoordinate(d.getMavenArtifact());
+            assertNotNull(item, d.getName());
+            assertEquals("drivers/" + item.getA() + "-" + item.getV() + ".jar", d.getJdbcJar(),
+                    d.getName() + " names the jar of its own coordinate");
+        }
+        assertEquals(2, seen, "H2 Embedded and H2 Server");
+    }
+
+    /**
+     * a configuration without a jar for a shipped driver picks up the bundled
+     * one - but only when the installation actually carries it.
+     */
+    @Test
+    public void aShippedDriverWithoutAJarTakesTheBundledOne(@TempDir Path install) throws Exception {
+        // both places a relative jar path is looked up in are redirected, the
+        // user data directory of this machine may well hold a downloaded H2
+        System.setProperty(AppDirs.RESOURCE_BASE_PROPERTY, install.resolve("install").toString());
+        System.setProperty(AppDirs.DATA_DIR_PROPERTY, install.resolve("data").toString());
+        try {
+            JDBDriver embedded = JDBDriver.builder().name("H2 Embedded").stockItem(true).build();
+            JDBDriver own = JDBDriver.builder().name("H2 Server").stockItem(true)
+                    .jdbcJar("drivers/h2-2.3.232.jar").build();
+            List<JDBDriver> drivers = new ArrayList<>();
+            drivers.add(embedded);
+            drivers.add(own);
+
+            JDBGenConfig.fillStockMavenArtifacts(drivers);
+            assertNull(embedded.getJdbcJar(), "an installation without the jar leaves it empty");
+
+            String bundled = bundledDrivers().stream()
+                    .filter(d -> "H2 Embedded".equals(d.getName()))
+                    .findFirst().get().getJdbcJar();
+            Path jar = install.resolve("install").resolve(bundled);
+            Files.createDirectories(jar.getParent());
+            Files.write(jar, new byte[]{ 'P', 'K' });
+
+            JDBGenConfig.fillStockMavenArtifacts(drivers);
+            assertEquals(bundled, embedded.getJdbcJar());
+            assertEquals("drivers/h2-2.3.232.jar", own.getJdbcJar(),
+                    "a jar the user has is never replaced");
+        } finally {
+            System.clearProperty(AppDirs.RESOURCE_BASE_PROPERTY);
+            System.clearProperty(AppDirs.DATA_DIR_PROPERTY);
+        }
     }
 
     @Test

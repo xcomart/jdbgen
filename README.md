@@ -161,7 +161,7 @@ The user interface follows your operating system language and can be switched
 by hand in the main window: English, 한국어, Español, 日本語 and 简体中文 are
 included.
 
-Both downloads ship with a small H2 sample database and three example templates,
+Both downloads ship with a small H2 sample database, its H2 driver and three example templates,
 and the default configuration includes a `Sample H2 Embedded` connection that
 uses them, so you can generate something on the first run without setting up a
 database.

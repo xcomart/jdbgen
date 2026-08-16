@@ -1168,16 +1168,38 @@ public class JDBGeneratorMain extends javax.swing.JFrame {
      *
      * @return the work area, not attached to the window yet.
      */
-    private JPanel buildWorkArea() {
-        JPanel work = new JPanel(new MigLayout("insets 0, gap 6 0, fill",
-                // the schema tree and the generation options keep their
-                // preferred width, the table list between them is what grows
-                // with the window and what yields when it shrinks
-                "[shrink 0][grow,fill][shrink 0]", "[grow,fill]"));
-        work.add(buildSchemaPanel(), "growy");
-        work.add(buildTableListPanel(), "grow, wmin 0");
-        work.add(buildOptionsPanel(), "growy");
-        return work;
+    private JComponent buildWorkArea() {
+        // two nested split panes, so that the user can trade width between the
+        // three panels: the divider between the schema tree and the table list
+        // and the one between the table list and the generation options. Both
+        // outer panels keep their width when the window is resized, the table
+        // list in the middle is what grows and what yields.
+        JSplitPane inner = workSplit(buildTableListPanel(), buildOptionsPanel(), 1.0);
+        JSplitPane outer = workSplit(buildSchemaPanel(), inner, 0.0);
+        return outer;
+    }
+
+    /**
+     * a horizontal split of the work area: no border, a slim divider that
+     * moves without repainting in between, and a minimum size of zero on
+     * both sides so that the divider can be dragged all the way.
+     *
+     * @param left
+     *            the left component.
+     * @param right
+     *            the right component.
+     * @param resizeWeight
+     *            the share of a size change the left side receives.
+     * @return the split pane.
+     */
+    private static JSplitPane workSplit(JComponent left, JComponent right, double resizeWeight) {
+        left.setMinimumSize(new Dimension(0, 0));
+        right.setMinimumSize(new Dimension(0, 0));
+        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, true, left, right);
+        split.setBorder(null);
+        split.setDividerSize(6);
+        split.setResizeWeight(resizeWeight);
+        return split;
     }
 
     /**

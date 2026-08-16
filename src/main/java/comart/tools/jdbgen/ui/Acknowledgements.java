@@ -116,7 +116,12 @@ public class Acknowledgements extends JDialog {
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-        jLabel1.setFont(new Font("맑은 고딕", Font.BOLD, 18));
+        // the heading font of the other dialogs: the label's own font, so it
+        // follows the look and feel and the locale, in bold and four points
+        // larger
+        jLabel1.setFont(jLabel1.getFont().deriveFont(
+                jLabel1.getFont().getStyle() | Font.BOLD,
+                jLabel1.getFont().getSize() + 4f));
         jLabel1.setText(I18n.t("acknowledgements.jLabel1.text"));
 
         txtContents.setEditable(false);

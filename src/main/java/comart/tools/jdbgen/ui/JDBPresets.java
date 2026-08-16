@@ -26,6 +26,7 @@ package comart.tools.jdbgen.ui;
 import comart.tools.jdbgen.types.JDBGenConfig;
 import comart.tools.jdbgen.types.JDBPreset;
 import comart.tools.jdbgen.types.JDBTemplate;
+import comart.utils.AppDirs;
 import comart.utils.I18n;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
@@ -111,18 +112,6 @@ public class JDBPresets extends JDialog {
      * applied, so that an applied preset is generated right away.
      */
     private final int connBaseIdx;
-
-    /**
-     * {@link #JDBPresets(javax.swing.JTable, int)} for a table whose first
-     * column is the template name.
-     *
-     * @param connTpls
-     *            the template table this dialog exchanges templates with, may
-     *            be <code>null</code>.
-     */
-    public JDBPresets(JTable connTpls) {
-        this(connTpls, 0);
-    }
 
     /**
      * Creates new form JDBPresets. The dialog is filled with the presets of the
@@ -434,6 +423,7 @@ public class JDBPresets extends JDialog {
         jLabel8.setText(I18n.t("presets.jLabel8.text"));
 
         btnBrowseTemplate.setText("...");
+        btnBrowseTemplate.addActionListener(this::browseTemplateFile);
 
         jLabel13.setHorizontalAlignment(SwingConstants.TRAILING);
         jLabel13.setText(I18n.t("presets.jLabel13.text"));
@@ -703,6 +693,20 @@ public class JDBPresets extends JDialog {
      */
     private void tabTemplatesMouseMoved(MouseEvent evt) {
         UIUtils.templateTooltip(tabTemplates, 0, evt);
+    }
+
+    /**
+     * pick the template file of the edited template with a file dialog, which
+     * opens in the bundled templates directory.
+     *
+     * @param evt
+     *            ignored.
+     */
+    private void browseTemplateFile(ActionEvent evt) {
+        String path = UIUtils.openFileDlg(this,
+                AppDirs.installResourceFile("templates").getAbsolutePath(), true);
+        if (!StrUtils.isEmpty(path))
+            txtTemplateFile.setText(path);
     }
 
     /** left half of the dialog, holding the list of the stored presets. */

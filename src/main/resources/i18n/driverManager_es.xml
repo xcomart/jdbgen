@@ -10,6 +10,7 @@
 
   <!-- driver list -->
   <entry key="driverManager.jLabel1.text">Controladores</entry>
+  <entry key="driverManager.list.driverRequired">controlador requerido</entry>
 
   <!-- tabs -->
   <entry key="driverManager.tab.general">General</entry>

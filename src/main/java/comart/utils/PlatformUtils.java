@@ -47,13 +47,30 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * What the operating system and the release around the application are: which
+ * platform it runs on, which version it is, how to hand a URL or a file to the
+ * desktop, and whether a newer release is available. Everything is
+ * <code>static</code> and the detected platform is worked out once.
+ */
 @Slf4j
 public class PlatformUtils {
+    /** the platform worked out on the first {@link #getOSType()} call. */
     private static OSType detectedOS = null;
 
+    /**
+     * this class only holds <code>static</code> methods.
+     */
     public PlatformUtils() {
     }
 
+    /**
+     * the platform this application runs on, read from the
+     * <code>os.name</code> system property and remembered afterwards.
+     *
+     * @return the detected platform, {@link OSType#Other} for a platform that
+     *         is none of the known ones.
+     */
     public synchronized static OSType getOSType() {
         if (detectedOS == null) {
             String OS = System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH);
@@ -73,6 +90,13 @@ public class PlatformUtils {
         return detectedOS;
     }
 
+    /**
+     * open <code>url</code> in the default browser of the desktop. A failure is
+     * logged and nothing else happens.
+     *
+     * @param url
+     *            the address to open.
+     */
     public static void openURL(String url) {
         Desktop desk = Desktop.getDesktop();
         
@@ -84,6 +108,13 @@ public class PlatformUtils {
 
     }
     
+    /**
+     * hand a file or a directory to the desktop, which opens it with whatever
+     * is registered for it. A failure is logged and nothing else happens.
+     *
+     * @param path
+     *            path of the file or directory to open.
+     */
     public static void openFile(String path) {
         Desktop desk = Desktop.getDesktop();
         
@@ -95,9 +126,18 @@ public class PlatformUtils {
 
     }
     
+    /** version reported when <code>/version.properties</code> cannot be read. */
     private static final String UNKNOWN_VERSION = "unknown";
+    /** the version read on the first {@link #getVersion()} call. */
     private static String _version = null;
 
+    /**
+     * the version of this release, read once from
+     * <code>/version.properties</code> on the class path.
+     *
+     * @return the version string, or <code>"unknown"</code> when the resource
+     *         is missing or unreadable.
+     */
     public synchronized static String getVersion() {
         if (_version == null) {
             Properties prop = new Properties();
@@ -132,28 +172,59 @@ public class PlatformUtils {
         openURL(docUrl);
     }
 
+    /**
+     * @return this application runs on Windows or not.
+     */
     public static boolean isWindows() {
         return getOSType() == OSType.Windows;
     }
 
+    /**
+     * @return this application runs on macOS or not.
+     */
     public static boolean isMac() {
         return getOSType() == OSType.MacOS;
     }
 
+    /**
+     * @return this application runs on a Unix like platform or not.
+     */
     public static boolean isUnix() {
         return getOSType() == OSType.Unix;
     }
 
+    /**
+     * The platforms told apart by {@link #getOSType()}.
+     */
     public static enum OSType {
+        /** Microsoft Windows. */
         Windows,
+        /** Apple macOS. */
         MacOS,
+        /** Linux and the other Unix like platforms. */
         Unix,
+        /** anything the <code>os.name</code> property is not recognised for. */
         Other;
 
+        /** the constants carry nothing beyond their identity. */
         private OSType() {
         }
     }
     
+    /**
+     * hook the application into the platform menus - the macOS application
+     * menu above all. A <code>null</code> handler is skipped, and a platform
+     * that does not support one of them is logged and ignored.
+     *
+     * @param about
+     *            handler of "About this application".
+     * @param prefs
+     *            handler of "Preferences".
+     * @param print
+     *            handler of files dropped on the application to be printed.
+     * @param shut
+     *            handler of "Quit".
+     */
     public static void registerHandlers(AboutHandler about,
             PreferencesHandler prefs, PrintFilesHandler print, QuitHandler shut) {
         try {
@@ -179,6 +250,10 @@ public class PlatformUtils {
         }
     }
     
+    /**
+     * put the application icon on the platform taskbar or dock. Silently does
+     * nothing where the platform has no such thing.
+     */
     public static void setDockIcon() {
         try {
             final Toolkit defaultToolkit = Toolkit.getDefaultToolkit();
@@ -192,15 +267,28 @@ public class PlatformUtils {
     
     /**
      * compare two dotted version strings numerically. A leading 'v' is ignored,
-     * and any non numeric segment is treated as 0. Missing trailing segments are
-     * treated as 0 too, so "1.2" equals "1.2.0".
+     * and missing trailing segments are treated as 0, so "1.2" equals "1.2.0".
      *
+     * <p>Whatever follows the dotted number - <code>"-rc1"</code> of
+     * <code>"0.3.2-rc1"</code> - is a pre-release mark and not part of the
+     * number: the numbers are compared first, and only when they are equal does
+     * the marked version count as the older one, so that
+     * <code>0.3.2-rc1</code> precedes <code>0.3.2</code> and follows
+     * <code>0.3.1</code>. Two pre-releases of the same number are not told
+     * apart, the tag itself is never read.</p>
+     *
+     * @param a
+     *            left hand version string, may be <code>null</code>.
+     * @param b
+     *            right hand version string, may be <code>null</code>.
      * @return negative if <code>a</code> precedes <code>b</code>, 0 if they are
      *         equal, positive otherwise.
      */
     static int compareVersions(String a, String b) {
-        String[] av = stripVersionPrefix(a).split("\\.");
-        String[] bv = stripVersionPrefix(b).split("\\.");
+        String as = stripVersionPrefix(a);
+        String bs = stripVersionPrefix(b);
+        String[] av = numericPart(as).split("\\.");
+        String[] bv = numericPart(bs).split("\\.");
         int len = Math.max(av.length, bv.length);
         for (int i=0; i<len; i++) {
             int an = i < av.length ? StrUtils.toInt(av[i]) : 0;
@@ -208,9 +296,50 @@ public class PlatformUtils {
             if (an != bn)
                 return an < bn ? -1 : 1;
         }
-        return 0;
+        // same number: a pre-release precedes the release it leads up to
+        boolean ap = isPreRelease(as);
+        boolean bp = isPreRelease(bs);
+        if (ap == bp)
+            return 0;
+        return ap ? -1 : 1;
     }
 
+    /**
+     * the dotted number a version string opens with.
+     *
+     * @param v
+     *            the version, already stripped of its tag prefix.
+     * @return the leading run of digits and dots, empty when the version does
+     *         not open with one.
+     */
+    private static String numericPart(String v) {
+        int idx = 0;
+        while (idx < v.length() &&
+                (v.charAt(idx) == '.' || (v.charAt(idx) >= '0' && v.charAt(idx) <= '9')))
+            idx++;
+        return v.substring(0, idx);
+    }
+
+    /**
+     * whether a version carries anything beyond its dotted number, which is how
+     * <code>0.3.2-rc1</code> is told from <code>0.3.2</code>.
+     *
+     * @param v
+     *            the version, already stripped of its tag prefix.
+     * @return there is a pre-release mark or not.
+     */
+    private static boolean isPreRelease(String v) {
+        return numericPart(v).length() < v.length();
+    }
+
+    /**
+     * drop the <code>v</code> a release tag is usually written with.
+     *
+     * @param v
+     *            the version string, may be <code>null</code>.
+     * @return the trimmed version without its leading <code>'v'</code>, empty
+     *         for <code>null</code>.
+     */
     private static String stripVersionPrefix(String v) {
         String res = v == null ? "" : v.trim();
         if (res.length() > 0 && (res.charAt(0) == 'v' || res.charAt(0) == 'V'))
@@ -218,9 +347,21 @@ public class PlatformUtils {
         return res;
     }
 
+    /** page the user is sent to when the update cannot be installed here. */
     private static final String RELEASE_PAGE =
             "https://github.com/xcomart/jdbgen/releases/latest";
 
+    /**
+     * Ask GitHub for the latest release and offer the update when it is newer
+     * than the running version.
+     *
+     * <p>Whatever an earlier update left behind is cleaned up first. The check
+     * is skipped when the running version is unknown, and every failure - no
+     * network, an unexpected response - is logged and the startup simply
+     * continues. An installation whose files cannot be replaced is not updated
+     * by the application itself; the user is told about the new version and
+     * offered the release page instead.</p>
+     */
     public static void updateCheck() {
         // whatever an earlier update left behind is of no use anymore
         UpdateManager.cleanupStaging();
@@ -266,6 +407,9 @@ public class PlatformUtils {
     /**
      * tell the user about a new version that cannot be installed by the
      * application itself, and offer the release page.
+     *
+     * @param tagName
+     *            tag of the new release, as GitHub reported it.
      */
     private static void announceManualUpdate(String tagName) {
         log.info("'{}' is not writable, the update has to be installed by the user.",
@@ -282,6 +426,10 @@ public class PlatformUtils {
      * download and install <code>release</code>, restarting the application
      * when it worked. A cancelled download just continues the startup, a
      * failed one falls back to the release page in the browser.
+     *
+     * @param release
+     *            the release object GitHub answered the latest release request
+     *            with.
      */
     private static void applyUpdate(JsonObject release) {
         UpdateManager.Result res = UpdateManager.performUpdate(release);

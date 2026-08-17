@@ -23,9 +23,13 @@
  */
 package comart.utils;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -114,5 +118,158 @@ public class ObjUtilsTest {
         outer.put("bean", inner);
 
         assertEquals("inner", ObjUtils.getValue(outer, "bean.name"));
+    }
+
+    /**
+     * a bean whose writable property is named without the <code>set</code>
+     * prefix, and one that carries a public field.
+     */
+    public static class PlainBean {
+        public String visible;
+        private String title;
+
+        public String getVisible() { return "from the getter"; }
+        public String getTitle() { return title; }
+        public void title(String title) { this.title = title; }
+    }
+
+    @Test
+    public void testSetValueIgnoresANullValue() throws Exception {
+        PrimitiveBean bean = new PrimitiveBean();
+        bean.setName("kept");
+
+        // no setter takes a null typed argument, so nothing is written - the
+        // property must not be cleared by a value that is not there
+        ObjUtils.setValue(bean, "name", null);
+        assertEquals("kept", bean.getName());
+    }
+
+    @Test
+    public void testSetValueIsANoOpWhenNoSetterMatches() throws Exception {
+        PrimitiveBean bean = new PrimitiveBean();
+        bean.setNo(5);
+
+        // there is a 'no' property but no setNo(String)
+        ObjUtils.setValue(bean, "no", "not a number");
+        assertEquals(5, bean.getNo());
+
+        // and no property of that name at all
+        ObjUtils.setValue(bean, "noSuchProperty", "x");
+        assertEquals(5, bean.getNo());
+    }
+
+    @Test
+    public void testSetValueFindsASetterWithoutThePrefix() throws Exception {
+        PlainBean bean = new PlainBean();
+        ObjUtils.setValue(bean, "title", "written");
+        assertEquals("written", bean.getTitle());
+    }
+
+    @Test
+    public void testGetValuePrefersAPublicField() throws Exception {
+        PlainBean bean = new PlainBean();
+        bean.visible = "field value";
+        // the field is read directly, the getter is only the fallback
+        assertEquals("field value", ObjUtils.getValue(bean, "visible"));
+    }
+
+    @Test
+    public void testGetValueOnAPathThatBreaksOffYieldsNull() throws Exception {
+        Map<String, Object> outer = new HashMap<>();
+        outer.put("bean", new PrimitiveBean());
+
+        // the middle segment resolves to nothing, so the rest of the path has
+        // nothing to be read from
+        assertNull(ObjUtils.getValue(outer, "missing.name"));
+        assertNull(ObjUtils.getValue(outer, "bean.name.length"));
+        assertNull(ObjUtils.getValue(null, "anything"));
+        assertNull(ObjUtils.getValue(outer, "missing"));
+    }
+
+    @Test
+    public void testGetValueOfAnEmptyNameIsNullInEveryContext() throws Exception {
+        Map<String, Object> map = new HashMap<>();
+        map.put("", "an entry under the empty key");
+
+        // reading a bean used to capitalize the name and die on substring(0, 1)
+        assertNull(ObjUtils.getValue(new PrimitiveBean(), ""));
+        // and a map answered whatever happened to sit under the empty key, so
+        // the '${}' of a template behaved differently per kind of context
+        assertNull(ObjUtils.getValue(map, ""));
+        assertNull(ObjUtils.getValue(map, "bean."));
+        assertNull(ObjUtils.getValue(new PrimitiveBean(), "name."));
+        assertNull(ObjUtils.getValue(null, ""));
+        // a name that is not there at all is nothing to read either
+        assertNull(ObjUtils.getValue(new PrimitiveBean(), null));
+        assertNull(ObjUtils.getValue(map, null));
+        // the fallback overload sees the same nothing
+        assertEquals("fallback", ObjUtils.getValue(map, "", "fallback"));
+        assertEquals("fallback", ObjUtils.getValue(new PrimitiveBean(), "", "fallback"));
+    }
+
+    @Test
+    public void testGetValueFallsBackToTheDefault() throws Exception {
+        PrimitiveBean bean = new PrimitiveBean();
+        bean.setName("sample");
+
+        assertEquals("sample", ObjUtils.getValue(bean, "name", "fallback"));
+        assertEquals("fallback", ObjUtils.getValue(bean, "noSuchProperty", "fallback"));
+        // a property that is there but null takes the fallback too
+        assertEquals("fallback", ObjUtils.getValue(new PrimitiveBean(), "name", "fallback"));
+    }
+
+    @Test
+    public void testObjToMapFlattensTheWholeHierarchy() {
+        DerivedBean bean = new DerivedBean();
+        bean.setNo(7);
+        bean.setFlag(true);
+        bean.setName("sample");
+        bean.setExtra("x");
+
+        Map<String, Object> map = ObjUtils.objToMap(bean);
+
+        assertEquals("x", map.get("extra"));
+        assertEquals(Integer.valueOf(7), map.get("no"),
+                "the fields of the super class are in there too");
+        assertEquals(Boolean.TRUE, map.get("flag"));
+        assertEquals("sample", map.get("name"));
+        assertEquals(Long.valueOf(0L), map.get("size"));
+        assertFalse(map.containsKey("noSuchProperty"));
+    }
+
+    @Test
+    public void testSetFieldsToOverwritesWhatIsAlreadyThere() {
+        PrimitiveBean bean = new PrimitiveBean();
+        bean.setName("from the bean");
+        HashMap<String, Object> vars = new HashMap<>();
+        vars.put("name", "from the map");
+        vars.put("untouched", "kept");
+
+        ObjUtils.setFieldsTo(bean, vars);
+
+        assertEquals("from the bean", vars.get("name"));
+        assertEquals("kept", vars.get("untouched"),
+                "an entry the object has no field for stays as it is");
+    }
+
+    @Test
+    public void testFileContentsRoundTrip(@TempDir Path dir) throws Exception {
+        Path file = dir.resolve("nested/sample.txt");
+        String content = "line one\n한글 두 번째 줄\n";
+
+        ObjUtils.writeFile(file.toString(), content);
+
+        assertTrue(Files.isRegularFile(file), "the parent directories are created");
+        assertEquals(content, ObjUtils.getFileContents(file.toString()));
+        // the file is UTF-8, whatever the platform encoding is
+        assertArrayEquals(content.getBytes(StandardCharsets.UTF_8), Files.readAllBytes(file));
+
+        ObjUtils.writeFile(file.toString(), "replaced");
+        assertEquals("replaced", ObjUtils.getFileContents(file.toString()));
+    }
+
+    @Test
+    public void testGetLoginUserIdIsTheAccountTheJvmRunsUnder() {
+        assertEquals(System.getProperty("user.name"), ObjUtils.getLoginUserId());
     }
 }

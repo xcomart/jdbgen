@@ -6,9 +6,9 @@
   <entry key="abbreviationMapper.jLabel1.text">Asignación de abreviaturas</entry>
   <entry key="abbreviationMapper.tblMapping.toolTipText">Reglas de asignación de abreviaturas aplicadas a los nombres de objetos (tablas y columnas).</entry>
   <entry key="abbreviationMapper.tblMapping.column.apply">Aplicar</entry>
-  <entry key="abbreviationMapper.tblMapping.column.totalName">Nombre completo</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">Solo nombre completo</entry>
   <entry key="abbreviationMapper.tblMapping.column.abbreviation">Abreviatura</entry>
-  <entry key="abbreviationMapper.tblMapping.column.replaceTo">Sustituir por</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">Reemplazo</entry>
   <entry key="abbreviationMapper.btnDel.toolTipText">Eliminar la asignación seleccionada</entry>
   <entry key="abbreviationMapper.btnOk.text">Aceptar</entry>
 

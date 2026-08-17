@@ -26,22 +26,41 @@ package comart.tools.jdbgen.types.maven;
 import lombok.Data;
 
 /**
+ * The query parameters of a Maven Central search call. The fields are the Solr
+ * parameters of the search service; the application only fills in the query, the
+ * page bounds and the response format, and receives the rest back in the header
+ * of the reply. On a request the fields are substituted into the URL template
+ * of the configured endpoint, where they appear as <code>${...}</code>
+ * variables named after the field.
  *
  * @author comart
  */
 @Data
 public class SearchParams {
+    /** the search term. */
     String q;
+    /** the search core, which selects what is searched, for example the version list of an artifact. */
     String core;
+    /** the Solr query parser to use. */
     String defType;
+    /** the fields the query terms are matched against. */
     String qf;
+    /** whether the reply is indented. */
     String indent;
+    /** whether spell checking is run for the query. */
     String spellcheck;
+    /** the fields to return per match. */
     String fl;
+    /** index of the first match to return. */
     String start;
+    /** how many spell checking suggestions to return. */
     String spellcheck_count;
+    /** the sort order of the matches. */
     String sort;
+    /** how many matches to return, that is the page size. */
     String rows;
+    /** the response format, always <code>"json"</code>. */
     String wt = "json";
+    /** the response format version. */
     String version;
 }

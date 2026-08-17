@@ -32,16 +32,18 @@
   <entry key="connectionManager.jLabel6.text">Contraseña del usuario:</entry>
   <entry key="connectionManager.jLabel12.text">Icono:</entry>
   <entry key="connectionManager.btnBrowseIcon.toolTipText">Examinar archivo de icono</entry>
+  <entry key="connectionManager.txtIcon.toolTipText">Icono de esta conexión. Use stock:nombre.png para un icono incluido, fa:nombre para un icono de Font Awesome, color:nombre para un punto de color, una URL http o la ruta de un archivo de imagen.</entry>
   <entry key="connectionManager.jLabel7.text">Propiedades de conexión:</entry>
   <entry key="connectionManager.tabProps.col.key">Clave</entry>
   <entry key="connectionManager.tabProps.col.value">Valor</entry>
-  <entry key="connectionManager.chkKeepAlive.text">Mantener la conexión activa con la siguiente sentencia cada</entry>
-  <entry key="connectionManager.jLabel15.text">segundos.</entry>
+  <entry key="connectionManager.tabProps.toolTipText">Propiedades que se pasan al controlador JDBC. Al escribir en la última fila vacía se añade otra.</entry>
+  <entry key="connectionManager.chkKeepAlive.text">Ejecutar esta sentencia cada</entry>
+  <entry key="connectionManager.jLabel15.text">segundos para mantener la conexión activa.</entry>
 
   <!-- templates tab -->
   <entry key="connectionManager.tabTemplates.col.name">Nombre</entry>
   <entry key="connectionManager.tabTemplates.col.templateFile">Archivo de plantilla</entry>
-  <entry key="connectionManager.tabTemplates.col.outTemplate">Plantilla de salida</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">Nombre del archivo de salida</entry>
   <entry key="connectionManager.btnTemplateHelp.toolTipText">Ayuda sobre plantillas</entry>
   <entry key="connectionManager.btnPresets.text">Preajustes</entry>
   <entry key="connectionManager.btnPresets.toolTipText">Administrar preajustes de plantillas</entry>
@@ -56,8 +58,8 @@
   <entry key="connectionManager.jLabel8.text">Archivo de plantilla:</entry>
   <entry key="connectionManager.txtTemplateFile.toolTipText">Ubicación del archivo de plantilla</entry>
   <entry key="connectionManager.btnBrowseTemplate.toolTipText">Examinar archivo de plantilla</entry>
-  <entry key="connectionManager.jLabel13.text">Plantilla del nombre de salida:</entry>
-  <entry key="connectionManager.txtOutTemplate.toolTipText">Plantilla del nombre del archivo de salida</entry>
+  <entry key="connectionManager.jLabel13.text">Nombre del archivo de salida:</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">Nombre del archivo generado a partir de esta plantilla. Se pueden usar variables de plantilla.</entry>
 
   <!-- options tab -->
   <entry key="connectionManager.jLabel11.text">Directorio de salida:</entry>
@@ -65,6 +67,7 @@
   <entry key="connectionManager.jLabel16.text">Variables personalizadas:</entry>
   <entry key="connectionManager.tabVars.col.name">Nombre</entry>
   <entry key="connectionManager.tabVars.col.value">Valor</entry>
+  <entry key="connectionManager.tabVars.toolTipText">Variables personalizadas disponibles en las plantillas. Al escribir en la última fila vacía se añade otra.</entry>
 
   <!-- default names of newly created connections -->
   <entry key="connectionManager.msg.newConnection">Conexión nueva</entry>
@@ -79,7 +82,6 @@
   <entry key="connectionManager.msg.passwordRequired">Se requiere la contraseña del usuario de la base de datos.</entry>
   <entry key="connectionManager.msg.keepAliveQueryRequired">Se requiere la sentencia SQL de mantenimiento de conexión.</entry>
   <entry key="connectionManager.msg.keepAliveSecRequired">Se requiere el intervalo de ejecución de la sentencia de mantenimiento de conexión.</entry>
-  <entry key="connectionManager.msg.outputDirRequired">Se requiere el directorio de salida.</entry>
   <entry key="connectionManager.msg.driverIncomplete">La información del controlador está incompleta.</entry>
 
   <!-- removing a connection -->

@@ -83,8 +83,11 @@ public class UpdateManager {
     /** the unpacked release below the staging directory. */
     static final String EXTRACTED_NAME = "extracted";
 
+    /** name prefix shared by the release archive and the application jar. */
     private static final String JAR_PREFIX = "jdbgen-";
+    /** file name suffix of the application jar. */
     private static final String JAR_SUFFIX = ".jar";
+    /** block size used while downloading and unpacking. */
     private static final int BUFFER_SIZE = 64 * 1024;
 
     /**
@@ -103,25 +106,51 @@ public class UpdateManager {
      * a downloadable file of a GitHub release.
      */
     public static class ReleaseAsset {
+        /** published file name of the asset. */
         private final String name;
+        /** direct download url of the asset. */
         private final String url;
+        /** size in bytes, 0 when the release did not tell. */
         private final long size;
 
+        /**
+         * @param name
+         *            file name of the asset as it is published.
+         * @param url
+         *            direct download url of the asset.
+         * @param size
+         *            size in bytes, 0 when the release did not tell.
+         */
         ReleaseAsset(String name, String url, long size) {
             this.name = name;
             this.url = url;
             this.size = size;
         }
 
+        /**
+         * file name of the asset, which is also the name the archive is
+         * downloaded under.
+         *
+         * @return the published file name.
+         */
         public String getName() {
             return name;
         }
 
+        /**
+         * direct download url of the asset.
+         *
+         * @return the <code>browser_download_url</code> of the release asset.
+         */
         public String getUrl() {
             return url;
         }
 
-        /** size in bytes, 0 when the release did not tell. */
+        /**
+         * size in bytes, 0 when the release did not tell.
+         *
+         * @return the announced size, or 0 when the release carried none.
+         */
         public long getSize() {
             return size;
         }
@@ -132,7 +161,11 @@ public class UpdateManager {
      * release. Releases also carry source archives and other attachments, so
      * only a <code>jdbgen-*.zip</code> qualifies.
      *
-     * @return empty when the release has no archive to download.
+     * @param release
+     *            the release object of the GitHub api, may be
+     *            <code>null</code>.
+     * @return the first matching asset, or empty when the release has no
+     *         archive to download.
      */
     public static Optional<ReleaseAsset> selectZipAsset(JsonObject release) {
         if (release == null)
@@ -164,6 +197,17 @@ public class UpdateManager {
         return Optional.empty();
     }
 
+    /**
+     * read a json member as a string, tolerating a missing or non primitive
+     * member.
+     *
+     * @param obj
+     *            json object to read from.
+     * @param key
+     *            name of the member.
+     * @return the member as a string, or <code>null</code> when it is absent
+     *         or not a primitive.
+     */
     private static String asString(JsonObject obj, String key) {
         JsonElement el = obj.get(key);
         return el == null || !el.isJsonPrimitive() ? null : el.getAsString();
@@ -173,6 +217,14 @@ public class UpdateManager {
      * download the release archive, unpack it and start the applier in a
      * separate JVM. On {@link Result#LAUNCHED} the caller must exit
      * immediately, otherwise the applier cannot replace the installed jar.
+     * Any failure is logged, the staging directory is removed and
+     * {@link Result#FAILED} is returned; no exception leaves this method.
+     *
+     * @param release
+     *            the release object of the GitHub api to update to.
+     * @return {@link Result#LAUNCHED} when the applier was started,
+     *         {@link Result#CANCELLED} when the user closed the download
+     *         dialog, {@link Result#FAILED} when nothing was changed.
      */
     public static Result performUpdate(JsonObject release) {
         File jar = runningJar();
@@ -228,8 +280,12 @@ public class UpdateManager {
     }
 
     /**
-     * the jar this application runs from, or <code>null</code> when it is not
-     * started from a jar at all (a development run out of the class files).
+     * locate the jar this application runs from. When it was started from an
+     * exploded class path instead, the first <code>jdbgen-*.jar</code> of the
+     * working directory is used.
+     *
+     * @return the jar of the running application, or <code>null</code> when
+     *         there is none (a development run out of the class files).
      */
     public static File runningJar() {
         File jar = AppDirs.runningJar();
@@ -243,6 +299,11 @@ public class UpdateManager {
 
     /**
      * every <code>jdbgen-*.jar</code> of <code>dir</code>, sorted by name.
+     *
+     * @param dir
+     *            directory to look into, may be <code>null</code>.
+     * @return the matching files, empty when <code>dir</code> is
+     *         <code>null</code> or holds none.
      */
     static List<File> listJars(File dir) {
         List<File> res = new ArrayList<>();
@@ -264,8 +325,13 @@ public class UpdateManager {
      * which is stripped so that the content lines up with the installation
      * directory.
      *
-     * @throws IOException when an entry would be written outside of
-     *         <code>destDir</code> (a "zip slip" archive).
+     * @param zip
+     *            the archive to unpack.
+     * @param destDir
+     *            directory to unpack into, created when missing.
+     * @throws IOException when the archive cannot be read or written, or when
+     *         an entry would be written outside of <code>destDir</code>
+     *         (a "zip slip" archive).
      */
     public static void extractZip(File zip, File destDir) throws IOException {
         Path dest = destDir.toPath().toAbsolutePath().normalize();
@@ -296,6 +362,18 @@ public class UpdateManager {
         }
     }
 
+    /**
+     * resolve an archive entry name below <code>dest</code> and make sure it
+     * stays there.
+     *
+     * @param dest
+     *            normalized absolute target directory.
+     * @param name
+     *            entry name of the archive.
+     * @return the normalized absolute path of the entry.
+     * @throws IOException when the entry resolves outside of
+     *         <code>dest</code>.
+     */
     private static Path resolveInside(Path dest, String name) throws IOException {
         Path target = dest.resolve(name).toAbsolutePath().normalize();
         if (!target.startsWith(dest))
@@ -306,6 +384,11 @@ public class UpdateManager {
     /**
      * drop the leading <code>jdbgen-&lt;version&gt;/</code> of an archive
      * entry. Entries without any directory part are dropped altogether.
+     *
+     * @param name
+     *            entry name with <code>/</code> as the separator.
+     * @return the name without its first segment, or an empty string when it
+     *         had no directory part.
      */
     static String stripFirstSegment(String name) {
         String res = name;
@@ -316,7 +399,16 @@ public class UpdateManager {
     }
 
     /**
+     * download <code>asset</code> on a worker thread while a modal progress
+     * dialog is shown, and return once the download has ended.
+     *
+     * @param asset
+     *            the release asset to fetch.
+     * @param dest
+     *            file the archive is written to.
      * @return <code>false</code> when the user cancelled the download.
+     * @throws Exception rethrown failure of the download thread, or a failure
+     *         of the dialog handling.
      */
     private static boolean downloadWithProgress(ReleaseAsset asset, File dest) throws Exception {
         final AtomicBoolean cancelled = new AtomicBoolean(false);
@@ -344,6 +436,21 @@ public class UpdateManager {
         return !cancelled.get();
     }
 
+    /**
+     * stream the asset into <code>dest</code>, feeding the progress dialog and
+     * aborting as soon as <code>cancelled</code> is set.
+     *
+     * @param asset
+     *            the release asset to fetch.
+     * @param dest
+     *            file the archive is written to.
+     * @param cancelled
+     *            flag the dialog sets when the user cancels.
+     * @param dlg
+     *            dialog the progress is reported to.
+     * @throws IOException on a failed request, an empty response body, a write
+     *         failure or a cancellation.
+     */
     private static void download(ReleaseAsset asset, File dest, AtomicBoolean cancelled,
             ProgressDialog dlg) throws IOException {
         Request req = new Request.Builder().url(asset.getUrl()).build();
@@ -372,6 +479,22 @@ public class UpdateManager {
         }
     }
 
+    /**
+     * start {@link UpdateApplier} in a JVM of its own, with the copied jar as
+     * its only class path entry and its output redirected into the staging
+     * directory.
+     *
+     * @param installDir
+     *            installation directory, also the working directory of the
+     *            new process.
+     * @param staging
+     *            staging directory the log file is written into.
+     * @param updater
+     *            copy of the running jar, used as the class path.
+     * @param extracted
+     *            directory holding the unpacked release.
+     * @throws IOException when the process cannot be started.
+     */
     private static void launchApplier(File installDir, File staging, File updater,
             File extracted) throws IOException {
         File logFile = new File(staging, LOG_NAME);
@@ -388,6 +511,12 @@ public class UpdateManager {
         pb.start();
     }
 
+    /**
+     * the java launcher of the running JVM.
+     *
+     * @return <code>bin/java.exe</code> when it exists, <code>bin/java</code>
+     *         otherwise.
+     */
     private static File javaExecutable() {
         File home = new File(System.getProperty("java.home", "."));
         File exe = new File(new File(home, "bin"), "java.exe");
@@ -399,6 +528,11 @@ public class UpdateManager {
     /**
      * delete a file or a whole directory tree, ignoring what cannot be
      * removed - a leftover is cleaned up on the next start.
+     *
+     * @param f
+     *            file or directory to remove, may be <code>null</code> or
+     *            already gone. A symbolic link is removed without being
+     *            followed.
      */
     static void deleteRecursively(File f) {
         if (f == null || !f.exists())
@@ -421,19 +555,46 @@ public class UpdateManager {
      * user cancels it.
      */
     private static class ProgressDialog {
+        /** set when the user cancels, read by the download thread. */
         private final AtomicBoolean cancelled;
+        /** the modal dialog itself. */
         private JDialog dialog;
+        /** the progress bar of the dialog. */
         private JProgressBar bar;
+        /** whether the download has already ended. */
         private boolean finished = false;
+        /** expected number of bytes; the bar is indeterminate while this is not positive. */
         private long total = 0;
+        /** last percentage painted, so that the bar is only repainted on a change. */
         private int lastPercent = -1;
 
+        /**
+         * build the dialog on the event dispatch thread. It is not shown yet,
+         * {@link #showAndWait()} does that.
+         *
+         * @param title
+         *            label shown above the progress bar.
+         * @param total
+         *            expected number of bytes; the bar is indeterminate while
+         *            this is not positive.
+         * @param cancelled
+         *            flag that is set when the user cancels the download.
+         * @throws Exception when building the dialog on the event dispatch
+         *         thread fails or is interrupted.
+         */
         ProgressDialog(String title, long total, AtomicBoolean cancelled) throws Exception {
             this.cancelled = cancelled;
             this.total = total;
             SwingUtilities.invokeAndWait(() -> build(title));
         }
 
+        /**
+         * assemble the modal dialog. Closing the window cancels the download
+         * rather than leaving it running unattended.
+         *
+         * @param title
+         *            label shown above the progress bar.
+         */
         private void build(String title) {
             dialog = new JDialog((java.awt.Frame)null,
                     I18n.t("common.update.progress.title"), true);
@@ -466,11 +627,20 @@ public class UpdateManager {
             dialog.setLocationRelativeTo(null);
         }
 
+        /** flag the download as cancelled and close the dialog. */
         private void cancel() {
             cancelled.set(true);
             finish();
         }
 
+        /**
+         * adopt the size the server announced, which may be the first size
+         * known at all.
+         *
+         * @param total
+         *            expected number of bytes; the bar stays indeterminate
+         *            while this is not positive.
+         */
         void setTotal(long total) {
             SwingUtilities.invokeLater(() -> {
                 this.total = total;
@@ -479,6 +649,13 @@ public class UpdateManager {
             });
         }
 
+        /**
+         * report the progress. The bar is only repainted when the percentage
+         * actually changed.
+         *
+         * @param done
+         *            number of bytes written so far.
+         */
         void setDone(long done) {
             if (total <= 0)
                 return;
@@ -503,6 +680,9 @@ public class UpdateManager {
          * show the dialog and return once it is gone. The check for an
          * already finished download happens on the event dispatch thread, so
          * a download that ends before the dialog is up cannot leave it open.
+         *
+         * @throws Exception when showing the dialog on the event dispatch
+         *         thread fails or is interrupted.
          */
         void showAndWait() throws Exception {
             SwingUtilities.invokeAndWait(() -> {

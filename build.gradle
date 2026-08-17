@@ -3,12 +3,25 @@ plugins {
 }
 
 group = 'comart.tools'
-version = '0.3.1'
+version = '0.3.2'
 description = 'jdbgen'
 
 ext {
     mainClassName = 'comart.tools.jdbgen.JDBGenerator'
     lombokVersion = '1.18.40'
+    testcontainersVersion = '1.21.3'
+    // The JDBC drivers the integration tests open their connections with. They
+    // are the drivers the stock driver definitions of defaultConfig.json expect,
+    // in the versions a user would download today.
+    jdbcDriverCoordinates = [
+        'org.postgresql:postgresql:42.7.4',
+        // 'mysql:mysql-connector-java' is a relocation pom since 8.0.31 - the
+        // artifact itself only exists under the new coordinate
+        'com.mysql:mysql-connector-j:8.0.33',
+        'org.mariadb.jdbc:mariadb-java-client:3.4.1',
+        'com.microsoft.sqlserver:mssql-jdbc:12.8.1.jre11',
+        'com.oracle.database.jdbc:ojdbc11:23.6.0.24.10'
+    ]
 }
 
 repositories {
@@ -33,6 +46,41 @@ sourceSets {
             srcDirs = ['src/test/resources']
         }
     }
+    // The database integration tests: they need a running Docker daemon, so
+    // they live in a source set of their own and are never part of 'check'.
+    integrationTest {
+        java {
+            srcDirs = ['src/integrationTest/java']
+        }
+        resources {
+            srcDirs = ['src/integrationTest/resources']
+        }
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    // the integration tests use the application the same way the application
+    // uses itself
+    integrationTestImplementation.extendsFrom implementation
+    integrationTestRuntimeOnly.extendsFrom runtimeOnly
+
+    // the JDBC driver jars shipped with the application below 'drivers/': the
+    // H2 driver of the sample database, so that the sample connection works
+    // out of the box. The stock driver definitions of defaultConfig.json name
+    // these jars by file name, so the version there has to match the one here.
+    // The documentation screenshots open their sample database with the same
+    // jar - resolved instead of taken from the user's driver directory, so that
+    // 'gradlew docShots' never reads anything of the user's installation.
+    bundledDrivers
+
+    // the JDBC driver jars, copied into build/int-drivers so that the tests can
+    // point a JDBDriver definition at a real jar file the way the application
+    // does. Only the driver jars themselves - whatever they need on top of that
+    // is on the test runtime class path anyway, and DBMeta's driver class loader
+    // delegates to it.
+    intDrivers
 }
 
 dependencies {
@@ -46,7 +94,7 @@ dependencies {
     implementation 'commons-io:commons-io:2.21.0'
     implementation 'org.slf4j:slf4j-api:2.0.17'
     implementation 'ch.qos.logback:logback-classic:1.5.23'
-    implementation 'org.netbeans.external:AbsoluteLayout:RELEASE280'
+    implementation 'com.miglayout:miglayout-swing:11.4.2'
 
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
@@ -62,6 +110,32 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+
+    // the H2 driver shipped below 'drivers/', see the bundledDrivers
+    // configuration; keep in step with the H2 entries of defaultConfig.json
+    bundledDrivers('com.h2database:h2:2.4.240') { transitive = false }
+
+    // --- database integration tests -----------------------------------------
+    integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    integrationTestRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+    integrationTestRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+
+    integrationTestImplementation platform("org.testcontainers:testcontainers-bom:${testcontainersVersion}")
+    integrationTestImplementation 'org.testcontainers:junit-jupiter'
+    integrationTestImplementation 'org.testcontainers:postgresql'
+    integrationTestImplementation 'org.testcontainers:mysql'
+    integrationTestImplementation 'org.testcontainers:mariadb'
+    integrationTestImplementation 'org.testcontainers:mssqlserver'
+    integrationTestImplementation 'org.testcontainers:oracle-free'
+
+    // The drivers are needed twice: on the test runtime class path, because the
+    // testcontainers wait strategy of a JdbcDatabaseContainer connects to the
+    // database itself, and as plain jar files below build/int-drivers, because
+    // that is what a JDBDriver definition names.
+    jdbcDriverCoordinates.each {
+        integrationTestRuntimeOnly it
+        intDrivers(it) { transitive = false }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -98,6 +172,111 @@ test {
     useJUnitPlatform()
 }
 
+// ---------------------------------------------------------------------------
+// Database integration tests
+// ---------------------------------------------------------------------------
+// 'gradlew integrationTest' starts a container per database with testcontainers,
+// seeds it and reads it back through DBMeta with the stock driver definitions.
+// It needs a running Docker daemon, which is why it is deliberately not wired
+// into 'check': a build on a machine without Docker has to keep working.
+// See docs/integration-tests.md.
+
+def intDriversDir = layout.buildDirectory.dir('int-drivers')
+
+tasks.register('copyIntDrivers', Copy) {
+    group = 'verification'
+    description = 'Copies the JDBC driver jars the integration tests load into build/int-drivers.'
+    from configurations.intDrivers
+    into intDriversDir
+}
+
+// The application itself stays at Java 11, but the integration tests only ever
+// run on the build JDK, so their own bytecode level is not restricted - some of
+// the test libraries are published for a newer JVM than 11.
+tasks.named('compileIntegrationTestJava') {
+    options.release = 17
+}
+
+tasks.register('integrationTest', Test) {
+    group = 'verification'
+    description = 'Runs the database integration tests (needs Docker).'
+
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    useJUnitPlatform()
+
+    dependsOn tasks.named('copyIntDrivers')
+
+    // The docker-java client testcontainers uses still asks for API version
+    // 1.32 by default, which Docker Engine 29 refuses outright ("client version
+    // 1.32 is too old, minimum supported API version is 1.40"). Every engine
+    // since Docker 19.03 speaks 1.40, so that is the safe floor to ask for;
+    // '-PdockerApiVersion=...' overrides it. docker-java reads this as the
+    // 'api.version' entry of its configuration, which system properties feed.
+    systemProperty 'api.version',
+            (project.findProperty('dockerApiVersion') ?: '1.40').toString()
+
+    // where the tests look for the driver jar a JDBDriver definition names
+    systemProperty 'intdrivers.dir', intDriversDir.get().asFile.absolutePath
+    // containers are not free to start, and the tests wait for them
+    timeout = java.time.Duration.ofMinutes(30)
+
+    shouldRunAfter tasks.named('test')
+
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat = 'full'
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Documentation screenshots
+// ---------------------------------------------------------------------------
+// 'gradlew docShots' retakes every screenshot below docs/images by starting the
+// real application windows and photographing them with java.awt.Robot. See
+// src/test/java/comart/tools/jdbgen/docs/ScreenshotTool.java.
+//
+// The run needs a desktop session - the windows really do appear on screen for
+// a moment - and it must never touch the configuration of the user running it,
+// which is why it points 'jdbgen.dataDir' at a throwaway directory below build/
+// and refuses to start when that has not happened. Override the location with
+// '-PshotsHome=<dir>' and the destination with '-PshotsOut=<dir>'.
+def docShotsHome = { ->
+    (project.findProperty('shotsHome') ?:
+            layout.buildDirectory.dir('doc-shots').get().asFile.absolutePath).toString()
+}
+
+tasks.register('docShots', JavaExec) {
+    group = 'documentation'
+    description = 'Retakes the screenshots of docs/images from the real application windows.'
+
+    mainClass = 'comart.tools.jdbgen.docs.ScreenshotTool'
+    classpath = sourceSets.test.runtimeClasspath
+
+    def home = docShotsHome()
+    def out = (project.findProperty('shotsOut') ?:
+            layout.projectDirectory.dir('docs/images').asFile.absolutePath).toString()
+
+    workingDir = file(home)
+
+    // the sandbox the application writes into - never the real user data
+    // directory, see AppDirs.DATA_DIR_PROPERTY
+    systemProperty 'jdbgen.dataDir', home
+    // 'templates/', 'resource/' and the sample database are read out of the
+    // working copy, the way a development run does
+    systemProperty 'jdbgen.resourceBase', projectDir.absolutePath
+    systemProperty 'jdbgen.shots.out', out
+    // the screenshots are documentation, and the documentation is English
+    systemProperty 'user.language', 'en'
+    systemProperty 'user.country', 'US'
+
+    doFirst {
+        file(home).mkdirs()
+        systemProperty 'jdbgen.shots.h2jar',
+                configurations.bundledDrivers.singleFile.absolutePath
+    }
+}
+
 // Equivalent of the maven-assembly-plugin run driven by zip.xml
 tasks.register('distZip', Zip) {
     group = 'distribution'
@@ -115,6 +294,9 @@ tasks.register('distZip', Zip) {
         }
         into('lib') {
             from(configurations.runtimeClasspath)
+        }
+        into('drivers') {
+            from(configurations.bundledDrivers)
         }
         from(tasks.named('jar'))
         from('shells/jdbgen.cmd')
@@ -320,6 +502,9 @@ tasks.register('jpackageInput', Sync) {
     into('lib') {
         from(configurations.runtimeClasspath)
     }
+    into('drivers') {
+        from(configurations.bundledDrivers)
+    }
     from(tasks.named('jar'))
     from('sample_h2.db.mv.db')
 }
@@ -459,9 +644,20 @@ tasks.register('jpackage', Exec) {
     }
 }
 
+// A development run reads 'drivers/' of the working copy the way an
+// installation reads its own, so the shipped drivers are copied there first.
+// The directory is ignored by git.
+tasks.register('copyBundledDrivers', Copy) {
+    group = 'application'
+    description = 'Copies the JDBC drivers shipped with the application into drivers/ of the working copy.'
+    from configurations.bundledDrivers
+    into layout.projectDirectory.dir('drivers')
+}
+
 tasks.register('run', JavaExec) {
     group = 'application'
     description = "Runs ${mainClassName}."
+    dependsOn tasks.named('copyBundledDrivers')
     mainClass = mainClassName
     classpath = sourceSets.main.runtimeClasspath
     // the user interface language is the 'language' entry of config.json,

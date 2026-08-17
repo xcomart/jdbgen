@@ -32,8 +32,16 @@ import comart.utils.MavenREST;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -42,14 +50,21 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Level;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
+import javax.swing.event.ListSelectionEvent;
 import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
+import net.miginfocom.swing.MigLayout;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -57,13 +72,31 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * modal dialog which searches the maven central repository for a JDBC driver
+ * and downloads its jar. The left list shows the artifacts matching the search
+ * text, the right list the versions of the selected artifact, both are paged
+ * and extended by their more button. The selected version is downloaded into
+ * the drivers directory below the user data directory while a
+ * <code>ProcessProgress</code> dialog reports the progress. A single shared
+ * instance is kept and reused.
  *
  * @author comart
  */
 @Slf4j
 public class MavenExplorer extends JDialog {
 
+    /** the shared dialog instance, created on the first call of
+     * <code>getInstance()</code>. */
     private static MavenExplorer INSTANCE = null;
+    /**
+     * return the shared maven explorer dialog. The dialog is created and
+     * registered for look and feel updates on the first call, later calls
+     * reuse that instance. The application icon and the component tree are
+     * refreshed, the search is cleared and <code>changed</code> is reset on
+     * every call.
+     *
+     * @return the shared <code>MavenExplorer</code> instance.
+     */
     public static synchronized MavenExplorer getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new MavenExplorer();
@@ -75,21 +108,46 @@ public class MavenExplorer extends JDialog {
         INSTANCE.changed = false;
         return INSTANCE;
     }
+    /**
+     * whether a driver jar has been downloaded since the dialog was obtained
+     * from <code>getInstance()</code>. Read by the caller to find out whether
+     * <code>saveLocation</code> holds a new download.
+     */
     public boolean changed = false;
+    /**
+     * location of the downloaded jar, relative to the user data directory, in
+     * the form <code>drivers/&lt;jar name&gt;</code>. Only meaningful when
+     * <code>changed</code> is <code>true</code>.
+     */
     public String saveLocation = "";
     
+    /** text of the running artifact search, empty while nothing was searched. */
     private String searchText = "";
+    /** zero based page of the artifact search, raised by the more button. */
     private int searchPageNo = 0;
+    /** number of artifacts the repository reports for <code>searchText</code>. */
     private int searchTotal = 0;
+    /** zero based page of the version search, raised by the more button. */
     private int versionPageNo = 0;
+    /** number of versions the repository reports for the selected artifact. */
     private int versionTotal = 0;
     
+    /** titles of the artifacts shown in the result list. */
     private final DefaultListModel<String> searchModel;
+    /** titles of the versions shown in the version list. */
     private final DefaultListModel<String> versionModel;
     
+    /** artifacts found so far, in the order of the result list. */
     private final List<SearchResponseItem> searchItems = new ArrayList<>();
+    /** versions found so far, in the order of the version list. */
     private final List<SearchResponseItem> versionItems = new ArrayList<>();
     
+    /**
+     * reapply the current look and feel to the whole dialog. Called after a
+     * theme or font change, the accent color of the maven link and the cell
+     * renderer of the result list are installed again afterwards and the
+     * search results are cleared.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
         lblMvnLink.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
@@ -103,6 +161,11 @@ public class MavenExplorer extends JDialog {
     
     /**
      * Creates new form MavenExplorer
+     * <p>
+     * The dialog is made modal, the empty list models of the result and of the
+     * version list are installed, the button icons are applied and a window
+     * listener is registered which cancels the dialog when it is closed and
+     * keeps it in front while it is active.
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     public MavenExplorer() {
@@ -119,6 +182,7 @@ public class MavenExplorer extends JDialog {
         this.pack();
     }
 
+    /** apply the font icons of the search, cancel, download and more buttons. */
     private void applyIcons() {
         UIUtils.applyIcon(btnSearch, FontAwesome.SEARCH);
         UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
@@ -127,6 +191,10 @@ public class MavenExplorer extends JDialog {
         UIUtils.addIcon(btnMore1, FontAwesome.PLUS);
     }
     
+    /**
+     * drop the version list and its paging state, so that the next version
+     * search starts at the first page of the selected artifact.
+     */
     private void clearVersions() {
         versionItems.clear();
         versionModel.removeAllElements();
@@ -135,6 +203,10 @@ public class MavenExplorer extends JDialog {
         versionTotal = 0;
     }
 
+    /**
+     * drop the artifact list and its paging state, together with the version
+     * list, so that the next search starts at the first page.
+     */
     private void clearSearch() {
         searchItems.clear();
         searchModel.removeAllElements();
@@ -144,6 +216,15 @@ public class MavenExplorer extends JDialog {
         clearVersions();
     }
     
+    /**
+     * fill the search field and run that search. The search itself is
+     * scheduled on the event dispatch thread, so it starts once the caller
+     * returns, which lets the dialog be prepared before it is made visible.
+     *
+     * @param query
+     *            text to be searched on maven central, a blank text runs no
+     *            search at all.
+     */
     public void setQuery(String query) {
         txtSearch.setText(query);
         EventQueue.invokeLater(() -> {
@@ -151,6 +232,12 @@ public class MavenExplorer extends JDialog {
         });
     }
 
+    /**
+     * register the window listener of the dialog. Closing the window is
+     * handled like the cancel button and the dialog is raised to the front
+     * whenever it becomes active, as it may be shown above another modal
+     * dialog.
+     */
     private void eventSetup() {
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -165,228 +252,154 @@ public class MavenExplorer extends JDialog {
     }
     
     /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * create the components of the dialog and lay them out. The search field
+     * sits on top, the artifact list and the version list of the selected
+     * artifact fill the middle, and the link to the repository and the two
+     * dialog buttons close the bottom row.
      */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
-        jLabel1 = new javax.swing.JLabel();
-        txtSearch = new javax.swing.JTextField();
-        btnSearch = new javax.swing.JButton();
-        btnCancel = new javax.swing.JButton();
-        btnDownload = new javax.swing.JButton();
-        jPanel1 = new javax.swing.JPanel();
-        jLabel3 = new javax.swing.JLabel();
-        jScrollPane5 = new javax.swing.JScrollPane();
-        lstSearchResult = new javax.swing.JList<>();
-        btnMore = new javax.swing.JButton();
-        jPanel3 = new javax.swing.JPanel();
-        jLabel4 = new javax.swing.JLabel();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        lstVersion = new javax.swing.JList<>();
-        btnMore1 = new javax.swing.JButton();
-        jLabel2 = new javax.swing.JLabel();
-        lblMvnLink = new javax.swing.JLabel();
+        jLabel1 = new JLabel();
+        txtSearch = new JTextField();
+        btnSearch = new JButton();
+        btnCancel = new JButton();
+        btnDownload = new JButton();
+        jPanel1 = new JPanel();
+        jLabel3 = new JLabel();
+        jScrollPane5 = new JScrollPane();
+        lstSearchResult = new JList<>();
+        btnMore = new JButton();
+        jPanel3 = new JPanel();
+        jLabel4 = new JLabel();
+        jScrollPane6 = new JScrollPane();
+        lstVersion = new JList<>();
+        btnMore1 = new JButton();
+        jLabel2 = new JLabel();
+        lblMvnLink = new JLabel();
 
         setTitle(I18n.t("mavenExplorer.title"));
 
         jLabel1.setText(I18n.t("mavenExplorer.jLabel1.text"));
 
-        txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
-            public void keyPressed(java.awt.event.KeyEvent evt) {
+        txtSearch.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent evt) {
                 txtSearchKeyPressed(evt);
             }
         });
 
         btnSearch.setText("O");
-        btnSearch.setPreferredSize(new java.awt.Dimension(30, 26));
-        btnSearch.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSearchActionPerformed(evt);
-            }
-        });
+        btnSearch.setPreferredSize(new Dimension(30, 26));
+        btnSearch.addActionListener(this::btnSearchActionPerformed);
 
         btnCancel.setText(I18n.t("mavenExplorer.btnCancel.text"));
-        btnCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCancelActionPerformed(evt);
-            }
-        });
+        btnCancel.addActionListener(this::btnCancelActionPerformed);
 
         btnDownload.setText(I18n.t("mavenExplorer.btnDownload.text"));
-        btnDownload.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDownloadActionPerformed(evt);
-            }
-        });
+        btnDownload.addActionListener(this::btnDownloadActionPerformed);
 
-        jLabel3.setFont(jLabel3.getFont().deriveFont(jLabel3.getFont().getStyle() | java.awt.Font.BOLD, jLabel3.getFont().getSize()+3));
+        jLabel3.setFont(jLabel3.getFont().deriveFont(
+                jLabel3.getFont().getStyle() | Font.BOLD,
+                jLabel3.getFont().getSize()+3));
         jLabel3.setText(I18n.t("mavenExplorer.jLabel3.text"));
 
-        lstSearchResult.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            public void mouseMoved(java.awt.event.MouseEvent evt) {
+        lstSearchResult.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent evt) {
                 lstSearchResultMouseMoved(evt);
             }
         });
-        lstSearchResult.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                lstSearchResultValueChanged(evt);
-            }
-        });
+        lstSearchResult.addListSelectionListener(this::lstSearchResultValueChanged);
         jScrollPane5.setViewportView(lstSearchResult);
 
         btnMore.setText(I18n.t("mavenExplorer.btnMore.text"));
-        btnMore.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnMoreActionPerformed(evt);
-            }
-        });
+        btnMore.addActionListener(this::btnMoreActionPerformed);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jLabel3)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addComponent(jScrollPane5, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 333, Short.MAX_VALUE)
-            .addComponent(btnMore, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 425, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnMore))
-        );
+        // the found artifacts: heading, list and the button loading the next
+        // page, which runs across the whole width of the list.
+        jPanel1.setLayout(new MigLayout(
+                "insets 11 0 0 0, fill, wrap 1", "[grow]", "[][grow][]"));
+        jPanel1.add(jLabel3);
+        jPanel1.add(jScrollPane5, "grow, push, w :333:, h :425:");
+        jPanel1.add(btnMore, "growx");
 
-        jLabel4.setFont(jLabel4.getFont().deriveFont(jLabel4.getFont().getStyle() | java.awt.Font.BOLD, jLabel4.getFont().getSize()+3));
+        jLabel4.setFont(jLabel4.getFont().deriveFont(
+                jLabel4.getFont().getStyle() | Font.BOLD,
+                jLabel4.getFont().getSize()+3));
         jLabel4.setText(I18n.t("mavenExplorer.jLabel4.text"));
 
         jScrollPane6.setViewportView(lstVersion);
 
         btnMore1.setText(I18n.t("mavenExplorer.btnMore1.text"));
-        btnMore1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnMore1ActionPerformed(evt);
-            }
-        });
+        btnMore1.addActionListener(this::btnMore1ActionPerformed);
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 267, Short.MAX_VALUE)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addComponent(jLabel4)
-                .addGap(0, 0, Short.MAX_VALUE))
-            .addComponent(btnMore1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-        );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnMore1))
-        );
+        // the versions of the selected artifact, built like the artifact list
+        // but keeping its designed width when the dialog is resized.
+        jPanel3.setLayout(new MigLayout(
+                "insets 11 0 0 0, fill, wrap 1", "[grow]", "[][grow][]"));
+        jPanel3.add(jLabel4);
+        jPanel3.add(jScrollPane6, "grow, push, w :267:");
+        jPanel3.add(btnMore1, "growx");
 
         jLabel2.setText(I18n.t("mavenExplorer.jLabel2.text"));
 
-        lblMvnLink.setForeground(javax.swing.UIManager.getDefaults().getColor("Component.accentColor"));
+        lblMvnLink.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
         lblMvnLink.setText("Apache Maven");
-        lblMvnLink.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        lblMvnLink.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+        lblMvnLink.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblMvnLink.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
                 lblMvnLinkMouseClicked(evt);
             }
         });
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(txtSearch)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jLabel2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(lblMvnLink)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnDownload)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnCancel))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnCancel)
-                    .addComponent(btnDownload)
-                    .addComponent(jLabel2)
-                    .addComponent(lblMvnLink))
-                .addContainerGap())
-        );
+        // search row, the two lists and the bottom row. Only the middle row
+        // grows, the artifact list takes the width the version list leaves.
+        getContentPane().setLayout(new MigLayout(
+                "insets dialog, fill", "[][grow][]", "[baseline][grow][baseline]"));
+        getContentPane().add(jLabel1);
+        getContentPane().add(txtSearch, "growx");
+        getContentPane().add(btnSearch, "wrap");
+        getContentPane().add(jPanel1, "span 3, split 2, grow, push");
+        getContentPane().add(jPanel3, "growy, wrap");
+        getContentPane().add(jLabel2, "span 3, split 4");
+        getContentPane().add(lblMvnLink);
+        getContentPane().add(btnDownload, "gapbefore push");
+        getContentPane().add(btnCancel);
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }
 
-    private void lstSearchResultMouseMoved(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lstSearchResultMouseMoved
+    /** show the details of the hovered artifact as tool tip of the result list. */
+    private void lstSearchResultMouseMoved(MouseEvent evt) {
         int idx = lstSearchResult.locationToIndex(evt.getPoint());
         if (idx > -1)
             lstSearchResult.setToolTipText(searchItems.get(idx).getToolTip());
         else
             lstSearchResult.setToolTipText(null);
-    }//GEN-LAST:event_lstSearchResultMouseMoved
+    }
 
-    private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
+    /** hide the dialog without downloading anything. */
+    private void btnCancelActionPerformed(ActionEvent evt) {
         setVisible(false);
-    }//GEN-LAST:event_btnCancelActionPerformed
+    }
 
-    private void txtSearchKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtSearchKeyPressed
+    /** run the search when enter is pressed in the search field. */
+    private void txtSearchKeyPressed(KeyEvent evt) {
         if (evt.getKeyCode() == KeyEvent.VK_ENTER)
             btnSearchActionPerformed(null);
-    }//GEN-LAST:event_txtSearchKeyPressed
+    }
 
-    private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+    /** search the first page of artifacts for the text of the search field. */
+    private void btnSearchActionPerformed(ActionEvent evt) {
         if (StringUtils.isBlank(txtSearch.getText()))
             return;
         searchText = txtSearch.getText();
         clearSearch();
         searchMaven();
-    }//GEN-LAST:event_btnSearchActionPerformed
+    }
 
-    private void btnMoreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMoreActionPerformed
+    /** append the next page of artifacts, or report that there are no more. */
+    private void btnMoreActionPerformed(ActionEvent evt) {
         if (StringUtils.isBlank(searchText))
             return;
         if (searchTotal > searchItems.size()) {
@@ -395,9 +408,10 @@ public class MavenExplorer extends JDialog {
         } else {
             UIUtils.info(this, I18n.t("mavenExplorer.msg.noMoreResults"));
         }
-    }//GEN-LAST:event_btnMoreActionPerformed
+    }
 
-    private void lstSearchResultValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstSearchResultValueChanged
+    /** load the versions of the artifact selected in the result list. */
+    private void lstSearchResultValueChanged(ListSelectionEvent evt) {
         int idx = lstSearchResult.getSelectedIndex();
         if (idx > -1 && !evt.getValueIsAdjusting()) {
             EventQueue.invokeLater(() -> {
@@ -405,19 +419,41 @@ public class MavenExplorer extends JDialog {
                 searchVersion();
             });
         }
-    }//GEN-LAST:event_lstSearchResultValueChanged
+    }
 
-    private void lblMvnLinkMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblMvnLinkMouseClicked
+    /** open the maven repository page in the default browser. */
+    private void lblMvnLinkMouseClicked(MouseEvent evt) {
         PlatformUtils.openURL("https://maven.org");
-    }//GEN-LAST:event_lblMvnLinkMouseClicked
+    }
 
     /**
+     * build the background task which downloads the jar of the given version.
+     * The task resolves the download link, streams the jar into the drivers
+     * directory below the user data directory, reports its progress and stores
+     * the location it was saved at - relative to the user data directory - in
+     * <code>locHolder</code>. Failures are logged, published to the progress
+     * log and reported through <code>errHolder</code>.
+     *
      * @param sitem the version selected on the EDT by the caller
      * @param errHolder receives the failure message, read by the caller on the EDT
+     * @param locHolder receives the stored location, read by the caller on the EDT
+     * @return a worker returning <code>true</code> when the jar was stored,
+     *         <code>false</code> otherwise.
      */
-    private ProcessProgress.Worker getProgressWorker(
-            final SearchResponseItem sitem, final String[] errHolder) {
+    private static ProcessProgress.Worker getProgressWorker(
+            final SearchResponseItem sitem, final String[] errHolder,
+            final String[] locHolder) {
         return new ProcessProgress.Worker() {
+            /**
+             * stream the jar of the snapshotted version into the drivers
+             * directory, publishing the received amount as it goes.
+             *
+             * @return <code>true</code> when the jar was written completely,
+             *         <code>false</code> when the download failed.
+             * @throws Exception
+             *             never thrown, every failure is caught and reported
+             *             through <code>errHolder</code>.
+             */
             @Override
             protected Boolean doInBackground() throws Exception {
                 // NOTE: this method must not touch any Swing component - the
@@ -452,8 +488,7 @@ public class MavenExplorer extends JDialog {
                                 publish(I18n.t("mavenExplorer.progress.received", curlen, totallen));
                             }
                         }
-                        saveLocation = stored;
-                        changed = true;
+                        locHolder[0] = stored;
                         publish(I18n.t("mavenExplorer.progress.complete"));
                         return true;
                     }
@@ -467,41 +502,74 @@ public class MavenExplorer extends JDialog {
         };
     }
 
+    /**
+     * download the jar of one artifact version into the drivers directory,
+     * showing the progress in a modal dialog and reporting the outcome the way
+     * the download button of this dialog does. Usable without this dialog: the
+     * driver manager downloads the jar of a shipped driver straight from its
+     * configured Maven coordinate.
+     *
+     * <p>Has to be called on the event dispatch thread; it returns once the
+     * download has finished, failed or was cancelled.</p>
+     *
+     * @param owner the window the progress and message dialogs are centered on
+     * @param sitem the artifact version to download, its group, artifact and
+     *              version fields are the ones that matter
+     * @return the location the jar was stored at, relative to the user data
+     *         directory, or <code>null</code> when it was not downloaded.
+     */
     @SuppressWarnings("UseSpecificCatch")
-    private void btnDownloadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownloadActionPerformed
+    public static String downloadJar(Component owner, SearchResponseItem sitem) {
+        final String[] err = new String[1];
+        final String[] loc = new String[1];
+        // We need to show modal dialog in front of another modal dialog.
+        JFrame dummy = new JFrame();
+        ProcessProgress pp = new ProcessProgress(dummy, true, getProgressWorker(sitem, err, loc));
+        pp.setModal(true);
+        pp.setLocationRelativeTo(owner);
+        pp.start();
+        // modal - returns once the worker's done() hides the dialog
+        pp.setVisible(true);
+        if (pp.result && loc[0] != null) {
+            UIUtils.info(owner, I18n.t("mavenExplorer.msg.downloadComplete"));
+            return loc[0];
+        }
+        UIUtils.error(owner, err[0] == null
+                ? I18n.t("mavenExplorer.msg.downloadFailed") : err[0]);
+        return null;
+    }
+
+    /** download the selected version while a modal progress dialog is shown. */
+    private void btnDownloadActionPerformed(ActionEvent evt) {
         int vidx = lstVersion.getSelectedIndex();
         if (vidx < 0 || vidx >= versionItems.size()) {
             UIUtils.error(this, I18n.t("mavenExplorer.msg.selectVersion"));
             return;
         }
-        SearchResponseItem sitem = versionItems.get(vidx);
-        final String[] err = new String[1];
-        // We need to show modal dialog in front of another modal dialog.
-        JFrame dummy = new JFrame();
-        ProcessProgress pp = new ProcessProgress(dummy, true, getProgressWorker(sitem, err));
-        pp.setModal(true);
-        pp.setLocationRelativeTo(this);
-        pp.start();
-        // modal - returns once the worker's done() hides the dialog
-        pp.setVisible(true);
-        if (pp.result) {
-            UIUtils.info(this, I18n.t("mavenExplorer.msg.downloadComplete"));
+        String stored = downloadJar(this, versionItems.get(vidx));
+        if (stored != null) {
+            saveLocation = stored;
+            changed = true;
             setVisible(false);
-        } else {
-            UIUtils.error(this, err[0] == null
-                    ? I18n.t("mavenExplorer.msg.downloadFailed") : err[0]);
         }
-    }//GEN-LAST:event_btnDownloadActionPerformed
+    }
 
-    private void btnMore1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMore1ActionPerformed
+    /** append the next page of versions, or report that there are no more. */
+    private void btnMore1ActionPerformed(ActionEvent evt) {
         if (versionTotal > versionItems.size()) {
             versionPageNo++;
             searchVersion();
         } else {
             UIUtils.info(this, I18n.t("mavenExplorer.msg.noMoreVersions"));
         }
-    }//GEN-LAST:event_btnMore1ActionPerformed
+    }
 
+    /**
+     * search the current page of artifacts on maven central. The request runs
+     * behind the loading overlay, the found artifacts are appended to the
+     * result list and the more button is enabled while further pages are
+     * available. A failing request is logged and reported to the user.
+     */
     private void searchMaven() {
         UIUtils.loading(this, () -> {
             try {
@@ -522,6 +590,13 @@ public class MavenExplorer extends JDialog {
         });
     }
 
+    /**
+     * search the current page of versions of the selected artifact. Nothing
+     * happens while no artifact is selected, otherwise the request runs behind
+     * the loading overlay, the found versions are appended to the version list
+     * and the more button is enabled while further pages are available. A
+     * failing request is logged and reported to the user.
+     */
     private void searchVersion() {
         int idx = lstSearchResult.getSelectedIndex();
         if (idx < 0)
@@ -544,36 +619,38 @@ public class MavenExplorer extends JDialog {
         });
     }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        UIUtils.setFlatDarkLaf();
-        EventQueue.invokeLater(() -> {
-            MavenExplorer instance = getInstance();
-            instance.setLocationRelativeTo(null);
-            instance.setVisible(true);
-            System.exit(0);
-        });
-    }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnCancel;
-    private javax.swing.JButton btnDownload;
-    private javax.swing.JButton btnMore;
-    private javax.swing.JButton btnMore1;
-    private javax.swing.JButton btnSearch;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JScrollPane jScrollPane6;
-    private javax.swing.JLabel lblMvnLink;
-    private javax.swing.JList<String> lstSearchResult;
-    private javax.swing.JList<String> lstVersion;
-    private javax.swing.JTextField txtSearch;
-    // End of variables declaration//GEN-END:variables
+    /** caption of the search field. */
+    private JLabel jLabel1;
+    /** the artifact the repository is searched for. */
+    private JTextField txtSearch;
+    /** button running the search. */
+    private JButton btnSearch;
+    /** left half of the dialog, holding the artifacts found. */
+    private JPanel jPanel1;
+    /** heading of the artifact list. */
+    private JLabel jLabel3;
+    /** scroll pane around the artifact list. */
+    private JScrollPane jScrollPane5;
+    /** the artifacts found for the search text. */
+    private JList<String> lstSearchResult;
+    /** button loading the next page of artifacts. */
+    private JButton btnMore;
+    /** right half of the dialog, holding the versions. */
+    private JPanel jPanel3;
+    /** heading of the version list. */
+    private JLabel jLabel4;
+    /** scroll pane around the version list. */
+    private JScrollPane jScrollPane6;
+    /** the versions of the selected artifact. */
+    private JList<String> lstVersion;
+    /** button loading the next page of versions. */
+    private JButton btnMore1;
+    /** caption of the repository link. */
+    private JLabel jLabel2;
+    /** clickable link to the maven repository. */
+    private JLabel lblMvnLink;
+    /** button downloading the selected version. */
+    private JButton btnDownload;
+    /** button closing the dialog. */
+    private JButton btnCancel;
 }

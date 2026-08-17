@@ -6,9 +6,9 @@
   <entry key="abbreviationMapper.jLabel1.text">Abbreviation Mapping</entry>
   <entry key="abbreviationMapper.tblMapping.toolTipText">Abbreviation Mapping Rules applied to object(table, column) name.</entry>
   <entry key="abbreviationMapper.tblMapping.column.apply">Apply</entry>
-  <entry key="abbreviationMapper.tblMapping.column.totalName">Total Name</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">Whole Name Only</entry>
   <entry key="abbreviationMapper.tblMapping.column.abbreviation">Abbreviation</entry>
-  <entry key="abbreviationMapper.tblMapping.column.replaceTo">Replace To</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">Replacement</entry>
   <entry key="abbreviationMapper.btnDel.toolTipText">Remove selected mapping</entry>
   <entry key="abbreviationMapper.btnOk.text">Ok</entry>
 

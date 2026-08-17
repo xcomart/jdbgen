@@ -161,6 +161,51 @@ public class I18nTest {
     }
 
     @Test
+    public void aKeyThatOnlyLooksLikeOneIsReturnedAsItIs() {
+        // the bundle segment is what is before the first dot, so there has to
+        // be something before it
+        assertEquals(".leading.dot", I18n.t(".leading.dot"));
+        assertEquals("", I18n.t(""));
+        // a key whose bundle is there but which the bundle does not carry
+        assertEquals("testonly", I18n.t("testonly"));
+    }
+
+    @Test
+    public void tooFewArgumentsLeaveThePlaceholderInThePattern() {
+        // a half filled message is still better than a dialog that throws
+        assertEquals("Welcome, Dennis, you have {1} messages.",
+                I18n.t("testonly.welcome", "Dennis"));
+        // and an argument nobody asked for is simply not used
+        assertEquals("Hello", I18n.t("testonly.greeting", "unused"));
+    }
+
+    @Test
+    public void anEmptyArgumentListIsNoArgumentList() {
+        // the pattern is returned unformatted, so the doubled quotes stay
+        assertEquals("''{0}'' is required", I18n.t("testonly.quoted", new Object[0]));
+        assertEquals("''{0}'' is required", I18n.t("testonly.quoted", (Object[])null));
+    }
+
+    @Test
+    public void aLanguageTagIsReadWithEitherSeparator() {
+        assertEquals("ko", I18n.toLocale("ko-KR").getLanguage());
+        assertEquals("KR", I18n.toLocale("ko-KR").getCountry());
+        // and with the white space a hand edited configuration may carry
+        assertEquals("ko", I18n.toLocale("  ko  ").getLanguage());
+    }
+
+    @Test
+    public void anUnusableLanguageSettingKeepsWhatIsThere() {
+        Locale.setDefault(Locale.KOREAN);
+
+        I18n.applyLanguage("!!!");
+
+        assertEquals(Locale.KOREAN, Locale.getDefault(),
+                "a setting that names no language must not change the JVM locale");
+        assertEquals(Locale.KOREAN, I18n.getLocale());
+    }
+
+    @Test
     public void everyKeyOfTheApplicationBundleIsTranslated() {
         // a spot check that the real bundle is on the class path and reachable
         // through the same lookup the application uses

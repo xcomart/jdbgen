@@ -72,10 +72,15 @@ public final class I18n {
     /** language tag standing for "whatever the operating system says". */
     public static final String SYSTEM_LANGUAGE = "system";
 
+    /** loads the bundles, which are XML documents rather than properties. */
     private static final ResourceBundle.Control CONTROL = new XmlControl();
 
+    /** the locale every lookup is made in, see {@link #init(Locale)}. */
     private static volatile Locale locale = Locale.getDefault();
 
+    /**
+     * this class only holds <code>static</code> methods.
+     */
     private I18n() {
     }
 
@@ -136,6 +141,8 @@ public final class I18n {
     }
 
     /**
+     * @param key the translation key, reading
+     *            <code>&lt;bundle&gt;.&lt;rest&gt;</code>
      * @return the translation of <code>key</code>, or <code>key</code> itself
      *         when there is none.
      */
@@ -159,6 +166,10 @@ public final class I18n {
     }
 
     /**
+     * @param key the translation key, reading
+     *            <code>&lt;bundle&gt;.&lt;rest&gt;</code>
+     * @param args the values of the placeholders; none of them leaves the
+     *            pattern untouched
      * @return the translation of <code>key</code> with <code>args</code>
      *         substituted into its {@link MessageFormat} placeholders.
      */
@@ -179,9 +190,16 @@ public final class I18n {
      * know about on its own.
      */
     private static final class XmlControl extends ResourceBundle.Control {
+        /** the only format a bundle of this application is looked for in. */
         private static final List<String> FORMATS =
                 Collections.unmodifiableList(Arrays.asList("xml"));
 
+        /**
+         * @param baseName the bundle being looked for.
+         * @return <code>xml</code>, and nothing else.
+         * @throws NullPointerException if <code>baseName</code> is
+         *         <code>null</code>.
+         */
         @Override
         public List<String> getFormats(String baseName) {
             if (baseName == null)
@@ -194,6 +212,12 @@ public final class I18n {
          * which would make an explicitly requested locale unreliable. Only the
          * bundle without a locale suffix - the English original - is used as a
          * fallback here.
+         *
+         * @param baseName the bundle being looked for.
+         * @param locale the locale that was not found.
+         * @return <code>null</code>, always.
+         * @throws NullPointerException if either argument is
+         *         <code>null</code>.
          */
         @Override
         public Locale getFallbackLocale(String baseName, Locale locale) {
@@ -202,6 +226,17 @@ public final class I18n {
             return null;
         }
 
+        /**
+         * read one bundle file as an XML properties document.
+         *
+         * @param baseName the bundle being loaded.
+         * @param locale the locale the file is looked for in.
+         * @param format has to be <code>xml</code>.
+         * @param loader the class loader the file is read through.
+         * @param reload bypass the URL connection caches.
+         * @return the bundle, or <code>null</code> when there is no such file.
+         * @throws IOException if the file cannot be read or parsed.
+         */
         @Override
         public ResourceBundle newBundle(String baseName, Locale locale, String format,
                 ClassLoader loader, boolean reload) throws IOException {
@@ -226,13 +261,24 @@ public final class I18n {
      * A {@link ResourceBundle} over the entries of one bundle file.
      */
     private static final class XmlResourceBundle extends ResourceBundle {
+        /** the entries of the bundle file, by key. */
         private final Map<String, Object> entries = new HashMap<>();
 
+        /**
+         * @param props the entries read from one bundle file.
+         */
         XmlResourceBundle(Properties props) {
             for (String name: props.stringPropertyNames())
                 entries.put(name, props.getProperty(name));
         }
 
+        /**
+         * @param key the entry to look up.
+         * @return the value, or <code>null</code> when this bundle has no such
+         *         entry.
+         * @throws NullPointerException if <code>key</code> is
+         *         <code>null</code>.
+         */
         @Override
         protected Object handleGetObject(String key) {
             if (key == null)
@@ -240,6 +286,9 @@ public final class I18n {
             return entries.get(key);
         }
 
+        /**
+         * @return the keys of this bundle and of the one it falls back to.
+         */
         @Override
         public Enumeration<String> getKeys() {
             Set<String> keys = new HashSet<>(entries.keySet());
@@ -251,6 +300,9 @@ public final class I18n {
             return Collections.enumeration(keys);
         }
 
+        /**
+         * @return the keys of this bundle alone, without the fallback.
+         */
         @Override
         protected Set<String> handleKeySet() {
             return entries.keySet();

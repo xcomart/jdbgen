@@ -170,6 +170,103 @@ public class UpdateManagerTest {
     }
 
     @Test
+    public void anAssetIsRecognizedRegardlessOfItsLetterCase() {
+        Optional<UpdateManager.ReleaseAsset> asset = UpdateManager.selectZipAsset(
+                json("{\"assets\":[{\"name\":\"JDBGen-0.3.1.ZIP\","
+                        + "\"browser_download_url\":\"https://x/JDBGen-0.3.1.ZIP\"}]}"));
+
+        assertTrue(asset.isPresent());
+        assertEquals("JDBGen-0.3.1.ZIP", asset.get().getName(),
+                "the name is downloaded as it is published");
+    }
+
+    @Test
+    public void anIncompleteAssetIsSkippedRatherThanUsed() {
+        // an asset without a download url cannot be fetched, and the release
+        // may well carry a usable one behind it
+        Optional<UpdateManager.ReleaseAsset> asset = UpdateManager.selectZipAsset(
+                json("{\"assets\":["
+                        + "\"not an object\","
+                        + "{\"name\":\"jdbgen-0.3.1.zip\"},"
+                        + "{\"browser_download_url\":\"https://x/anonymous.zip\"},"
+                        + "{\"name\":\"jdbgen-0.3.1.zip\",\"browser_download_url\":\"https://x/ok.zip\"}"
+                        + "]}"));
+
+        assertTrue(asset.isPresent());
+        assertEquals("https://x/ok.zip", asset.get().getUrl());
+    }
+
+    @Test
+    public void anAssetSizeThatIsNoNumberOnlyCostsTheProgressBar() {
+        Optional<UpdateManager.ReleaseAsset> asset = UpdateManager.selectZipAsset(
+                json("{\"assets\":[{\"name\":\"jdbgen-1.0.zip\",\"size\":\"huge\","
+                        + "\"browser_download_url\":\"https://x/jdbgen-1.0.zip\"}]}"));
+
+        assertTrue(asset.isPresent());
+        assertEquals(0L, asset.get().getSize());
+    }
+
+    @Test
+    public void theFirstSegmentOfAnEntryNameIsWhatIsStripped() {
+        assertEquals("lib/gson.jar", UpdateManager.stripFirstSegment("jdbgen-0.3.1/lib/gson.jar"));
+        assertEquals("lib/gson.jar", UpdateManager.stripFirstSegment("/jdbgen-0.3.1/lib/gson.jar"),
+                "an absolute entry name is no reason to keep the version directory");
+        assertEquals("templates/", UpdateManager.stripFirstSegment("jdbgen-0.3.1/templates/"));
+        assertEquals("", UpdateManager.stripFirstSegment("jdbgen-0.3.1/"),
+                "the version directory itself has nothing left to create");
+        assertEquals("", UpdateManager.stripFirstSegment("readme.txt"),
+                "an entry outside of the version directory is dropped");
+        assertEquals("", UpdateManager.stripFirstSegment(""));
+    }
+
+    @Test
+    public void anEmptyArchiveLeavesAnEmptyDirectoryBehind(@TempDir Path dir) throws Exception {
+        File zip = zipOf(dir, "jdbgen-0.3.1.zip", new LinkedHashMap<>());
+        File dest = dir.resolve("extracted").toFile();
+
+        UpdateManager.extractZip(zip, dest);
+
+        assertTrue(dest.isDirectory(), "the target is created even when nothing is unpacked");
+        assertEquals(0, dest.list().length);
+    }
+
+    @Test
+    public void aDirectoryEntryOfTheArchiveIsCreatedEvenWhenItIsEmpty(@TempDir Path dir)
+            throws Exception {
+        Map<String, String> entries = new LinkedHashMap<>();
+        entries.put("jdbgen-0.3.1/drivers/", null);
+        File zip = zipOf(dir, "jdbgen-0.3.1.zip", entries);
+        File dest = dir.resolve("extracted").toFile();
+
+        UpdateManager.extractZip(zip, dest);
+
+        assertTrue(new File(dest, "drivers").isDirectory());
+    }
+
+    @Test
+    public void aWindowsStyleEntryNameIsUnderstood(@TempDir Path dir) throws Exception {
+        Map<String, String> entries = new LinkedHashMap<>();
+        entries.put("jdbgen-0.3.1\\lib\\gson.jar", "lib");
+        File zip = zipOf(dir, "jdbgen-0.3.1.zip", entries);
+        File dest = dir.resolve("extracted").toFile();
+
+        UpdateManager.extractZip(zip, dest);
+
+        assertEquals("lib", Files.readString(dest.toPath().resolve("lib/gson.jar")));
+    }
+
+    @Test
+    public void aDirectoryWithoutAnyJarOfTheApplicationIsNoInstallation(@TempDir Path dir)
+            throws Exception {
+        Files.write(dir.resolve("something.jar"), new byte[0]);
+
+        assertTrue(UpdateManager.listJars(dir.toFile()).isEmpty());
+        assertTrue(UpdateManager.listJars(new File(dir.toFile(), "nowhere")).isEmpty(),
+                "a directory that is not there holds no jars either");
+        assertTrue(UpdateManager.listJars(null).isEmpty());
+    }
+
+    @Test
     public void theStagingDirectoryIsRemovedWithEverythingInIt(@TempDir Path dir) throws Exception {
         Files.createDirectories(dir.resolve("staging/extracted/lib"));
         try (OutputStream os = Files.newOutputStream(dir.resolve("staging/extracted/lib/a.jar"))) {

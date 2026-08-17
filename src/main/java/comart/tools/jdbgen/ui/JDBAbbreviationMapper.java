@@ -29,30 +29,62 @@ import comart.tools.jdbgen.types.db.DBTable;
 import comart.utils.I18n;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
+import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
+import net.miginfocom.swing.MigLayout;
 
 /**
+ * editor of the abbreviation mappings kept in the application configuration.
+ * Every row of the table maps an abbreviation to the word it is replaced with
+ * while names are generated, and tells whether the mapping is active and
+ * whether it applies to a whole name instead of a single name part. Edits are
+ * written back to <code>JDBGenConfig</code> as they happen, the table always
+ * keeps one trailing empty row for new entries, and duplicated abbreviations
+ * are rejected. On a right click in the abbreviation cell of a whole name
+ * mapping, a popup offers the table names of the current connection.
  *
  * @author comart
  */
 @Slf4j
-public class JDBAbbreviationMapper extends javax.swing.JDialog {
+public class JDBAbbreviationMapper extends JDialog {
 
 
+    /** the shared dialog instance, created on the first call of
+     * <code>getInstance(Frame)</code>. */
     private static JDBAbbreviationMapper INSTANCE = null;
+    /**
+     * return the shared abbreviation mapper dialog. The dialog is created as a
+     * modal dialog of <code>parent</code> and registered for look and feel
+     * updates on the first call, later calls reuse that instance. The
+     * application icon and the component tree are refreshed and the dialog is
+     * centered on <code>parent</code> on every call.
+     *
+     * @param parent
+     *            frame the dialog is centered on, used as owner on the first
+     *            call.
+     * @return the shared <code>JDBAbbreviationMapper</code> instance.
+     */
     public static synchronized JDBAbbreviationMapper getInstance(Frame parent) {
         if (INSTANCE == null) {
             INSTANCE = new JDBAbbreviationMapper(parent, true);
@@ -65,17 +97,36 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         return INSTANCE;
     }
     
+    /**
+     * reapply the current look and feel to the whole dialog. Called after a
+     * theme or font change so that the already created dialog is redrawn with
+     * the new settings.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
     }
     
+    /** application configuration the edited abbreviations are written to. */
     private JDBGenConfig conf;
+    /** model of the mapping table, kept for the delete button and the
+     * duplication check. */
     private DefaultTableModel mdl;
 
     /**
      * Creates new form JDBAbbreviationMapper
+     * <p>
+     * The column headers are translated, the preferred column widths are
+     * applied and the table is filled with the abbreviations of the current
+     * configuration followed by one empty row. A model listener is installed
+     * which rejects duplicated abbreviations and otherwise writes the table
+     * back to the configuration and makes sure an empty trailing row remains.
+     *
+     * @param parent
+     *            frame the dialog belongs to.
+     * @param modal
+     *            <code>true</code> to create a modal dialog.
      */
-    public JDBAbbreviationMapper(java.awt.Frame parent, boolean modal) {
+    public JDBAbbreviationMapper(Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
         
@@ -118,6 +169,17 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         
     }
     
+    /**
+     * check that no abbreviation is mapped twice. Only rows which are applied
+     * and which have both an abbreviation and a replacement take part, and an
+     * error message naming the offending abbreviation is shown for the first
+     * collision found.
+     *
+     * @param model
+     *            model of the mapping table to be checked.
+     * @return <code>true</code> when all abbreviations are unique,
+     *         <code>false</code> when a duplicate was found and reported.
+     */
     private boolean checkDuplication(DefaultTableModel model) {
         HashMap<String,String> map = new HashMap<>();
         for (int i=0; i<model.getRowCount(); i++) {
@@ -136,11 +198,24 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         return true;
     }
     
+    /** apply the font icons of the ok and of the delete button. */
     private void applyIcons() {
         UIUtils.addIcon(btnOk, FontAwesome.CHECK);
         UIUtils.applyIcon(btnDel, FontAwesome.MINUS);
     }    
 
+    /**
+     * convert the rows of the mapping table into abbreviation objects. Rows
+     * whose abbreviation or replacement is empty are skipped, so the trailing
+     * empty row of the editor is dropped, and the remaining rows are mapped to
+     * <code>JDBAbbr</code> instances keeping their apply and whole name flags.
+     *
+     * @param model
+     *            table model of the mapping table, holding the apply flag, the
+     *            whole name flag, the abbreviation and the replacement in
+     *            columns <code>0</code> to <code>3</code>.
+     * @return the abbreviations of all filled rows, in table order.
+     */
     public static List<JDBAbbr> applyTableToList(TableModel model) {
         List<JDBAbbr> abbrs = new ArrayList<>();
         for (int i=0; i<model.getRowCount(); i++) {
@@ -155,26 +230,27 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
     }
     
     /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * create the components of the dialog and lay them out. The heading sits
+     * above the mapping table, which fills the dialog, and the delete and ok
+     * buttons share the bottom row at its two ends.
      */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        jLabel1 = new JLabel();
+        jScrollPane1 = new JScrollPane();
+        tblMapping = new JTable();
+        btnOk = new JButton();
+        btnDel = new JButton();
 
-        jLabel1 = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        tblMapping = new javax.swing.JTable();
-        btnOk = new javax.swing.JButton();
-        btnDel = new javax.swing.JButton();
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-
-        jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
+        jLabel1.setFont(jLabel1.getFont().deriveFont(
+                jLabel1.getFont().getStyle() | Font.BOLD,
+                jLabel1.getFont().getSize()+4));
         jLabel1.setText(I18n.t("abbreviationMapper.jLabel1.text"));
 
-        tblMapping.setModel(new javax.swing.table.DefaultTableModel(
+        // the rows are filled from the configuration by the constructor, the
+        // single design time row only gives the table its size in the layout.
+        tblMapping.setModel(new DefaultTableModel(
             new Object [][] {
                 {null, null, null, null}
             },
@@ -182,78 +258,53 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
                 "Apply", "Total Name", "Abbreviation", "Replace To"
             }
         ) {
-            Class[] types = new Class [] {
-                java.lang.Boolean.class, java.lang.Boolean.class, java.lang.String.class, java.lang.String.class
+            final Class[] types = new Class [] {
+                Boolean.class, Boolean.class, String.class, String.class
             };
 
+            @Override
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];
             }
         });
         tblMapping.setToolTipText(I18n.t("abbreviationMapper.tblMapping.toolTipText"));
-        tblMapping.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                tblMappingMouseClicked(evt);
+        tblMapping.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
+                showPopupTrigger(evt);
             }
         });
         jScrollPane1.setViewportView(tblMapping);
 
         btnOk.setText(I18n.t("abbreviationMapper.btnOk.text"));
         btnOk.setToolTipText("");
-        btnOk.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnOkActionPerformed(evt);
-            }
-        });
+        btnOk.addActionListener(this::btnOkActionPerformed);
 
         btnDel.setText("-");
         btnDel.setToolTipText(I18n.t("abbreviationMapper.btnDel.toolTipText"));
-        btnDel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDelActionPerformed(evt);
-            }
-        });
+        btnDel.addActionListener(this::btnDelActionPerformed);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 513, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(btnDel)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnOk)))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnOk)
-                    .addComponent(btnDel))
-                .addContainerGap())
-        );
+        // heading and table span both columns, the button row uses them to
+        // keep the delete button left and the ok button right. The size of the
+        // table is the one the form was designed with.
+        getContentPane().setLayout(new MigLayout(
+                "insets dialog, fill", "[grow][]", "[][grow][]"));
+        getContentPane().add(jLabel1, "span 2, wrap");
+        getContentPane().add(jScrollPane1, "span 2, grow, push, w :513:, h :310:, wrap");
+        getContentPane().add(btnDel, "align left");
+        getContentPane().add(btnOk, "align right");
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
+    }
 
-    private void btnOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOkActionPerformed
+    /** save the configuration and hide the dialog. */
+    private void btnOkActionPerformed(ActionEvent evt) {
         JDBGenConfig.saveInstance(this);
         setVisible(false);
-    }//GEN-LAST:event_btnOkActionPerformed
+    }
 
-    private void btnDelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelActionPerformed
+    /** ask for confirmation and remove the selected mapping row. */
+    private void btnDelActionPerformed(ActionEvent evt) {
         int idx = tblMapping.getSelectedRow();
         if (idx > -1 && idx < mdl.getRowCount()) {
             // the model always keeps a trailing empty row and empty rows are
@@ -271,9 +322,19 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
                 UIUtils.tableSetLastEmpty(mdl, 2);
             }
         }
-    }//GEN-LAST:event_btnDelActionPerformed
+    }
 
-    private void showPopupTrigger(java.awt.event.MouseEvent evt) {
+    /**
+     * show the table name popup for a right click on the mapping table. The
+     * popup only appears on the abbreviation cell of a row which is marked as
+     * a whole name mapping and only while the main window holds tables, and
+     * the chosen table name is written into the clicked cell.
+     *
+     * @param evt
+     *            mouse event of the click, its button and point decide whether
+     *            and where the popup is shown.
+     */
+    private void showPopupTrigger(MouseEvent evt) {
         if (evt.getButton() == MouseEvent.BUTTON3) {
             Point p = evt.getPoint();
             int row = tblMapping.rowAtPoint(p);
@@ -297,57 +358,14 @@ public class JDBAbbreviationMapper extends javax.swing.JDialog {
         }
     }
     
-    private void tblMappingMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tblMappingMouseClicked
-        showPopupTrigger(evt);
-    }//GEN-LAST:event_tblMappingMouseClicked
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(JDBAbbreviationMapper.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(JDBAbbreviationMapper.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(JDBAbbreviationMapper.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(JDBAbbreviationMapper.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                JDBAbbreviationMapper dialog = new JDBAbbreviationMapper(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
-
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnDel;
-    private javax.swing.JButton btnOk;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable tblMapping;
-    // End of variables declaration//GEN-END:variables
+    /** heading of the dialog. */
+    private JLabel jLabel1;
+    /** scroll pane around the mapping table. */
+    private JScrollPane jScrollPane1;
+    /** table holding one abbreviation mapping per row. */
+    private JTable tblMapping;
+    /** button removing the selected mapping. */
+    private JButton btnDel;
+    /** button saving the configuration and closing the dialog. */
+    private JButton btnOk;
 }

@@ -10,6 +10,7 @@
 
   <!-- driver list -->
   <entry key="driverManager.jLabel1.text">驱动</entry>
+  <entry key="driverManager.list.driverRequired">需要驱动</entry>
 
   <!-- tabs -->
   <entry key="driverManager.tab.general">常规</entry>

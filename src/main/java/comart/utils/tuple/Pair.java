@@ -27,9 +27,19 @@ package comart.utils.tuple;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * A mutable two element tuple. Lombok generates the getters, the setters,
+ * {@link Object#equals(Object)}, {@link Object#hashCode()},
+ * {@link Object#toString()} and the constructor taking both elements.
+ *
+ * @param <T> type of the first element.
+ * @param <U> type of the second element.
+ */
 @Data
 @AllArgsConstructor
 public class Pair<T, U> {
+    /** the first element. */
     private T first;
+    /** the second element. */
     private U second;
 }

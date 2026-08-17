@@ -24,22 +24,57 @@
 package comart.tools.jdbgen.ui;
 
 import comart.utils.UIUtils;
+import java.awt.Frame;
 import java.util.List;
+import javax.swing.JDialog;
+import javax.swing.JProgressBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.SwingWorker;
+import javax.swing.WindowConstants;
+import net.miginfocom.swing.MigLayout;
 
 /**
+ * undecorated progress dialog for long running background tasks such as the
+ * driver download of the maven explorer. The dialog shows a progress bar and
+ * a log area which are fed by an attached <code>Worker</code>, and hides
+ * itself as soon as that worker is done.
  *
  * @author comart
  */
-public class ProcessProgress extends javax.swing.JDialog {
+public class ProcessProgress extends JDialog {
     
+    /**
+     * background task driving a <code>ProcessProgress</code> dialog.
+     * Subclasses only have to implement <code>doInBackground()</code>, report
+     * their progress with <code>setProgress(int)</code> and their log lines
+     * with <code>publish(String...)</code>, and return whether the task
+     * succeeded. The dialog is wired to the worker by the
+     * <code>ProcessProgress</code> constructor.
+     */
     public static abstract class Worker extends SwingWorker<Boolean, String> {
+        /** dialog fed by this worker, assigned by the
+         * <code>ProcessProgress</code> constructor. */
         ProcessProgress parent = null;
         
+        /**
+         * create a worker which is not attached to a dialog yet. The dialog
+         * is assigned when the worker is passed to the
+         * <code>ProcessProgress</code> constructor.
+         */
         public Worker() {
             
         }
         
+        /**
+         * publish the log lines produced since the last call on the event
+         * dispatch thread. The progress bar is set to the current progress
+         * value, every chunk is appended as one line to the log area and the
+         * caret is moved to the end of the text.
+         *
+         * @param chunks
+         *            log lines published by <code>doInBackground()</code>.
+         */
         @Override
         protected void process(List<String> chunks) {
             parent.progStatus.setValue(getProgress());
@@ -50,6 +85,12 @@ public class ProcessProgress extends javax.swing.JDialog {
             parent.txtProcessLog.setSelectionEnd(last);
         }
 
+        /**
+         * store the result of the task in the dialog and hide it. The value
+         * returned by <code>doInBackground()</code> is written to the
+         * <code>result</code> field of the dialog, <code>false</code> is
+         * stored when the task failed with an exception.
+         */
         @Override
         protected void done() {
             boolean bStatus = false;
@@ -63,15 +104,35 @@ public class ProcessProgress extends javax.swing.JDialog {
         } 
     }
     
+    /**
+     * outcome of the attached worker, valid once the dialog has been hidden.
+     * <code>true</code> when the worker returned <code>true</code>,
+     * <code>false</code> when it failed or when it has not run yet.
+     */
     public boolean result = false;
     
+    /** task started by <code>start()</code>, <code>null</code> when the dialog
+     * was created without a worker. */
     private Worker worker = null;
 
     /**
      * Creates new form ProcessProgress
+     * <p>
+     * The dialog is created undecorated, centered on <code>parent</code> and
+     * attached to <code>worker</code> so that the worker can feed the
+     * progress bar and the log area. The worker is not started here, call
+     * <code>start()</code> for that.
+     *
+     * @param parent
+     *            frame the dialog belongs to and is centered on.
+     * @param modal
+     *            <code>true</code> to create a modal dialog.
+     * @param worker
+     *            background task to be attached, may be <code>null</code> in
+     *            which case the dialog shows no progress at all.
      */
     @SuppressWarnings("LeakingThisInConstructor")
-    public ProcessProgress(java.awt.Frame parent, boolean modal, Worker worker) {
+    public ProcessProgress(Frame parent, boolean modal, Worker worker) {
         super(parent, modal);
         setUndecorated( true );
         initComponents();
@@ -86,99 +147,46 @@ public class ProcessProgress extends javax.swing.JDialog {
         this.pack();
     }
     
+    /**
+     * start the attached background task. Nothing happens when no worker was
+     * given to the constructor. Call this before the dialog is made visible,
+     * as a modal dialog blocks the caller until the worker is done.
+     */
     public void start() {
         if (worker != null)
             worker.execute();
     }
 
     /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * create the components of the dialog and lay them out. The progress bar
+     * sits above the log area, both fill the width of the dialog and only the
+     * log area grows with it.
      */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
+        progStatus = new JProgressBar();
+        jScrollPane1 = new JScrollPane();
+        txtProcessLog = new JTextArea();
 
-        progStatus = new javax.swing.JProgressBar();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        txtProcessLog = new javax.swing.JTextArea();
-
-        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         txtProcessLog.setColumns(20);
         txtProcessLog.setRows(5);
         jScrollPane1.setViewportView(txtProcessLog);
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 481, Short.MAX_VALUE)
-                    .addComponent(progStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(progStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 265, Short.MAX_VALUE)
-                .addContainerGap())
-        );
+        // bar of a fixed height on top, log area filling the rest. The size of
+        // the log area is the one the form was designed with.
+        getContentPane().setLayout(new MigLayout(
+                "insets dialog, fill, wrap 1", "[grow]", "[][grow]"));
+        getContentPane().add(progStatus, "growx, h 33!");
+        getContentPane().add(jScrollPane1, "grow, push, w :481:, h :265:");
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ProcessProgress.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ProcessProgress.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ProcessProgress.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ProcessProgress.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                ProcessProgress dialog = new ProcessProgress(new javax.swing.JFrame(), true, null);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JProgressBar progStatus;
-    private javax.swing.JTextArea txtProcessLog;
-    // End of variables declaration//GEN-END:variables
+    /** the bar showing how far the attached worker has come. */
+    private JProgressBar progStatus;
+    /** scroll pane around the log area. */
+    private JScrollPane jScrollPane1;
+    /** log area collecting the lines published by the attached worker. */
+    private JTextArea txtProcessLog;
 }

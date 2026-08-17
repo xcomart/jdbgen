@@ -27,17 +27,29 @@ import java.time.Duration;
 import okhttp3.OkHttpClient;
 
 /**
+ * The single <code>OkHttpClient</code> every HTTP call of the application goes
+ * through. Sharing one client keeps its connection pool and thread pool shared
+ * as well, and gives every call the same one minute connect, read and write
+ * timeout.
  *
  * @author comart
  */
 public class HttpUtils {
+    /** connect, read and write timeout of every call. */
     private static final Duration TIMEOUT = Duration.ofMinutes(1);
+    /** the one client of the application, built once. */
     private static final OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(TIMEOUT)
             .readTimeout(TIMEOUT)
             .writeTimeout(TIMEOUT)
             .build();
     
+    /**
+     * the shared HTTP client.
+     *
+     * @return the client every caller is expected to use, never
+     *         <code>null</code>.
+     */
     public static OkHttpClient getClient() {
         return client;
     }

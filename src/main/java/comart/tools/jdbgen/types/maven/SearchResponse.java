@@ -26,12 +26,18 @@ package comart.tools.jdbgen.types.maven;
 import lombok.Data;
 
 /**
+ * The result body of a Maven Central search: one page of matches together with
+ * the total number of hits, which is what the paging of the driver download
+ * dialog is based on.
  *
  * @author comart
  */
 @Data
 public class SearchResponse {
+    /** total number of matches, not only those of this page. */
     int numFound;
+    /** index of the first match of this page within all matches. */
     int start;
+    /** the matches of this page. */
     SearchResponseItem[] docs;
 }

@@ -38,13 +38,38 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
+ * The Maven Central search REST API, used to find and download a JDBC driver
+ * jar without leaving the application. The endpoints are not hard coded: the
+ * URL templates come from the <code>maven</code> section of the configuration
+ * and are filled in with {@link StrUtils#replaceWith(String, Object, String,
+ * String)}, so a mirror can be used instead.
  *
  * @author comart
  */
 @Slf4j
 public class MavenREST {
+    /** number of results asked for per request. */
     private static final int PAGE_SIZE=20;
     
+    /**
+     * fill the placeholders of <code>urlTemplate</code> from <code>param</code>,
+     * request the result and parse the response body as <code>clazz</code>.
+     *
+     * @param urlTemplate
+     *            URL with <code>${...}</code> placeholders.
+     * @param param
+     *            the object or map the placeholders are read from.
+     * @param clazz
+     *            the type to parse the response into.
+     * @param <T>
+     *            the response type.
+     * @return the parsed response.
+     * @throws ParseException
+     *             if the template is malformed.
+     * @throws IOException
+     *             if the request fails, the status is not a success or the body
+     *             is empty.
+     */
     private static <T> T restCall(String urlTemplate, Object param, Class<T> clazz) throws ParseException, IOException {
         String url = StrUtils.replaceWith(urlTemplate, param, "${", "}");
         log.info("requesting to {}", url);
@@ -61,10 +86,28 @@ public class MavenREST {
         }
     }
     
+    /**
+     * @return the <code>maven</code> section of the configuration, holding the
+     *         URL templates of the endpoints.
+     */
     private static MavenConfig mavenConfig() {
         return JDBGenConfig.getInstance().getMaven();
     }
     
+    /**
+     * search Maven Central for artifacts matching <code>queryStr</code>.
+     *
+     * @param queryStr
+     *            the search expression, handed to the API as its
+     *            <code>q</code> parameter.
+     * @param pageNo
+     *            zero based page number; a page holds 20 results.
+     * @return the parsed response.
+     * @throws ParseException
+     *             if the configured URL template is malformed.
+     * @throws IOException
+     *             if the request fails or the response is not successful.
+     */
     public static SearchResult search(String queryStr, int pageNo) throws ParseException, IOException {
         SearchParams query = new SearchParams();
         query.setQ(queryStr);
@@ -75,6 +118,20 @@ public class MavenREST {
         return restCall(searchUrl, query, SearchResult.class);
     }
 
+    /**
+     * every published version of the artifact <code>qitem</code> belongs to,
+     * looked up by its group and artifact id.
+     *
+     * @param qitem
+     *            an item of a {@link #search(String, int)} result.
+     * @param pageNo
+     *            zero based page number; a page holds 20 results.
+     * @return the parsed response.
+     * @throws ParseException
+     *             if the configured URL template is malformed.
+     * @throws IOException
+     *             if the request fails or the response is not successful.
+     */
     public static SearchResult version(SearchResponseItem qitem, int pageNo) throws ParseException, IOException {
         HashMap<String,Object> query = new HashMap<>();
         query.put("g", qitem.getG());
@@ -86,6 +143,20 @@ public class MavenREST {
         return restCall(versionUrl, query, SearchResult.class);
     }
 
+    /**
+     * the URL the jar of <code>qitem</code> can be downloaded from. Nothing is
+     * requested here, the configured download template is only filled in with
+     * the file path of the item.
+     *
+     * @param qitem
+     *            the artifact version to download.
+     * @return the download URL.
+     * @throws ParseException
+     *             if the configured URL template is malformed.
+     * @throws IOException
+     *             never thrown, part of the signature for the callers that
+     *             handle it together with the requesting methods.
+     */
     public static String downloadLink(SearchResponseItem qitem) throws ParseException, IOException {
         HashMap<String,Object> query = new HashMap<>();
         query.put("fpath", qitem.getFilePath());

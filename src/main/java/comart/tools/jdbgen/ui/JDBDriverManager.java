@@ -1,18 +1,18 @@
 /*
  * MIT License
- * 
+ *
  * Copyright (c) 2020 Dennis Soungjin Park
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all
  * copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,13 +25,21 @@ package comart.tools.jdbgen.ui;
 
 import comart.tools.jdbgen.types.JDBDriver;
 import comart.tools.jdbgen.types.JDBGenConfig;
+import comart.tools.jdbgen.types.maven.SearchResponseItem;
 import comart.utils.AppDirs;
 import comart.utils.ClassUtils;
 import comart.utils.I18n;
 import comart.utils.PlatformUtils;
 import comart.utils.StrUtils;
 import comart.utils.UIUtils;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.EventQueue;
+import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -40,34 +48,94 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
+import javax.swing.event.ListSelectionEvent;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.DefaultTableModel;
 import jiconfont.icons.font_awesome.FontAwesome;
 import lombok.extern.slf4j.Slf4j;
+import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * JDBC driver management dialog. It lists the configured drivers and edits the
+ * selected one: the jar file and driver class to load, the url template and the
+ * icon shown for it, the default connection properties, and the optional
+ * vendor specific queries that replace the standard metadata lookups.
+ * <p>
+ * Drivers that ship with the application are marked as stock items; their name,
+ * class and icon are read only and they cannot be deleted, but they can be
+ * cloned into an editable copy. The dialog is a singleton, see
+ * {@link #getInstance()}, and is shown modally from the connection manager.
  *
  * @author comart
  */
 @Slf4j
 public class JDBDriverManager extends JDialog {
 
+    /**
+     * color of the "driver required" hint of the driver list when the theme
+     * defines none of its own.
+     */
+    private static final Color FALLBACK_MISSING_JAR_COLOR = new Color(0xD9534F);
+
+    /**
+     * the live driver list of the configuration. Every edit of this dialog
+     * goes into this list, which is what gets saved.
+     */
     private final List<JDBDriver> drivers;
+    /**
+     * the model behind the driver list, holding the driver names.
+     */
     private final DefaultListModel<String> listModel;
+    /**
+     * the model of the connection property table of the selected driver.
+     */
     private final DefaultTableModel tableModel;
+    /**
+     * <code>true</code> once a driver has been saved, so that the caller knows
+     * it has to reload the driver list. Reset by {@link #getInstance()}.
+     */
     public boolean changed = false;
+    /**
+     * guard against feedback while the property table is being filled
+     * programmatically. While <code>false</code>, the table model listener
+     * neither writes back into the selected driver nor appends a trailing
+     * empty row.
+     */
     private boolean autoreset = true;
 
+    /**
+     * the single instance of this dialog, see {@link #getInstance()}.
+     */
     private static JDBDriverManager INSTANCE = null;
+    /**
+     * the single instance of this dialog, created on first use. The returned
+     * instance is refreshed for the current look and feel and its
+     * {@link #changed} flag is cleared, so that a caller can tell whether the
+     * driver list was edited while the dialog was open.
+     *
+     * @return the shared driver manager dialog, never <code>null</code>.
+     */
     public static synchronized JDBDriverManager getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new JDBDriverManager();
@@ -81,7 +149,9 @@ public class JDBDriverManager extends JDialog {
     }
 
     /**
-     * Creates new form JDBDriverManager
+     * Creates new form JDBDriverManager. Loads the drivers of the current
+     * configuration into the list and registers the listener that writes the
+     * property table back into the selected driver.
      */
     @SuppressWarnings("OverridableMethodCallInConstructor")
     private JDBDriverManager() {
@@ -91,10 +161,6 @@ public class JDBDriverManager extends JDialog {
         applyIcons();
         eventSetup();
         tableModel = (DefaultTableModel)tabProps.getModel();
-        // the column titles come from the form's design time table model, which
-        // cannot hold custom code, so they are translated here.
-        tabProps.getColumnModel().getColumn(0).setHeaderValue(I18n.t("driverManager.tabProps.key"));
-        tabProps.getColumnModel().getColumn(1).setHeaderValue(I18n.t("driverManager.tabProps.value"));
         listModel = new DefaultListModel();
         lstDrivers.setModel(listModel);
         listModel.removeAllElements();
@@ -103,7 +169,7 @@ public class JDBDriverManager extends JDialog {
         drivers.forEach((d) -> listModel.addElement(d.getName()));
 
         UIUtils.iconHelpAction(btnIconHelp);
-        
+
         tabProps.getModel().addTableModelListener((evt) -> {
             if (autoreset) {
                 int idx = lstDrivers.getSelectedIndex();
@@ -114,30 +180,125 @@ public class JDBDriverManager extends JDialog {
                 UIUtils.tableSetLastEmpty(tableModel);
             }
         });
-        
+
         this.pack();
     }
-    
+
+    /**
+     * convert the rows of the property table into a map, dropping the rows
+     * with an empty key such as the trailing input row.
+     *
+     * @return the connection properties currently shown, in table order.
+     */
     private Map<String, String> applyToPropsMap() {
         return UIUtils.applyTableToMap(tableModel);
     }
-    
+
+    /**
+     * preselect a driver in the list before the dialog is shown. A negative
+     * index leaves the current selection alone.
+     *
+     * @param index
+     *            the index of the driver to select in the driver list.
+     */
     public void setDriverIndex(int index) {
         if (index > -1) {
             lstDrivers.setSelectedIndex(index);
         }
     }
 
+    /**
+     * rebuild the user interface delegates of every component of this dialog
+     * and restore what a look and feel change resets: the link style of the
+     * download button and the icon renderer of the driver list. Needed because
+     * the dialog outlives a look and feel change made in the main window.
+     */
     public void updateComponents() {
         SwingUtilities.updateComponentTreeUI(this);
         btnDownJdbc.setBorder((Border)null);
         btnDownJdbc.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
-        lstDrivers.setCellRenderer(UIUtils.getListCellRenderer(
-                s -> drivers.stream()
-                        .filter(d -> s.equals(d.getName()))
-                        .findFirst().orElse(null)));
+        lstDrivers.setCellRenderer(driverListRenderer());
     }
 
+    /**
+     * the driver a name in the driver list belongs to.
+     *
+     * @param name the name shown in the list
+     * @return the driver, or <code>null</code> when no driver carries the name.
+     */
+    private JDBDriver driverByName(Object name) {
+        return drivers.stream()
+                .filter(d -> d.getName() != null && d.getName().equals(name))
+                .findFirst().orElse(null);
+    }
+
+    /**
+     * whether the jar of a driver cannot be used: none is configured, or the
+     * configured one is not there. Such a driver opens no connection, which is
+     * what the driver list marks.
+     *
+     * @param driver the driver to check
+     * @return <code>true</code> when the driver jar is missing.
+     */
+    private static boolean isJarMissing(JDBDriver driver) {
+        if (StrUtils.isEmpty(driver.getJdbcJar()))
+            return true;
+        File jar = AppDirs.resolve(driver.getJdbcJar());
+        return jar == null || !jar.exists();
+    }
+
+    /**
+     * the renderer of the driver list: the icon and the name of the driver,
+     * followed by a red hint for every driver whose jar is missing, so that a
+     * fresh installation shows at a glance which drivers still need their jar
+     * downloaded.
+     *
+     * @return the renderer, rebuilt on every look and feel change so that it
+     *         picks up the colors of the current theme.
+     */
+    private ListCellRenderer<? super String> driverListRenderer() {
+        ListCellRenderer<String> base = UIUtils.getListCellRenderer(this::driverByName);
+        return (list, value, index, isSelected, cellHasFocus) -> {
+            Component comp = base.getListCellRendererComponent(
+                    list, value, index, isSelected, cellHasFocus);
+            JDBDriver driver = driverByName(value);
+            if (driver != null && comp instanceof JLabel && isJarMissing(driver)) {
+                // html, so that the hint keeps its own color whatever the
+                // selection paints the rest of the cell in
+                ((JLabel)comp).setText("<html>" + escapeHtml(driver.getName())
+                        + " <span style='color:" + missingJarColor() + "'>("
+                        + escapeHtml(I18n.t("driverManager.list.driverRequired"))
+                        + ")</span></html>");
+            }
+            return comp;
+        };
+    }
+
+    /**
+     * @return the color of the "driver required" hint as a css value, taken
+     *         from the theme where it defines one so that it stays readable in
+     *         the light and in the dark theme.
+     */
+    private static String missingJarColor() {
+        Color col = UIManager.getColor("Actions.Red");
+        if (col == null)
+            col = UIManager.getColor("Component.error.focusedBorderColor");
+        return String.format("#%06x",
+                (col == null ? FALLBACK_MISSING_JAR_COLOR : col).getRGB() & 0xFFFFFF);
+    }
+
+    /**
+     * @param text the text to place into the html of a list cell
+     * @return <code>text</code> with the characters html reads as markup escaped.
+     */
+    private static String escapeHtml(String text) {
+        return text == null ? "" : text.replace("&", "&amp;")
+                .replace("<", "&lt;").replace(">", "&gt;");
+    }
+
+    /**
+     * apply the font icons of every button of this dialog.
+     */
     private void applyIcons() {
         UIUtils.applyIcon(btnNewDriver, FontAwesome.PLUS);
         UIUtils.applyIcon(btnCloneDriver, FontAwesome.CLONE);
@@ -147,16 +308,20 @@ public class JDBDriverManager extends JDialog {
         UIUtils.applyIcon(btnDelProp, FontAwesome.MINUS);
         UIUtils.applyIcon(btnBrowseIcon, FontAwesome.FOLDER_O);
         UIUtils.applyIcon(btnIconHelp, FontAwesome.QUESTION);
-        
+
         UIUtils.applyIcon(btnTableComments, FontAwesome.QUESTION);
         UIUtils.applyIcon(btnColumnComments, FontAwesome.QUESTION);
         UIUtils.applyIcon(btnTables, FontAwesome.QUESTION);
         UIUtils.applyIcon(btnColumns, FontAwesome.QUESTION);
-        
+
         UIUtils.addIcon(btnCancel, FontAwesome.TIMES);
         UIUtils.addIcon(btnSave, FontAwesome.CHECK);
     }
 
+    /**
+     * register the window listener that cancels the dialog when its window is
+     * closed and raises it when it is activated.
+     */
     private void eventSetup() {
         this.addWindowListener(new WindowAdapter() {
             @Override
@@ -171,7 +336,11 @@ public class JDBDriverManager extends JDialog {
         // NOTE: keeping one trailing empty row is handled by the (autoreset
         // guarded) table model listener registered in the constructor.
     }
-    
+
+    /**
+     * clear the selection and every editor field, leaving the dialog in the
+     * state of "no driver selected" with all read only fields editable again.
+     */
     private void resetControls() {
         lstDrivers.clearSelection();
         txtDriverClass.setText("");
@@ -179,7 +348,7 @@ public class JDBDriverManager extends JDialog {
         txtIcon.setText("");
         txtJarFile.setText("");
         txtUrlTemplate.setText("");
-        
+
         chkTableComments.setSelected(false);
         txtTableComments.setText("");
         chkColumnComments.setSelected(false);
@@ -194,505 +363,291 @@ public class JDBDriverManager extends JDialog {
     }
 
     /**
-     * This method is called from within the constructor to initialize the form.
-     * WARNING: Do NOT modify this code. The content of this method is always
-     * regenerated by the Form Editor.
+     * build the dialog: the driver list on the left, the editor of the selected
+     * driver on the right, and the buttons that close the dialog below both of
+     * them.
      */
-    @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-
-        btnCancel = new javax.swing.JButton();
-        btnSave = new javax.swing.JButton();
-        jPanel1 = new javax.swing.JPanel();
-        jPanel3 = new javax.swing.JPanel();
-        btnNewDriver = new javax.swing.JButton();
-        btnCloneDriver = new javax.swing.JButton();
-        btnDelDriver = new javax.swing.JButton();
-        jLabel1 = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        lstDrivers = new javax.swing.JList<>();
-        jTabbedPane1 = new javax.swing.JTabbedPane();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel3 = new javax.swing.JLabel();
-        txtDriverName = new javax.swing.JTextField();
-        jLabel4 = new javax.swing.JLabel();
-        btnBrowseJar = new javax.swing.JButton();
-        txtJarFile = new javax.swing.JTextField();
-        btnDownJdbc = new javax.swing.JButton();
-        jLabel8 = new javax.swing.JLabel();
-        txtUrlTemplate = new javax.swing.JTextField();
-        jLabel9 = new javax.swing.JLabel();
-        txtDriverClass = new javax.swing.JTextField();
-        jLabel10 = new javax.swing.JLabel();
-        btnBrowseIcon = new javax.swing.JButton();
-        txtIcon = new javax.swing.JTextField();
-        jLabel11 = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        tabProps = new javax.swing.JTable();
-        btnDelProp = new javax.swing.JButton();
-        chkNoAuth = new javax.swing.JCheckBox();
-        btnIconHelp = new javax.swing.JButton();
-        jPanel4 = new javax.swing.JPanel();
-        jScrollPane3 = new javax.swing.JScrollPane();
-        jPanel5 = new javax.swing.JPanel();
-        btnTableComments = new javax.swing.JButton();
-        chkTableComments = new javax.swing.JCheckBox();
-        jScrollPane4 = new javax.swing.JScrollPane();
-        txtColumnComments = new javax.swing.JTextArea();
-        btnColumnComments = new javax.swing.JButton();
-        chkColumnComments = new javax.swing.JCheckBox();
-        jScrollPane5 = new javax.swing.JScrollPane();
-        txtTableComments = new javax.swing.JTextArea();
-        chkTables = new javax.swing.JCheckBox();
-        jScrollPane6 = new javax.swing.JScrollPane();
-        txtTables = new javax.swing.JTextArea();
-        btnTables = new javax.swing.JButton();
-        jScrollPane7 = new javax.swing.JScrollPane();
-        txtColumns = new javax.swing.JTextArea();
-        chkColumns = new javax.swing.JCheckBox();
-        btnColumns = new javax.swing.JButton();
-
         setTitle(I18n.t("driverManager.title"));
 
-        btnCancel.setText(I18n.t("driverManager.btnCancel.text"));
-        btnCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCancelActionPerformed(evt);
-            }
-        });
+        btnSave = new JButton(I18n.t("driverManager.btnSave.text"));
+        btnSave.addActionListener(this::btnSaveActionPerformed);
 
-        btnSave.setText(I18n.t("driverManager.btnSave.text"));
-        btnSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSaveActionPerformed(evt);
-            }
-        });
+        btnCancel = new JButton(I18n.t("driverManager.btnCancel.text"));
+        btnCancel.addActionListener(this::btnCancelActionPerformed);
 
-        jPanel3.setLayout(new java.awt.GridLayout(1, 0));
+        jTabbedPane1 = new JTabbedPane();
+        jTabbedPane1.setFont(headingFont(jTabbedPane1.getFont()));
+        jTabbedPane1.addTab(I18n.t("driverManager.tab.general"), createGeneralTab());
+        jTabbedPane1.addTab(I18n.t("driverManager.tab.customQueries"), createCustomQueryTab());
 
-        btnNewDriver.setText("+");
-        btnNewDriver.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnNewDriverActionPerformed(evt);
-            }
-        });
-        jPanel3.add(btnNewDriver);
+        // the list keeps its preferred width, the editor takes the rest
+        getContentPane().setLayout(new MigLayout("fill, insets dialog",
+                "[][grow]", "[grow][]"));
+        getContentPane().add(createDriverListPanel(), "grow, wmin 196");
+        getContentPane().add(jTabbedPane1, "grow, wrap");
+        getContentPane().add(btnSave, "spanx 2, split 2, align right");
+        getContentPane().add(btnCancel);
 
-        btnCloneDriver.setText("c");
-        btnCloneDriver.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCloneDriverActionPerformed(evt);
-            }
-        });
-        jPanel3.add(btnCloneDriver);
+        pack();
+    }
 
-        btnDelDriver.setText("-");
-        btnDelDriver.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDelDriverActionPerformed(evt);
-            }
-        });
-        jPanel3.add(btnDelDriver);
+    /**
+     * build the left hand side of the dialog: the heading, the driver list and
+     * the row of buttons that add, copy and remove a driver.
+     *
+     * @return the panel holding the driver list.
+     */
+    private JPanel createDriverListPanel() {
+        jLabel1 = new JLabel(I18n.t("driverManager.jLabel1.text"));
+        jLabel1.setFont(headingFont(jLabel1.getFont()));
 
-        jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() | java.awt.Font.BOLD, jLabel1.getFont().getSize()+4));
-        jLabel1.setText(I18n.t("driverManager.jLabel1.text"));
+        lstDrivers = new JList<>();
+        lstDrivers.addListSelectionListener(this::lstDriversValueChanged);
+        jScrollPane1 = new JScrollPane(lstDrivers);
 
-        lstDrivers.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
-        });
-        lstDrivers.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
-            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
-                lstDriversValueChanged(evt);
-            }
-        });
-        jScrollPane1.setViewportView(lstDrivers);
+        btnNewDriver = new JButton("+");
+        btnNewDriver.addActionListener(this::btnNewDriverActionPerformed);
+        btnCloneDriver = new JButton("c");
+        btnCloneDriver.addActionListener(this::btnCloneDriverActionPerformed);
+        btnDelDriver = new JButton("-");
+        btnDelDriver.addActionListener(this::btnDelDriverActionPerformed);
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
-                    .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, 196, Short.MAX_VALUE)
-                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
+        // the three buttons share the width of the list in equal parts
+        jPanel3 = new JPanel(new MigLayout("insets 0, gap 0, fillx",
+                "[sg listbtn, grow][sg listbtn, grow][sg listbtn, grow]", "[]"));
+        jPanel3.add(btnNewDriver, "growx");
+        jPanel3.add(btnCloneDriver, "growx");
+        jPanel3.add(btnDelDriver, "growx");
 
-        jTabbedPane1.setFont(jTabbedPane1.getFont().deriveFont(jTabbedPane1.getFont().getStyle() | java.awt.Font.BOLD, jTabbedPane1.getFont().getSize()+4));
+        // the list takes the height that heading and button row leave over
+        jPanel1 = new JPanel(new MigLayout("insets 0, fill, wrap 1",
+                "[grow]", "[][grow][]"));
+        jPanel1.add(jLabel1);
+        jPanel1.add(jScrollPane1, "grow");
+        jPanel1.add(jPanel3, "growx");
+        return jPanel1;
+    }
 
-        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel3.setText(I18n.t("driverManager.jLabel3.text"));
+    /**
+     * build the editor of the selected driver: what has to be loaded to open a
+     * connection with it, how it is presented, and the connection properties it
+     * hands to every connection using it.
+     *
+     * @return the panel shown on the general tab.
+     */
+    private JPanel createGeneralTab() {
+        jLabel3 = trailingLabel("driverManager.jLabel3.text");
+        txtDriverName = new JTextField();
 
-        jLabel4.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel4.setText(I18n.t("driverManager.jLabel4.text"));
-
-        btnBrowseJar.setText("...");
-        btnBrowseJar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrowseJarActionPerformed(evt);
-            }
-        });
-
+        jLabel4 = trailingLabel("driverManager.jLabel4.text");
+        txtJarFile = new JTextField();
         txtJarFile.setEditable(false);
+        btnBrowseJar = new JButton("...");
+        btnBrowseJar.addActionListener(this::btnBrowseJarActionPerformed);
 
+        // a link rather than a button: it opens the maven explorer
+        btnDownJdbc = new JButton(I18n.t("driverManager.btnDownJdbc.text"));
         btnDownJdbc.setFont(btnDownJdbc.getFont().deriveFont(btnDownJdbc.getFont().getSize()-1f));
-        btnDownJdbc.setForeground(javax.swing.UIManager.getDefaults().getColor("Component.accentColor"));
-        btnDownJdbc.setText(I18n.t("driverManager.btnDownJdbc.text"));
+        btnDownJdbc.setForeground(UIManager.getDefaults().getColor("Component.accentColor"));
         btnDownJdbc.setBorder(null);
         btnDownJdbc.setBorderPainted(false);
-        btnDownJdbc.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        btnDownJdbc.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDownJdbcActionPerformed(evt);
-            }
-        });
+        btnDownJdbc.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnDownJdbc.addActionListener(this::btnDownJdbcActionPerformed);
 
-        jLabel8.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel8.setText(I18n.t("driverManager.jLabel8.text"));
+        jLabel8 = trailingLabel("driverManager.jLabel8.text");
+        txtUrlTemplate = new JTextField();
 
-        jLabel9.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel9.setText(I18n.t("driverManager.jLabel9.text"));
-
-        txtDriverClass.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
+        jLabel9 = trailingLabel("driverManager.jLabel9.text");
+        txtDriverClass = new JTextField();
+        txtDriverClass.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent evt) {
                 txtDriverClassMouseClicked(evt);
             }
         });
 
-        jLabel10.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel10.setText(I18n.t("driverManager.jLabel10.text"));
-
-        btnBrowseIcon.setText("...");
-        btnBrowseIcon.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnBrowseIconActionPerformed(evt);
-            }
-        });
-
+        jLabel10 = trailingLabel("driverManager.jLabel10.text");
+        txtIcon = new JTextField();
         txtIcon.setEditable(false);
+        btnBrowseIcon = new JButton("...");
+        btnBrowseIcon.addActionListener(this::btnBrowseIconActionPerformed);
+        // what the button does is attached once the dialog is built, see the
+        // constructor
+        btnIconHelp = new JButton("?");
 
-        jLabel11.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel11.setText(I18n.t("driverManager.jLabel11.text"));
+        chkNoAuth = new JCheckBox(I18n.t("driverManager.chkNoAuth.text"));
 
-        tabProps.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {null, null}
-            },
-            new String [] {
-                "Key", "Value"
-            }
-        ) {
-            Class[] types = new Class [] {
-                java.lang.String.class, java.lang.String.class
-            };
-
-            public Class getColumnClass(int columnIndex) {
-                return types [columnIndex];
+        jLabel11 = trailingLabel("driverManager.jLabel11.text");
+        // the property table is edited in place, both of its columns hold text
+        tabProps = new JTable(new DefaultTableModel(
+                new Object[][] {{null, null}},
+                new String[] {
+                    I18n.t("driverManager.tabProps.key"),
+                    I18n.t("driverManager.tabProps.value")
+                }) {
+            @Override
+            public Class<?> getColumnClass(int columnIndex) {
+                return String.class;
             }
         });
         tabProps.getTableHeader().setReorderingAllowed(false);
-        jScrollPane2.setViewportView(tabProps);
+        jScrollPane2 = new JScrollPane(tabProps);
+        btnDelProp = new JButton("-");
+        btnDelProp.addActionListener(this::btnDelPropActionPerformed);
 
-        btnDelProp.setText("-");
-        btnDelProp.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnDelPropActionPerformed(evt);
-            }
-        });
+        // a right aligned label column, an editor column that takes the width
+        // left over, and two columns for the trailing buttons
+        JPanel panel = new JPanel(new MigLayout("fillx, insets dialog",
+                "[right][grow, fill][][]", "[]"));
+        panel.add(jLabel3);
+        panel.add(txtDriverName, "spanx 3, wrap");
+        panel.add(jLabel4);
+        panel.add(txtJarFile, "spanx 2");
+        panel.add(btnBrowseJar, "wrap");
+        panel.add(btnDownJdbc, "skip 1, spanx 3, growx, wrap");
+        panel.add(jLabel8);
+        panel.add(txtUrlTemplate, "spanx 3, wrap");
+        panel.add(jLabel9);
+        panel.add(txtDriverClass, "spanx 3, wrap");
+        // the browse and help buttons keep the height of the field they follow
+        panel.add(jLabel10);
+        panel.add(txtIcon, "sgy iconrow");
+        panel.add(btnBrowseIcon, "sgy iconrow");
+        panel.add(btnIconHelp, "sgy iconrow, wrap");
+        // the check box keeps its own width, the editor column would stretch it
+        panel.add(chkNoAuth, "skip 1, spanx 3, alignx left, w pref!, wrap");
+        // the property table takes the height left over, its heading and its
+        // remove button stay beside it in the label column
+        panel.add(jLabel11, "aligny top");
+        // the table asks for a viewport of its own that would blow the dialog
+        // up, it is given a share of the height and grows with the window
+        panel.add(jScrollPane2, "spanx 3, spany 2, grow, h 240, wrap");
+        panel.add(btnDelProp, "aligny top, sgy iconrow, pushy");
+        return panel;
+    }
 
-        chkNoAuth.setText(I18n.t("driverManager.chkNoAuth.text"));
+    /**
+     * build the editor of the queries that replace the standard metadata
+     * lookups. Every section is a check box that turns the query on, a help
+     * button pointing at the documentation, and the statement itself.
+     *
+     * @return the scroll pane shown on the custom queries tab; the sections do
+     *         not fit into the dialog on smaller screens.
+     */
+    private JScrollPane createCustomQueryTab() {
+        btnTableComments = new JButton("?");
+        btnTableComments.addActionListener(this::btnTableCommentsActionPerformed);
+        chkTableComments = new JCheckBox(I18n.t("driverManager.chkTableComments.text"));
+        chkTableComments.addActionListener(this::chkTableCommentsActionPerformed);
+        txtTableComments = queryArea();
+        jScrollPane5 = new JScrollPane(txtTableComments);
 
-        btnIconHelp.setText("?");
+        btnColumnComments = new JButton("?");
+        btnColumnComments.addActionListener(this::btnColumnCommentsActionPerformed);
+        chkColumnComments = new JCheckBox(I18n.t("driverManager.chkColumnComments.text"));
+        chkColumnComments.addActionListener(this::chkColumnCommentsActionPerformed);
+        txtColumnComments = queryArea();
+        jScrollPane4 = new JScrollPane(txtColumnComments);
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnDelProp, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtDriverName)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(txtJarFile)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseJar))
-                    .addComponent(btnDownJdbc, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(txtUrlTemplate)
-                    .addComponent(txtDriverClass)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 487, Short.MAX_VALUE)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(chkNoAuth)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(txtIcon)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnBrowseIcon)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnIconHelp)))
-                .addContainerGap())
-        );
+        btnTables = new JButton("?");
+        btnTables.addActionListener(this::btnTablesActionPerformed);
+        chkTables = new JCheckBox(I18n.t("driverManager.chkTables.text"));
+        chkTables.addActionListener(this::chkTablesActionPerformed);
+        txtTables = queryArea();
+        jScrollPane6 = new JScrollPane(txtTables);
 
-        jPanel2Layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jLabel10, jLabel11, jLabel3, jLabel4, jLabel8, jLabel9});
+        btnColumns = new JButton("?");
+        btnColumns.addActionListener(this::btnColumnsActionPerformed);
+        chkColumns = new JCheckBox(I18n.t("driverManager.chkColumns.text"));
+        chkColumns.addActionListener(this::chkColumnsActionPerformed);
+        txtColumns = queryArea();
+        jScrollPane7 = new JScrollPane(txtColumns);
 
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel3)
-                    .addComponent(txtDriverName, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
-                    .addComponent(btnBrowseJar)
-                    .addComponent(txtJarFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnDownJdbc)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel8)
-                    .addComponent(txtUrlTemplate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel9)
-                    .addComponent(txtDriverClass, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel10)
-                    .addComponent(txtIcon, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnBrowseIcon)
-                    .addComponent(btnIconHelp))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(chkNoAuth)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabel11)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnDelProp)
-                        .addGap(172, 216, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                        .addContainerGap())))
-        );
+        jPanel5 = new JPanel(new MigLayout("fillx, insets dialog", "[grow]", "[]"));
+        addQuerySection(jPanel5, chkTableComments, btnTableComments, jScrollPane5, true);
+        addQuerySection(jPanel5, chkColumnComments, btnColumnComments, jScrollPane4, false);
+        addQuerySection(jPanel5, chkTables, btnTables, jScrollPane6, false);
+        addQuerySection(jPanel5, chkColumns, btnColumns, jScrollPane7, false);
 
-        jTabbedPane1.addTab(I18n.t("driverManager.tab.general"), jPanel2);
+        jScrollPane3 = new JScrollPane(jPanel5);
+        return jScrollPane3;
+    }
 
-        btnTableComments.setText("?");
-        btnTableComments.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTableCommentsActionPerformed(evt);
-            }
-        });
+    /**
+     * add one query section to the custom query panel: the check box and its
+     * help button on one row, the statement indented below them.
+     *
+     * @param panel
+     *            the panel the section is added to.
+     * @param chk
+     *            the check box that turns the query on.
+     * @param help
+     *            the button opening the documentation of the query.
+     * @param area
+     *            the scroll pane holding the statement.
+     * @param first
+     *            whether this is the topmost section, which needs no extra gap
+     *            above it.
+     */
+    private static void addQuerySection(JPanel panel, JCheckBox chk, JButton help,
+            JScrollPane area, boolean first) {
+        panel.add(chk, "split 2" + (first ? "" : ", gaptop unrelated"));
+        panel.add(help, "wrap");
+        panel.add(area, "growx, h 65!, gapleft 23, wrap");
+    }
 
-        chkTableComments.setText(I18n.t("driverManager.chkTableComments.text"));
-        chkTableComments.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkTableCommentsActionPerformed(evt);
-            }
-        });
+    /**
+     * an editor for one of the custom queries.
+     *
+     * @return the text area, not added to a container yet.
+     */
+    private static JTextArea queryArea() {
+        JTextArea area = new JTextArea();
+        area.setColumns(20);
+        area.setRows(5);
+        return area;
+    }
 
-        txtColumnComments.setColumns(20);
-        txtColumnComments.setRows(5);
-        jScrollPane4.setViewportView(txtColumnComments);
+    /**
+     * a label of the editor: right aligned, so that it reads towards the field
+     * it names.
+     *
+     * @param key
+     *            the resource key of the label text.
+     * @return the label, not added to a container yet.
+     */
+    private static JLabel trailingLabel(String key) {
+        JLabel label = new JLabel(I18n.t(key));
+        label.setHorizontalAlignment(SwingConstants.TRAILING);
+        return label;
+    }
 
-        btnColumnComments.setText("?");
-        btnColumnComments.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnColumnCommentsActionPerformed(evt);
-            }
-        });
+    /**
+     * the heading font of this dialog: the given font in bold and four points
+     * larger.
+     *
+     * @param base
+     *            the font of the component the heading font is derived for.
+     * @return the derived font.
+     */
+    private static Font headingFont(Font base) {
+        return base.deriveFont(base.getStyle() | Font.BOLD, base.getSize() + 4f);
+    }
 
-        chkColumnComments.setText(I18n.t("driverManager.chkColumnComments.text"));
-        chkColumnComments.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkColumnCommentsActionPerformed(evt);
-            }
-        });
-
-        txtTableComments.setColumns(20);
-        txtTableComments.setRows(5);
-        jScrollPane5.setViewportView(txtTableComments);
-
-        chkTables.setText(I18n.t("driverManager.chkTables.text"));
-        chkTables.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkTablesActionPerformed(evt);
-            }
-        });
-
-        txtTables.setColumns(20);
-        txtTables.setRows(5);
-        jScrollPane6.setViewportView(txtTables);
-
-        btnTables.setText("?");
-        btnTables.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnTablesActionPerformed(evt);
-            }
-        });
-
-        txtColumns.setColumns(20);
-        txtColumns.setRows(5);
-        jScrollPane7.setViewportView(txtColumns);
-
-        chkColumns.setText(I18n.t("driverManager.chkColumns.text"));
-        chkColumns.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                chkColumnsActionPerformed(evt);
-            }
-        });
-
-        btnColumns.setText("?");
-        btnColumns.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnColumnsActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
-        jPanel5.setLayout(jPanel5Layout);
-        jPanel5Layout.setHorizontalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addComponent(chkColumnComments)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(btnColumnComments)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addComponent(chkTableComments)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnTableComments))
-                            .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addComponent(chkTables)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnTables))
-                            .addGroup(jPanel5Layout.createSequentialGroup()
-                                .addComponent(chkColumns)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnColumns)))
-                        .addContainerGap(391, Short.MAX_VALUE))
-                    .addGroup(jPanel5Layout.createSequentialGroup()
-                        .addGap(23, 23, 23)
-                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane6)
-                            .addComponent(jScrollPane5)
-                            .addComponent(jScrollPane4)
-                            .addComponent(jScrollPane7)))))
-        );
-        jPanel5Layout.setVerticalGroup(
-            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel5Layout.createSequentialGroup()
-                .addGap(7, 7, 7)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkTableComments)
-                    .addComponent(btnTableComments))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkColumnComments)
-                    .addComponent(btnColumnComments))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkTables)
-                    .addComponent(btnTables))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(chkColumns)
-                    .addComponent(btnColumns))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.PREFERRED_SIZE, 65, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(93, Short.MAX_VALUE))
-        );
-
-        jScrollPane3.setViewportView(jPanel5);
-
-        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
-        jPanel4.setLayout(jPanel4Layout);
-        jPanel4Layout.setHorizontalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel4Layout.createSequentialGroup()
-                .addComponent(jScrollPane3)
-                .addContainerGap())
-        );
-        jPanel4Layout.setVerticalGroup(
-            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jScrollPane3)
-        );
-
-        jTabbedPane1.addTab(I18n.t("driverManager.tab.customQueries"), jPanel4);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane1))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(btnSave)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnCancel)
-                .addContainerGap())
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(jTabbedPane1)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnCancel)
-                    .addComponent(btnSave))
-                .addContainerGap())
-        );
-
-        pack();
-    }// </editor-fold>//GEN-END:initComponents
-
-    private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
+    /**
+     * close the dialog, discarding whatever has not been saved.
+     */
+    private void btnCancelActionPerformed(ActionEvent evt) {
         setVisible(false);
-    }//GEN-LAST:event_btnCancelActionPerformed
+    }
 
-    private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
+    /**
+     * validate the editor fields, store them into the driver, save the
+     * configuration and close the dialog. The first failing check is reported
+     * and focuses its field.
+     */
+    private void btnSaveActionPerformed(ActionEvent evt) {
         int idx = lstDrivers.getSelectedIndex();
         boolean isNameExists;
         JDBDriver target = null;
@@ -760,21 +715,34 @@ public class JDBDriverManager extends JDialog {
                 // name may have been changed, keep the list model in sync
                 listModel.set(idx, target.getName());
             }
+            // the jar of the driver may have changed with it
+            lstDrivers.repaint();
 
             JDBGenConfig.saveInstance(this);
             changed = true;
             setVisible(false);
         }
-    }//GEN-LAST:event_btnSaveActionPerformed
+    }
 
+    /**
+     * apply a change to the driver that is currently selected in the list.
+     * Does nothing when there is no selection.
+     *
+     * @param cons
+     *            the change to perform on the selected driver.
+     */
     private void updateDriver(Consumer<JDBDriver> cons) {
         int idx = lstDrivers.getSelectedIndex();
         if (idx < 0) return;
         JDBDriver driver = (JDBDriver)drivers.get(lstDrivers.getSelectedIndex());
         cons.accept(driver);
     }
-    
-    private void lstDriversValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_lstDriversValueChanged
+
+    /**
+     * load the selected driver into the editor fields. The identifying fields
+     * of a driver shipped with the application stay read only.
+     */
+    private void lstDriversValueChanged(ListSelectionEvent evt) {
         int idx = lstDrivers.getSelectedIndex();
         if (idx < 0) return;
         autoreset = false;
@@ -784,7 +752,7 @@ public class JDBDriverManager extends JDialog {
         txtIcon.setText(driver.getIcon());
         txtJarFile.setText(driver.getJdbcJar());
         txtUrlTemplate.setText(driver.getUrlTemplate());
-        
+
         chkNoAuth.setSelected(driver.isNoAuth());
 
         for(int i = tableModel.getRowCount() - 1; i >= 0; --i) {
@@ -810,7 +778,7 @@ public class JDBDriverManager extends JDialog {
         chkColumns.setSelected(driver.isUseColumns());
         txtColumns.setEnabled(chkColumns.isSelected());
         txtColumns.setText(driver.getColumnsSql());
-        
+
         boolean isStockItem = driver.isStockItem();
         txtDriverName.setEditable(!isStockItem);
         txtDriverClass.setEditable(!isStockItem);
@@ -821,10 +789,12 @@ public class JDBDriverManager extends JDialog {
         // rows were filled while autoreset was off, so make sure there is a
         // trailing empty row to type a new property into.
         UIUtils.tableSetLastEmpty(tableModel);
-    }//GEN-LAST:event_lstDriversValueChanged
+    }
 
-    private void btnNewDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewDriverActionPerformed
-//        resetControls();
+    /**
+     * add a driver with a generated name and the generic icon, and select it.
+     */
+    private void btnNewDriverActionPerformed(ActionEvent evt) {
         JDBDriver driver = new JDBDriver();
         driver.setIcon("stock:generic.png");
         driver.setName(NamingUtils.nextNameOf(drivers, I18n.t("driverManager.msg.newDriverName")));
@@ -832,9 +802,12 @@ public class JDBDriverManager extends JDialog {
         drivers.add(driver);
         listModel.addElement(driver.getName());
         lstDrivers.setSelectedIndex(drivers.size()-1);
-    }//GEN-LAST:event_btnNewDriverActionPerformed
+    }
 
-    private void btnCloneDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCloneDriverActionPerformed
+    /**
+     * add an editable copy of the selected driver and select it.
+     */
+    private void btnCloneDriverActionPerformed(ActionEvent evt) {
         int idx = lstDrivers.getSelectedIndex();
         if (idx >= 0) {
             JDBDriver driver = drivers.get(idx);
@@ -850,10 +823,12 @@ public class JDBDriverManager extends JDialog {
             listModel.addElement(newOne.getName());
             lstDrivers.setSelectedIndex(drivers.size() - 1);
         }
+    }
 
-    }//GEN-LAST:event_btnCloneDriverActionPerformed
-
-    private void btnDelDriverActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelDriverActionPerformed
+    /**
+     * remove the selected driver unless it is shipped with the application.
+     */
+    private void btnDelDriverActionPerformed(ActionEvent evt) {
         int idx = lstDrivers.getSelectedIndex();
         if (idx >= 0) {
             JDBDriver driver = (JDBDriver)drivers.get(idx);
@@ -863,23 +838,33 @@ public class JDBDriverManager extends JDialog {
             }
             resetControls();
         }
-    }//GEN-LAST:event_btnDelDriverActionPerformed
+    }
 
-    private void btnDelPropActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDelPropActionPerformed
+    /**
+     * remove the selected connection property.
+     */
+    private void btnDelPropActionPerformed(ActionEvent evt) {
         int idx = tabProps.getSelectedRow();
         if (idx > -1) {
             tableModel.removeRow(idx);
         }
-    }//GEN-LAST:event_btnDelPropActionPerformed
+    }
 
-    private void btnBrowseIconActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseIconActionPerformed
+    /**
+     * pick the icon shown for this driver.
+     */
+    private void btnBrowseIconActionPerformed(ActionEvent evt) {
         String fpath = UIUtils.openIconDlg(this, "");
         if (!StrUtils.isEmpty(fpath)) {
             txtIcon.setText(fpath);
         }
-    }//GEN-LAST:event_btnBrowseIconActionPerformed
+    }
 
-    private void txtDriverClassMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_txtDriverClassMouseClicked
+    /**
+     * offer the driver classes found in the selected jar in a popup menu, and
+     * store the picked one in the driver.
+     */
+    private void txtDriverClassMouseClicked(MouseEvent evt) {
         if (ObjectUtils.isNotEmpty(txtJarFile.getText())) {
             List<String> clazz = ClassUtils.getDrivers(txtJarFile.getText());
             if (ObjectUtils.isNotEmpty(clazz)) {
@@ -895,41 +880,58 @@ public class JDBDriverManager extends JDialog {
                 popup.show(txtDriverClass, evt.getX(), evt.getY());
             }
         }
-    }//GEN-LAST:event_txtDriverClassMouseClicked
+    }
 
-    private void btnDownJdbcActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDownJdbcActionPerformed
-        MavenExplorer me = MavenExplorer.getInstance();
-        EventQueue.invokeLater(() -> {
+    /**
+     * download the JDBC jar of the selected driver.
+     *
+     * <p>A driver that carries a Maven coordinate - every driver shipped with
+     * the application whose driver is published on Maven Central - is fetched
+     * straight from the repository, so that a fresh installation is one click
+     * away from a working connection. Everything else opens the maven explorer
+     * with the driver's default query as the initial search.</p>
+     */
+    private void btnDownJdbcActionPerformed(ActionEvent evt) {
+        EventQueue.invokeLater(() -> updateDriver(d -> {
+            SearchResponseItem item = SearchResponseItem.ofCoordinate(d.getMavenArtifact());
+            if (item != null) {
+                String stored = MavenExplorer.downloadJar(this, item);
+                if (stored != null)
+                    applyDownloadedJar(d, stored);
+                return;
+            }
+            MavenExplorer me = MavenExplorer.getInstance();
             me.setModal(true);
             me.setLocationRelativeTo(this);
-            updateDriver(d -> {
-                String query = d.getDefaultQuery();
-                if (!StrUtils.isEmpty(query))
-                    me.setQuery(d.getDefaultQuery());
-                me.setVisible(true);
-                if (me.changed) {
-                    txtJarFile.setText(me.saveLocation);
-                    d.setJdbcJar(me.saveLocation);
-                }
-            });
-        });
-//        String groupId = txtGroupId.getText();
-//        String artifactId = txtArtifactId.getText();
-//        String vInclude = txtVersionInclude.getText();
-//        if (ObjectUtils.isNotEmpty(groupId) && ObjectUtils.isNotEmpty(artifactId)) {
-////            btnDownJdbc.setEnabled(false);
-////            EventQueue.invokeLater(() -> {
-////                Pair<String, String> res = MavenUtils.downloadMaven(groupId, artifactId, vInclude);
-////                if (res != null) {
-////                    txtVersion.setText((String)res.getFirst());
-////                    txtJarFile.setText((String)res.getSecond());
-////                }
-////                btnDownJdbc.setEnabled(true);
-////            });
-//        }
-    }//GEN-LAST:event_btnDownJdbcActionPerformed
+            String query = d.getDefaultQuery();
+            if (!StrUtils.isEmpty(query))
+                me.setQuery(query);
+            me.setVisible(true);
+            if (me.changed)
+                applyDownloadedJar(d, me.saveLocation);
+        }));
+    }
 
-    private void btnBrowseJarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBrowseJarActionPerformed
+    /**
+     * store the jar a download produced in the driver and show it in the
+     * editor. The driver list is repainted as well: the driver has stopped
+     * missing its jar.
+     *
+     * @param driver the driver the jar belongs to
+     * @param stored the location of the jar, relative to the user data directory
+     */
+    private void applyDownloadedJar(JDBDriver driver, String stored) {
+        txtJarFile.setText(stored);
+        driver.setJdbcJar(stored);
+        lstDrivers.repaint();
+    }
+
+    /**
+     * pick the JDBC jar, filtered to jar and zip files and starting in the
+     * driver directory. A jar below the user data or the installation directory
+     * is stored relative to it.
+     */
+    private void btnBrowseJarActionPerformed(ActionEvent evt) {
         JFileChooser fc = new JFileChooser();
         fc.setCurrentDirectory(AppDirs.driversDir());
         fc.addChoosableFileFilter(new FileFilter() {
@@ -960,108 +962,120 @@ public class JDBDriverManager extends JDialog {
             String relative = AppDirs.relativize(fc.getSelectedFile().getAbsolutePath());
             this.txtJarFile.setText(relative);
             updateDriver(d -> d.setJdbcJar(relative));
+            // the driver may just have stopped missing its jar
+            lstDrivers.repaint();
         }
-    }//GEN-LAST:event_btnBrowseJarActionPerformed
-
-    private void chkTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTableCommentsActionPerformed
-        txtTableComments.setEnabled(chkTableComments.isSelected());
-    }//GEN-LAST:event_chkTableCommentsActionPerformed
-
-    private void chkColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnCommentsActionPerformed
-        txtColumnComments.setEnabled(chkColumnComments.isSelected());
-    }//GEN-LAST:event_chkColumnCommentsActionPerformed
-
-    private void btnTableCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTableCommentsActionPerformed
-        // TODO add your handling code here:
-        PlatformUtils.openDoc("custom-queries.md#get-table-comments-sql");
-    }//GEN-LAST:event_btnTableCommentsActionPerformed
-
-    private void btnColumnCommentsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnCommentsActionPerformed
-        // TODO add your handling code here:
-        PlatformUtils.openDoc("custom-queries.md#get-column-comments-sql");
-    }//GEN-LAST:event_btnColumnCommentsActionPerformed
-
-    private void chkTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkTablesActionPerformed
-        txtTables.setEnabled(chkTables.isSelected());
-    }//GEN-LAST:event_chkTablesActionPerformed
-
-    private void btnTablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTablesActionPerformed
-        // TODO add your handling code here:
-        PlatformUtils.openDoc("custom-queries.md#get-table-list-sql");
-    }//GEN-LAST:event_btnTablesActionPerformed
-
-    private void chkColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chkColumnsActionPerformed
-        txtColumns.setEnabled(chkColumns.isSelected());
-    }//GEN-LAST:event_chkColumnsActionPerformed
-
-    private void btnColumnsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnColumnsActionPerformed
-        // TODO add your handling code here:
-        PlatformUtils.openDoc("custom-queries.md#get-column-list-sql");
-    }//GEN-LAST:event_btnColumnsActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        UIUtils.setFlatDarkLaf();
-        EventQueue.invokeLater(() -> {
-            JDBDriverManager instance = getInstance();
-            instance.setLocationRelativeTo(null);
-            instance.setVisible(true);
-            System.exit(0);
-        });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnBrowseIcon;
-    private javax.swing.JButton btnBrowseJar;
-    private javax.swing.JButton btnCancel;
-    private javax.swing.JButton btnCloneDriver;
-    private javax.swing.JButton btnColumnComments;
-    private javax.swing.JButton btnColumns;
-    private javax.swing.JButton btnDelDriver;
-    private javax.swing.JButton btnDelProp;
-    private javax.swing.JButton btnDownJdbc;
-    private javax.swing.JButton btnIconHelp;
-    private javax.swing.JButton btnNewDriver;
-    private javax.swing.JButton btnSave;
-    private javax.swing.JButton btnTableComments;
-    private javax.swing.JButton btnTables;
-    private javax.swing.JCheckBox chkColumnComments;
-    private javax.swing.JCheckBox chkColumns;
-    private javax.swing.JCheckBox chkNoAuth;
-    private javax.swing.JCheckBox chkTableComments;
-    private javax.swing.JCheckBox chkTables;
-    private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
-    private javax.swing.JLabel jLabel11;
-    private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel8;
-    private javax.swing.JLabel jLabel9;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JPanel jPanel4;
-    private javax.swing.JPanel jPanel5;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JScrollPane jScrollPane3;
-    private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JScrollPane jScrollPane5;
-    private javax.swing.JScrollPane jScrollPane6;
-    private javax.swing.JScrollPane jScrollPane7;
-    private javax.swing.JTabbedPane jTabbedPane1;
-    private javax.swing.JList<String> lstDrivers;
-    private javax.swing.JTable tabProps;
-    private javax.swing.JTextArea txtColumnComments;
-    private javax.swing.JTextArea txtColumns;
-    private javax.swing.JTextField txtDriverClass;
-    private javax.swing.JTextField txtDriverName;
-    private javax.swing.JTextField txtIcon;
-    private javax.swing.JTextField txtJarFile;
-    private javax.swing.JTextArea txtTableComments;
-    private javax.swing.JTextArea txtTables;
-    private javax.swing.JTextField txtUrlTemplate;
-    // End of variables declaration//GEN-END:variables
+    /**
+     * enable the table comment query along with its check box.
+     */
+    private void chkTableCommentsActionPerformed(ActionEvent evt) {
+        txtTableComments.setEnabled(chkTableComments.isSelected());
+    }
+
+    /**
+     * enable the column comment query along with its check box.
+     */
+    private void chkColumnCommentsActionPerformed(ActionEvent evt) {
+        txtColumnComments.setEnabled(chkColumnComments.isSelected());
+    }
+
+    /**
+     * open the documentation of the table comment query.
+     */
+    private void btnTableCommentsActionPerformed(ActionEvent evt) {
+        PlatformUtils.openDoc("custom-queries.md#get-table-comments-sql");
+    }
+
+    /**
+     * open the documentation of the column comment query.
+     */
+    private void btnColumnCommentsActionPerformed(ActionEvent evt) {
+        PlatformUtils.openDoc("custom-queries.md#get-column-comments-sql");
+    }
+
+    /**
+     * enable the table list query along with its check box.
+     */
+    private void chkTablesActionPerformed(ActionEvent evt) {
+        txtTables.setEnabled(chkTables.isSelected());
+    }
+
+    /**
+     * open the documentation of the table list query.
+     */
+    private void btnTablesActionPerformed(ActionEvent evt) {
+        PlatformUtils.openDoc("custom-queries.md#get-table-list-sql");
+    }
+
+    /**
+     * enable the column list query along with its check box.
+     */
+    private void chkColumnsActionPerformed(ActionEvent evt) {
+        txtColumns.setEnabled(chkColumns.isSelected());
+    }
+
+    /**
+     * open the documentation of the column list query.
+     */
+    private void btnColumnsActionPerformed(ActionEvent evt) {
+        PlatformUtils.openDoc("custom-queries.md#get-column-list-sql");
+    }
+
+    // the frame of the dialog
+    private JTabbedPane jTabbedPane1;
+    private JButton btnSave;
+    private JButton btnCancel;
+
+    // the driver list on the left
+    private JPanel jPanel1;
+    private JPanel jPanel3;
+    private JLabel jLabel1;
+    private JScrollPane jScrollPane1;
+    private JList<String> lstDrivers;
+    private JButton btnNewDriver;
+    private JButton btnCloneDriver;
+    private JButton btnDelDriver;
+
+    // the editor of the selected driver
+    private JLabel jLabel3;
+    private JTextField txtDriverName;
+    private JLabel jLabel4;
+    private JTextField txtJarFile;
+    private JButton btnBrowseJar;
+    private JButton btnDownJdbc;
+    private JLabel jLabel8;
+    private JTextField txtUrlTemplate;
+    private JLabel jLabel9;
+    private JTextField txtDriverClass;
+    private JLabel jLabel10;
+    private JTextField txtIcon;
+    private JButton btnBrowseIcon;
+    private JButton btnIconHelp;
+    private JCheckBox chkNoAuth;
+    private JLabel jLabel11;
+    private JScrollPane jScrollPane2;
+    private JTable tabProps;
+    private JButton btnDelProp;
+
+    // the custom metadata queries
+    private JScrollPane jScrollPane3;
+    private JPanel jPanel5;
+    private JCheckBox chkTableComments;
+    private JButton btnTableComments;
+    private JScrollPane jScrollPane5;
+    private JTextArea txtTableComments;
+    private JCheckBox chkColumnComments;
+    private JButton btnColumnComments;
+    private JScrollPane jScrollPane4;
+    private JTextArea txtColumnComments;
+    private JCheckBox chkTables;
+    private JButton btnTables;
+    private JScrollPane jScrollPane6;
+    private JTextArea txtTables;
+    private JCheckBox chkColumns;
+    private JButton btnColumns;
+    private JScrollPane jScrollPane7;
+    private JTextArea txtColumns;
 }

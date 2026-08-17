@@ -5,8 +5,9 @@
             "stockItem": true,
             "name": "Oracle",
             "driverClass": "oracle.jdbc.OracleDriver",
-            "urlTemplate": "jdbc:oracle:thin:@<databaseHost>:1521:<database>",
+            "urlTemplate": "jdbc:oracle:thin:@//<databaseHost>:1521/<database>",
             "defaultQuery": "ojdbc8",
+            "mavenArtifact": "com.oracle.database.jdbc:ojdbc11:23.26.3.0.0",
             "icon": "stock:oracle.png",
             "props": {
                 "remarksReporting": "true"
@@ -18,17 +19,21 @@
             "driverClass": "org.postgresql.Driver",
             "urlTemplate": "jdbc:postgresql://<databaseHost>:5432/<database>",
             "defaultQuery": "postgresql",
+            "mavenArtifact": "org.postgresql:postgresql:42.7.13",
             "icon": "stock:postgresql.png",
             "props": {}
         },
         {
             "stockItem": true,
             "name": "MySQL",
-            "driverClass": "com.mysql.jdbc.Driver",
+            "driverClass": "com.mysql.cj.jdbc.Driver",
             "urlTemplate": "jdbc:mysql://<databaseHost>:3306/<database>",
-            "defaultQuery": "mysql-connector-java",
+            "defaultQuery": "mysql-connector-j",
+            "mavenArtifact": "com.mysql:mysql-connector-j:26.7.0",
             "icon": "stock:mysql.png",
-            "props": {}
+            "props": {
+                "useInformationSchema": "true"
+            }
         },
         {
             "stockItem": true,
@@ -36,6 +41,7 @@
             "driverClass": "org.sqlite.JDBC",
             "urlTemplate": "jdbc:sqlite:<database file>",
             "defaultQuery": "sqlite-jdbc",
+            "mavenArtifact": "org.xerial:sqlite-jdbc:3.53.2.1",
             "noAuth": true,
             "icon": "stock:sqlite.png",
             "props": {}
@@ -46,6 +52,8 @@
             "driverClass": "org.h2.Driver",
             "urlTemplate": "jdbc:h2:<database file>",
             "defaultQuery": "h2database",
+            "mavenArtifact": "com.h2database:h2:2.4.240",
+            "jdbcJar": "drivers/h2-2.4.240.jar",
             "noAuth": true,
             "icon": "stock:h2.png",
             "useTables": true,
@@ -58,6 +66,8 @@
             "driverClass": "org.h2.Driver",
             "urlTemplate": "jdbc:h2:tcp://<databaseHost>[:9092]/<database file>",
             "defaultQuery": "h2database",
+            "mavenArtifact": "com.h2database:h2:2.4.240",
+            "jdbcJar": "drivers/h2-2.4.240.jar",
             "icon": "stock:h2.png",
             "useTables": true,
             "tablesSql": "select TABLE_CATALOG as \"TABLE_CAT\", TABLE_SCHEMA as \"TABLE_SCHEM\", TABLE_NAME, CASE WHEN TABLE_TYPE\u003d\u0027BASE TABLE\u0027 THEN \u0027TABLE\u0027 ELSE TABLE_TYPE END AS \"TABLE_TYPE\", REMARKS\nfrom information_schema.tables\nwhere TABLE_CATALOG\u003d\u0027${catalog}\u0027 and TABLE_SCHEMA\u003d\u0027${schema}\u0027",
@@ -69,6 +79,7 @@
             "driverClass": "com.microsoft.sqlserver.jdbc.SQLServerDriver",
             "urlTemplate": "jdbc:sqlserver://<databaseHost>:1433;databaseName=<database>",
             "defaultQuery": "mssql-jdbc",
+            "mavenArtifact": "com.microsoft.sqlserver:mssql-jdbc:13.4.0.jre11",
             "icon": "stock:mssql.png",
             "useTableComments": true,
             "tableCommentsSql": "SELECT OBJNAME, cast(value as varchar(8000)) as VALUE \nFROM fn_listextendedproperty ('MS_DESCRIPTION','schema','${schema}','table',null,null,null)",
@@ -85,6 +96,7 @@
             "driverClass": "org.mariadb.jdbc.Driver",
             "urlTemplate": "jdbc:mariadb://<databaseHost>:3306/<database>",
             "defaultQuery": "mariadb-java-client",
+            "mavenArtifact": "org.mariadb.jdbc:mariadb-java-client:3.5.10",
             "icon": "stock:mariadb.png",
             "props": {}
         },
@@ -94,6 +106,7 @@
             "driverClass": "com.mongodb.jdbc.MongoDriver",
             "urlTemplate": "jdbc:mongodb://<databaseHost>:3306/<database>",
             "defaultQuery": "mongodb-jdbc",
+            "mavenArtifact": "org.mongodb:mongodb-jdbc:3.0.8",
             "icon": "stock:mongodb.png",
             "props": {}
         },

@@ -32,16 +32,18 @@
   <entry key="connectionManager.jLabel6.text">ユーザーパスワード:</entry>
   <entry key="connectionManager.jLabel12.text">アイコン:</entry>
   <entry key="connectionManager.btnBrowseIcon.toolTipText">アイコンファイルを参照</entry>
+  <entry key="connectionManager.txtIcon.toolTipText">この接続のアイコンです。内蔵アイコンは stock:名前.png、Font Awesome アイコンは fa:名前、色の丸は color:色名、ほかに http URL や画像ファイルのパスを指定できます。</entry>
   <entry key="connectionManager.jLabel7.text">接続プロパティ:</entry>
   <entry key="connectionManager.tabProps.col.key">キー</entry>
   <entry key="connectionManager.tabProps.col.value">値</entry>
-  <entry key="connectionManager.chkKeepAlive.text">下の文を実行して接続を維持する。実行間隔</entry>
-  <entry key="connectionManager.jLabel15.text">秒。</entry>
+  <entry key="connectionManager.tabProps.toolTipText">JDBC ドライバーに渡すプロパティです。最後の空行に入力すると行が追加されます。</entry>
+  <entry key="connectionManager.chkKeepAlive.text">接続を維持するために下の文を</entry>
+  <entry key="connectionManager.jLabel15.text">秒ごとに実行する。</entry>
 
   <!-- templates tab -->
   <entry key="connectionManager.tabTemplates.col.name">名前</entry>
   <entry key="connectionManager.tabTemplates.col.templateFile">テンプレートファイル</entry>
-  <entry key="connectionManager.tabTemplates.col.outTemplate">出力テンプレート</entry>
+  <entry key="connectionManager.tabTemplates.col.outTemplate">出力ファイル名</entry>
   <entry key="connectionManager.btnTemplateHelp.toolTipText">テンプレートのヘルプ</entry>
   <entry key="connectionManager.btnPresets.text">プリセット</entry>
   <entry key="connectionManager.btnPresets.toolTipText">テンプレートプリセットの管理</entry>
@@ -56,8 +58,8 @@
   <entry key="connectionManager.jLabel8.text">テンプレートファイル:</entry>
   <entry key="connectionManager.txtTemplateFile.toolTipText">テンプレートファイルの場所</entry>
   <entry key="connectionManager.btnBrowseTemplate.toolTipText">テンプレートファイルを参照</entry>
-  <entry key="connectionManager.jLabel13.text">出力ファイル名テンプレート:</entry>
-  <entry key="connectionManager.txtOutTemplate.toolTipText">出力ファイル名のテンプレート</entry>
+  <entry key="connectionManager.jLabel13.text">出力ファイル名:</entry>
+  <entry key="connectionManager.txtOutTemplate.toolTipText">このテンプレートから生成されるファイルの名前です。テンプレート変数を使えます。</entry>
 
   <!-- options tab -->
   <entry key="connectionManager.jLabel11.text">出力ディレクトリ:</entry>
@@ -65,6 +67,7 @@
   <entry key="connectionManager.jLabel16.text">カスタム変数:</entry>
   <entry key="connectionManager.tabVars.col.name">名前</entry>
   <entry key="connectionManager.tabVars.col.value">値</entry>
+  <entry key="connectionManager.tabVars.toolTipText">テンプレートで使えるユーザー変数です。最後の空行に入力すると行が追加されます。</entry>
 
   <!-- default names of newly created connections -->
   <entry key="connectionManager.msg.newConnection">新しい接続</entry>
@@ -79,7 +82,6 @@
   <entry key="connectionManager.msg.passwordRequired">データベースのユーザーパスワードを入力してください。</entry>
   <entry key="connectionManager.msg.keepAliveQueryRequired">接続維持用の SQL 文を入力してください。</entry>
   <entry key="connectionManager.msg.keepAliveSecRequired">接続維持文の実行間隔を入力してください。</entry>
-  <entry key="connectionManager.msg.outputDirRequired">出力ディレクトリを入力してください。</entry>
   <entry key="connectionManager.msg.driverIncomplete">ドライバーの情報が不完全です。</entry>
 
   <!-- removing a connection -->

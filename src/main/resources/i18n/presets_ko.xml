@@ -17,11 +17,12 @@
   <entry key="presets.btnSaveTemplate.text">적용</entry>
   <entry key="presets.jLabel9.text">템플릿 이름:</entry>
   <entry key="presets.jLabel8.text">템플릿 파일:</entry>
-  <entry key="presets.jLabel13.text">출력 파일명 템플릿:</entry>
+  <entry key="presets.jLabel13.text">출력 파일명:</entry>
 
   <!-- bottom bar -->
-  <entry key="presets.btnNewFromConn.text">현재 연결로 프리셋 만들기</entry>
+  <entry key="presets.btnNewFromConn.text">현재 연결에서 가져오기</entry>
   <entry key="presets.btnApply.text">현재 연결에 적용</entry>
+  <entry key="presets.btnApply.toolTipText">현재 연결의 템플릿 목록을 이 프리셋의 템플릿으로 교체합니다. 기존 목록은 병합되지 않고 사라집니다.</entry>
   <entry key="presets.btnSave.text">저장</entry>
   <entry key="presets.btnCancel.text">취소</entry>
 

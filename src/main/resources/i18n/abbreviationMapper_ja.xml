@@ -6,9 +6,9 @@
   <entry key="abbreviationMapper.jLabel1.text">略語マッピング</entry>
   <entry key="abbreviationMapper.tblMapping.toolTipText">オブジェクト(テーブル、列)の名前に適用される略語マッピングルールです。</entry>
   <entry key="abbreviationMapper.tblMapping.column.apply">適用</entry>
-  <entry key="abbreviationMapper.tblMapping.column.totalName">正式名</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">名前全体のみ</entry>
   <entry key="abbreviationMapper.tblMapping.column.abbreviation">略語</entry>
-  <entry key="abbreviationMapper.tblMapping.column.replaceTo">置換後の文字列</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">置換後</entry>
   <entry key="abbreviationMapper.btnDel.toolTipText">選択したマッピングを削除します</entry>
   <entry key="abbreviationMapper.btnOk.text">OK</entry>
 

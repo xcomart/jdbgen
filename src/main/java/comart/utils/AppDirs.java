@@ -71,14 +71,21 @@ public final class AppDirs {
     /** name of the configuration file, below {@link #userDataDir()}. */
     public static final String CONFIG_NAME = "config.json";
 
+    /** file name ending a code source location has to have to be a jar. */
     private static final String JAR_SUFFIX = ".jar";
 
+    /**
+     * this class only holds <code>static</code> methods.
+     */
     private AppDirs() {
     }
 
     /**
      * the directory the application writes to, created when it is not there
      * yet.
+     *
+     * @return the user data directory. It is returned even when it could not be
+     *         created, so that the failure is reported where the file is used.
      */
     public static File userDataDir() {
         File dir = configuredUserDataDir();
@@ -88,6 +95,10 @@ public final class AppDirs {
     }
 
     /**
+     * name a file the application writes.
+     *
+     * @param name
+     *            name of the file, relative to the user data directory.
      * @return <code>name</code> below {@link #userDataDir()}.
      */
     public static File userDataFile(String name) {
@@ -96,6 +107,8 @@ public final class AppDirs {
 
     /**
      * the directory of the JDBC driver jars, created when it is not there yet.
+     *
+     * @return {@link #DRIVERS_DIR} below {@link #userDataDir()}.
      */
     public static File driversDir() {
         File dir = userDataFile(DRIVERS_DIR);
@@ -106,6 +119,9 @@ public final class AppDirs {
 
     /**
      * the user data directory as it is configured, without creating it.
+     *
+     * @return the override of {@value #DATA_DIR_PROPERTY} when there is one,
+     *         the per user location of the operating system otherwise.
      */
     static File configuredUserDataDir() {
         String override = System.getProperty(DATA_DIR_PROPERTY);
@@ -123,6 +139,8 @@ public final class AppDirs {
      * @param appData value of <code>%APPDATA%</code>, Windows only
      * @param xdgConfigHome value of <code>$XDG_CONFIG_HOME</code>, Unix only
      * @param userHome the user's home directory
+     * @return the absolute {@value #APP_NAME} directory below the per user
+     *         location of <code>os</code>
      */
     static File defaultUserDataDir(PlatformUtils.OSType os, String appData,
             String xdgConfigHome, String userHome) {
@@ -145,6 +163,9 @@ public final class AppDirs {
     /**
      * the directory the read only files of the release live in: the directory
      * of the running jar, or the working directory when there is no jar.
+     *
+     * @return the installation resource base, overridden by
+     *         {@value #RESOURCE_BASE_PROPERTY} when that is set.
      */
     public static File installResourceBase() {
         String override = System.getProperty(RESOURCE_BASE_PROPERTY);
@@ -156,6 +177,10 @@ public final class AppDirs {
     }
 
     /**
+     * name one of the read only files shipped with the release.
+     *
+     * @param name
+     *            name of the file, relative to the installation resource base.
      * @return <code>name</code> below {@link #installResourceBase()}.
      */
     public static File installResourceFile(String name) {
@@ -165,6 +190,9 @@ public final class AppDirs {
     /**
      * the jar this application runs from, or <code>null</code> when it is
      * started from class files (a development run).
+     *
+     * @return the jar file, or <code>null</code> when the code source is no jar
+     *         or cannot be read.
      */
     public static File runningJar() {
         try {
@@ -180,7 +208,11 @@ public final class AppDirs {
         return null;
     }
 
-    /** the working directory the application was started from. */
+    /**
+     * the working directory the application was started from.
+     *
+     * @return the absolute <code>user.dir</code>.
+     */
     public static File workingDir() {
         return new File(System.getProperty("user.dir", ".")).getAbsoluteFile();
     }
@@ -194,6 +226,7 @@ public final class AppDirs {
      * afterwards, which is what a configuration carried over from an unpacked
      * archive refers to.</p>
      *
+     * @param path the configured path, absolute or relative
      * @return the user data candidate when the path names nothing that exists,
      *         so that a failure names the location the file is expected in.
      *         <code>null</code> for an empty path.
@@ -216,6 +249,9 @@ public final class AppDirs {
     /**
      * {@link #resolve(String)} as a path string, for the callers that hand it
      * on to a file API taking a name.
+     *
+     * @param path the configured path, absolute or relative
+     * @return the resolved path, or <code>path</code> itself when it is empty
      */
     public static String resolvePath(String path) {
         File f = resolve(path);
@@ -236,6 +272,7 @@ public final class AppDirs {
      * "open the output directory" after a generation run has something to
      * open even when no file was written.</p>
      *
+     * @param path the configured output directory, absolute or relative
      * @return the empty path it was given, so that "no output directory" stays
      *         "no output directory".
      */
@@ -253,6 +290,11 @@ public final class AppDirs {
      * the two known directories relative to it, so that the configuration
      * keeps working when the application is reinstalled somewhere else.
      * Anything else is stored as the absolute path it is.
+     *
+     * @param path the path to store, as the file chooser reported it
+     * @return the path relative to the user data directory or the installation,
+     *         written with <code>'/'</code> separators whatever the platform
+     *         is; the absolute path otherwise, and an empty path unchanged
      */
     public static String relativize(String path) {
         if (StrUtils.isEmpty(path))
@@ -265,6 +307,8 @@ public final class AppDirs {
     }
 
     /**
+     * @param dir the directory to relativize against
+     * @param f the file to relativize
      * @return the path of <code>f</code> relative to <code>dir</code>, or
      *         <code>null</code> when it is not below it.
      */
@@ -289,6 +333,9 @@ public final class AppDirs {
      * are not asked for, a file is actually created: a directory below
      * <code>C:\Program Files</code> looks writable to
      * {@link File#canWrite()} while every write ends up virtualized or denied.
+     *
+     * @param dir the directory to test, may be <code>null</code>
+     * @return a file could be created in <code>dir</code> or not
      */
     public static boolean isWritable(File dir) {
         if (dir == null || !dir.isDirectory())
@@ -309,6 +356,8 @@ public final class AppDirs {
     /**
      * whether the installed files can be replaced, which is what the automatic
      * update needs.
+     *
+     * @return {@link #installResourceBase()} is writable or not.
      */
     public static boolean isInstallWritable() {
         return isWritable(installResourceBase());
@@ -342,6 +391,8 @@ public final class AppDirs {
     /**
      * the directories a previous release may have kept its files in: the
      * installation and the working directory the application was started from.
+     *
+     * @return the candidate directories, without duplicates.
      */
     static List<File> legacySources() {
         List<File> res = new ArrayList<>();
@@ -356,6 +407,8 @@ public final class AppDirs {
      * copy <code>config.json</code>, its backups and the driver jars of
      * <code>from</code> into <code>to</code>.
      *
+     * @param from the directory of the previous release
+     * @param to the user data directory
      * @return <code>true</code> when the configuration itself was copied.
      */
     static boolean migrateLegacyData(File from, File to) {
@@ -381,6 +434,13 @@ public final class AppDirs {
         return copyFile(config, new File(to, CONFIG_NAME));
     }
 
+    /**
+     * copy one file, creating the parent directories of the destination.
+     *
+     * @param src the file to copy
+     * @param dst the file to write, replaced when it exists
+     * @return <code>true</code> when the copy succeeded; a failure is logged.
+     */
     private static boolean copyFile(File src, File dst) {
         try {
             Files.createDirectories(dst.toPath().toAbsolutePath().getParent());
@@ -395,6 +455,9 @@ public final class AppDirs {
     /**
      * copy a directory tree, keeping whatever cannot be copied out of the way
      * of the rest - a driver jar that is missing is reported when it is used.
+     *
+     * @param src the directory to copy, ignored when it is none
+     * @param dst the directory to copy into, created when it is missing
      */
     private static void copyTree(File src, File dst) {
         if (!src.isDirectory())

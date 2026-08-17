@@ -26,13 +26,20 @@ package comart.tools.jdbgen.types.maven;
 import lombok.Data;
 
 /**
+ * The endpoints of the Maven repository the JDBC driver jars are searched in
+ * and downloaded from. Every path is appended to {@link #urlBase} to form the
+ * request URL.
  *
  * @author comart
  */
 @Data
 public class MavenConfig {
+    /** base URL of the repository, the other entries are appended to it. */
     private String urlBase;
+    /** path of the artifact search endpoint. */
     private String search;
+    /** path of the endpoint listing the versions of one artifact. */
     private String version;
+    /** path of the jar download, with the artifact path as the <code>${fpath}</code> variable. */
     private String download;
 }

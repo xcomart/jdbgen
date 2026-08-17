@@ -37,6 +37,7 @@ New to jdbgen? Install it, start it, and generate from the bundled
 | Document | Read this when you want to |
 |:---|:---|
 | [Building from Source](building.md) | Build, test or release jdbgen yourself |
+| [Database Integration Tests](integration-tests.md) | Run the tests that check jdbgen against real PostgreSQL, MySQL, MariaDB, SQL Server and Oracle servers |
 
 Issues and pull requests are welcome at
 [github.com/xcomart/jdbgen](https://github.com/xcomart/jdbgen).

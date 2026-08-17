@@ -24,9 +24,22 @@
 package comart.tools.jdbgen.types;
 
 /**
+ * Marker for model objects that can be rendered with an icon in the user
+ * interface. List and tree renderers look for this interface and decorate the
+ * cell with the icon named by {@link #getIcon()}.
  *
  * @author comart
  */
 public interface HasIcon {
+    /**
+     * icon locator of this item. Besides a plain file path, the following
+     * prefixed forms are understood by the icon loader: <code>stock:</code>
+     * for an icon bundled with the application, <code>fa:</code> for a Font
+     * Awesome glyph, <code>color:</code> for a solid color swatch and
+     * <code>http</code> for a remote image.
+     *
+     * @return icon locator, or <code>null</code>/empty when the item has no
+     *         icon.
+     */
     String getIcon();
 }

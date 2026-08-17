@@ -50,15 +50,32 @@ import java.util.Locale;
 public class UpdateApplier {
     /** how long to wait for the previous application to release its jar. */
     private static final long WAIT_MILLIS = 60_000L;
+    /** pause between two attempts to move a file that is still held open. */
     private static final long RETRY_MILLIS = 500L;
 
+    /** file name prefix of the application jar. */
     private static final String JAR_PREFIX = "jdbgen-";
+    /** file name suffix of the application jar. */
     private static final String JAR_SUFFIX = ".jar";
+    /** directory holding the dependencies, replaced as a whole. */
     private static final String LIB_DIR = "lib";
+    /** directory below the staging directory the previous version is moved to. */
     private static final String BACKUP_DIR = "backup";
+    /** sample database, only added when the installation has none. */
     private static final String SAMPLE_DB = "sample_h2.db.mv.db";
+    /** launcher scripts, which belong to the release and are always overwritten. */
     private static final String[] SCRIPTS = { "jdbgen.cmd", "jdbgen.sh" };
 
+    /**
+     * apply the update and start the new version. The staging directory is
+     * cleaned up afterwards either way; a failed update keeps the backup of
+     * the previous version around, because it may be the only copy left.
+     *
+     * @param args
+     *            the installation directory and the directory holding the
+     *            unpacked release, in that order. Fewer arguments only produce
+     *            a usage line in the log.
+     */
     public static void main(String[] args) {
         if (args.length < 2) {
             log("usage: UpdateApplier <installDir> <extractedDir>");
@@ -88,6 +105,8 @@ public class UpdateApplier {
      * edited - <code>config.json</code>, <code>drivers/</code>,
      * <code>output/</code>, the templates and the sample database - is kept.
      *
+     * @param installDir the installation directory to update in place.
+     * @param extractedDir the directory holding the unpacked release.
      * @param waitMillis how long to keep retrying while the previous
      *        application still holds its jar open.
      * @return <code>false</code> when nothing was applied; the installation is
@@ -154,6 +173,9 @@ public class UpdateApplier {
 
     /**
      * throw the half copied new version away and put the previous one back.
+     *
+     * @param installDir the installation directory being updated.
+     * @param backup the directory the previous version was moved to.
      */
     private static void rollback(File installDir, File backup) {
         for (File jar: listJars(installDir)) {
@@ -172,6 +194,9 @@ public class UpdateApplier {
      * still in place stays as it is - a file that could not be moved aside is
      * the original one. Anything that cannot be restored is logged and
      * skipped, there is nothing better left to do at that point.
+     *
+     * @param installDir the installation directory being updated.
+     * @param backup the directory the previous version was moved to.
      */
     private static void restoreBackup(File installDir, File backup) {
         try {
@@ -191,6 +216,13 @@ public class UpdateApplier {
     /**
      * start the new version from the installation directory. Windows gets
      * <code>javaw</code> so that no console window is left behind.
+     *
+     * @param installDir the installation directory, which becomes the working
+     *        directory of the new process.
+     * @return the started process.
+     * @throws IOException when the directory holds no
+     *         <code>jdbgen-*.jar</code>, or when the process cannot be
+     *         started.
      */
     static Process restart(File installDir) throws IOException {
         List<File> jars = listJars(installDir);
@@ -202,6 +234,13 @@ public class UpdateApplier {
         return pb.start();
     }
 
+    /**
+     * the java launcher to start the new version with.
+     *
+     * @return <code>javaw.exe</code> on Windows so that no console window
+     *         appears, falling back to <code>java.exe</code>, and
+     *         <code>java</code> everywhere else.
+     */
     private static File javaExecutable() {
         File bin = new File(System.getProperty("java.home", "."), "bin");
         boolean windows = System.getProperty("os.name", "")
@@ -220,6 +259,8 @@ public class UpdateApplier {
      * jar cannot delete itself while it runs on Windows; the application
      * removes what is left on its next start.
      *
+     * @param installDir the installation directory holding the staging
+     *        directory.
      * @param keepBackup leave the previous version in
      *        <code>.update/backup/</code> as well.
      */
@@ -239,6 +280,14 @@ public class UpdateApplier {
             log("the previous version is kept in " + new File(staging, BACKUP_DIR));
     }
 
+    /**
+     * rename <code>src</code> to <code>dst</code> without waiting for it to be
+     * released.
+     *
+     * @param src the file or directory to move.
+     * @param dst the target name.
+     * @throws IOException when the move fails.
+     */
     private static void move(File src, File dst) throws IOException {
         moveWithRetry(src, dst, 0);
     }
@@ -247,6 +296,12 @@ public class UpdateApplier {
      * rename <code>src</code>, retrying while the previous application still
      * holds it open. A directory that cannot be renamed at all is copied and
      * removed instead, which is what a move to another file system needs too.
+     *
+     * @param src the file or directory to move.
+     * @param dst the target name, replaced when it already exists.
+     * @param waitMillis how long to keep retrying before giving up.
+     * @throws IOException the last failure of the move, or an interruption
+     *         while waiting.
      */
     private static void moveWithRetry(File src, File dst, long waitMillis) throws IOException {
         long deadline = System.currentTimeMillis() + waitMillis;
@@ -278,8 +333,16 @@ public class UpdateApplier {
     }
 
     /**
+     * copy the whole directory tree below <code>src</code> into
+     * <code>dst</code>, creating the directories on the way.
+     *
+     * @param src the directory to copy; nothing happens when it cannot be
+     *        listed.
+     * @param dst the target directory, created when missing.
      * @param overwrite when <code>false</code>, files already present below
      *        <code>dst</code> are left untouched.
+     * @throws IOException when a directory cannot be created or a file cannot
+     *         be copied.
      */
     private static void copyTree(File src, File dst, boolean overwrite) throws IOException {
         File[] children = src.listFiles();
@@ -296,6 +359,13 @@ public class UpdateApplier {
         }
     }
 
+    /**
+     * copy a single file, creating the parent directory of the target first.
+     *
+     * @param src the file to copy.
+     * @param dst the target file, replaced when it already exists.
+     * @throws IOException when the parent cannot be created or the copy fails.
+     */
     private static void copyFile(File src, File dst) throws IOException {
         Path parent = dst.toPath().toAbsolutePath().getParent();
         if (parent != null)
@@ -303,6 +373,13 @@ public class UpdateApplier {
         Files.copy(src.toPath(), dst.toPath(), StandardCopyOption.REPLACE_EXISTING);
     }
 
+    /**
+     * delete a file or a whole directory tree, logging what cannot be removed
+     * instead of failing.
+     *
+     * @param f file or directory to remove, may be <code>null</code> or
+     *        already gone. A symbolic link is removed without being followed.
+     */
     private static void deleteRecursively(File f) {
         if (f == null || !f.exists())
             return;
@@ -317,6 +394,13 @@ public class UpdateApplier {
             log("cannot delete " + f);
     }
 
+    /**
+     * every <code>jdbgen-*.jar</code> of <code>dir</code>, sorted by name.
+     *
+     * @param dir directory to look into, may be <code>null</code>.
+     * @return the matching files, empty when <code>dir</code> is
+     *         <code>null</code> or holds none.
+     */
     private static List<File> listJars(File dir) {
         List<File> res = new ArrayList<>();
         File[] files = dir == null ? null : dir.listFiles();
@@ -331,14 +415,23 @@ public class UpdateApplier {
         return res;
     }
 
+    /** time stamp every log line is prefixed with. */
     private static final SimpleDateFormat LOG_TIME =
             new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
+    /**
+     * write a time stamped line to the standard output, which the starting
+     * process redirects into <code>.update/update.log</code>. It is flushed
+     * right away so that nothing is lost when the JVM ends abruptly.
+     *
+     * @param message the line to write.
+     */
     private static void log(String message) {
         System.out.println(LOG_TIME.format(new Date()) + " " + message);
         System.out.flush();
     }
 
+    /** this class is never instantiated. */
     private UpdateApplier() {
     }
 }

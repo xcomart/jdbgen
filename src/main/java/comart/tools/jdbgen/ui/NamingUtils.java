@@ -27,16 +27,49 @@ import comart.tools.jdbgen.types.JDBListBase;
 import java.util.List;
 
 /**
+ * naming helpers for the list based editors of the user interface. The
+ * dialogs which manage lists of named items(connections, templates and so
+ * on) use these methods to keep the <code>name</code> property of every
+ * <code>JDBListBase</code> element unique inside its list.
  *
  * @author comart
  */
 public class NamingUtils {
+    /**
+     * check whether an item named <code>name</code> is already contained in
+     * <code>list</code>.
+     *
+     * @param list
+     *            list of items to be searched.
+     * @param name
+     *            name to be looked up, compared with
+     *            <code>JDBListBase.getName()</code>, may be <code>null</code>.
+     * @return <code>true</code> if any element of <code>list</code> carries
+     *         the given name, <code>false</code> otherwise. A name that is not
+     *         there collides with nothing, not even with an element which
+     *         carries no name either.
+     */
     public static boolean nameExists(List<? extends JDBListBase> list, String name) {
+        if (name == null)
+            return false;
         return list.stream().anyMatch((d) -> {
             return name.equals(d.getName());
         });
     }
 
+    /**
+     * build a name which does not collide with any item of <code>list</code>.
+     * <code>name</code> itself is returned when it is still unused, otherwise
+     * a counter is appended as <code>name + " - " + count</code>, starting at
+     * <code>0</code> and increased until the resulting name is free.
+     *
+     * @param list
+     *            list the new name has to be unique in.
+     * @param name
+     *            preferred name.
+     * @return <code>name</code>, or a suffixed variant of it which no element
+     *         of <code>list</code> uses yet.
+     */
     public static String nextNameOf(List<? extends JDBListBase> list, String name) {
         int count = 0;
 

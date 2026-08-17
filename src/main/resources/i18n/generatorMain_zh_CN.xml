@@ -6,11 +6,26 @@
   <!-- window chrome -->
   <entry key="generatorMain.title">JDBGen 主窗口</entry>
 
+  <!-- menu bar -->
+  <entry key="generatorMain.menu.file">文件</entry>
+  <entry key="generatorMain.menu.file.generate">生成</entry>
+  <entry key="generatorMain.menu.file.close">关闭</entry>
+  <entry key="generatorMain.menu.tools">工具</entry>
+  <entry key="generatorMain.menu.tools.connectionManager">连接管理…</entry>
+  <entry key="generatorMain.menu.tools.driverManager">驱动管理…</entry>
+  <entry key="generatorMain.menu.tools.abbreviationMapper">缩写映射…</entry>
+  <entry key="generatorMain.menu.view">视图</entry>
+  <entry key="generatorMain.menu.view.darkUI">深色主题</entry>
+  <entry key="generatorMain.menu.view.language">语言</entry>
+  <entry key="generatorMain.menu.help">帮助</entry>
+  <entry key="generatorMain.menu.help.about">关于 JDBGen</entry>
+  <entry key="generatorMain.menu.help.templateReference">模板参考</entry>
+
   <!-- connection bar -->
   <entry key="generatorMain.jLabel2.text">连接</entry>
   <entry key="generatorMain.btnManageConn.text">管理</entry>
   <entry key="generatorMain.btnMapper.text">缩写映射</entry>
-  <entry key="generatorMain.btnAck.toolTipText">关于本程序</entry>
+  <entry key="generatorMain.btnAck.toolTipText">关于 JDBGen</entry>
 
   <!-- catalog/schema pane -->
   <entry key="generatorMain.jLabel1.text">目录/模式</entry>
@@ -19,21 +34,37 @@
   <!-- table pane -->
   <entry key="generatorMain.jLabel5.text">表</entry>
   <entry key="generatorMain.chkShowView.text">显示视图</entry>
+  <entry key="generatorMain.txtTableFilter.placeholder">筛选表…</entry>
+  <entry key="generatorMain.lstTables.popup.selectAll">全选</entry>
+  <entry key="generatorMain.lstTables.popup.clearSelection">清除选择</entry>
 
   <!-- generation options -->
   <entry key="generatorMain.jLabel4.text">生成选项</entry>
   <entry key="generatorMain.jLabel6.text">模板</entry>
+  <entry key="generatorMain.tabTemplates.emptyHint">右键单击以添加模板</entry>
   <entry key="generatorMain.tabTemplates.column.select">选择</entry>
   <entry key="generatorMain.tabTemplates.column.name">名称</entry>
   <entry key="generatorMain.tabTemplates.column.templateFile">模板文件</entry>
-  <entry key="generatorMain.tabTemplates.column.outTemplate">输出模板</entry>
+  <entry key="generatorMain.tabTemplates.column.outTemplate">输出文件名</entry>
+  <entry key="generatorMain.tabTemplates.header.toolTipText">对每个选中的表运行的模板。输出文件名列可以使用模板变量，例如 {0}。在列表中右键单击可以添加、编辑或删除模板。</entry>
+  <entry key="generatorMain.tabTemplates.popup.add">添加模板…</entry>
+  <entry key="generatorMain.tabTemplates.popup.edit">编辑模板…</entry>
+  <entry key="generatorMain.tabTemplates.popup.delete">删除模板</entry>
+  <entry key="generatorMain.tabTemplates.popup.presets">模板预设…</entry>
+  <entry key="generatorMain.template.add.title">添加模板</entry>
+  <entry key="generatorMain.template.edit.title">编辑模板</entry>
+  <entry key="generatorMain.template.name">名称：</entry>
+  <entry key="generatorMain.template.file">模板文件：</entry>
+  <entry key="generatorMain.template.outTemplate">输出文件名：</entry>
   <entry key="generatorMain.jLabel11.text">输出目录：</entry>
+  <entry key="generatorMain.txtOutputDir.toolTipText">写入生成文件的目录。相对路径以用户数据目录为基准解析；若其中不存在，则以安装目录为基准。</entry>
   <entry key="generatorMain.jLabel14.text">作者名称：</entry>
   <entry key="generatorMain.jLabel15.text">缩写：</entry>
   <entry key="generatorMain.chkApplyAbbr.text">对所有名称字段应用缩写规则。</entry>
   <entry key="generatorMain.jLabel16.text">自定义变量：</entry>
   <entry key="generatorMain.tabVars.column.name">名称</entry>
   <entry key="generatorMain.tabVars.column.value">值</entry>
+  <entry key="generatorMain.tabVars.toolTipText">可在模板中使用的自定义变量。在最后一个空行中输入即可新增一行。</entry>
 
   <!-- bottom bar -->
   <entry key="generatorMain.chkDarkUI.text">深色主题</entry>
@@ -50,6 +81,7 @@
   <entry key="generatorMain.msg.connectFirst">请先连接到数据库。</entry>
   <entry key="generatorMain.msg.selectTable">请至少选择一个要生成的表。</entry>
   <entry key="generatorMain.msg.selectTemplate">请至少选择一个要生成的模板。</entry>
+  <entry key="generatorMain.msg.templateRequired">请填写名称、模板文件和输出文件名。</entry>
   <entry key="generatorMain.msg.complete.title">处理完成</entry>
   <entry key="generatorMain.msg.complete">处理已成功完成！&#10;是否打开输出目录？</entry>
   <entry key="generatorMain.msg.failed">处理失败！</entry>

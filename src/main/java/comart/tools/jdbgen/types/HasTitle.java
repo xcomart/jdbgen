@@ -24,10 +24,18 @@
 package comart.tools.jdbgen.types;
 
 /**
+ * Marker for model objects that carry a display label. List and tree renderers
+ * use {@link #getTitle()} as the text of the cell instead of
+ * <code>toString()</code>.
  *
  * @author comart
  */
 public interface HasTitle {
+    /**
+     * label of this item as it is shown to the user.
+     *
+     * @return display title of this item.
+     */
     String getTitle();
     
 }

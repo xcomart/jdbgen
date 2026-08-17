@@ -37,12 +37,44 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Looks into a jar file for the classes it contains. Used to find the JDBC
+ * driver classes of a driver jar the user picked, so that the driver class name
+ * does not have to be typed in by hand.
+ */
 @Slf4j
 public class ClassUtils {
 
+    /**
+     * this class only holds <code>static</code> methods.
+     */
     public ClassUtils() {
     }
     
+    /**
+     * every class of the jar <code>f</code> that <code>type</code> can be
+     * assigned from. The jar is read entry by entry and each class is loaded
+     * through a throw away class loader over that jar alone; a class that
+     * cannot be loaded - a missing dependency, for instance - is skipped
+     * silently. Inner classes (those whose name contains <code>$</code>) are
+     * not looked at.
+     *
+     * @param f
+     *            the jar file to look into. A file that does not exist yields
+     *            an empty list.
+     * @param type
+     *            the interface or class the results have to implement or
+     *            extend.
+     * @param <T>
+     *            the type looked for.
+     * @return the fully qualified names of the matching classes, never
+     *         <code>null</code>.
+     * @throws FileNotFoundException
+     *             if the jar disappears between the existence check and the
+     *             read.
+     * @throws IOException
+     *             if the jar cannot be read.
+     */
     @SuppressWarnings("UseSpecificCatch")
     public static <T> List<String> getClasses(File f, Class<T> type) throws FileNotFoundException, IOException {
         final List<String> classesTobeReturned = new ArrayList<>();
@@ -78,6 +110,16 @@ public class ClassUtils {
         return classesTobeReturned;
     }
 
+    /**
+     * the <code>java.sql.Driver</code> implementations of a driver jar.
+     *
+     * @param jarFile
+     *            path of the jar, resolved with
+     *            {@link AppDirs#resolve(String)} so that a path stored relative
+     *            to the user data directory or the installation works.
+     * @return the driver class names, or <code>null</code> when the jar cannot
+     *         be read.
+     */
     @SuppressWarnings("UseSpecificCatch")
     public static List<String> getDrivers(String jarFile) {
         try {

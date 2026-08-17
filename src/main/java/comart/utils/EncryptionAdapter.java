@@ -29,16 +29,41 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 
 /**
+ * A Gson type adapter that keeps a <code>String</code> encrypted in the
+ * configuration file. Registered on the fields holding a secret - a database
+ * password, for instance - so that they are written with
+ * {@link StrUtils#encrypt(String)} and read back with
+ * {@link StrUtils#decrypt(String)}, which requires the master password to have
+ * been set beforehand.
  *
  * @author comart
  */
 public class EncryptionAdapter extends TypeAdapter<String> {
 
+    /**
+     * write <code>t</code> in its encrypted form.
+     *
+     * @param writer
+     *            the writer of the document being produced.
+     * @param t
+     *            the plain text value, may be <code>null</code>.
+     * @throws IOException
+     *             if the value cannot be written.
+     */
     @Override
     public void write(JsonWriter writer, String t) throws IOException {
         writer.value(StrUtils.encrypt(t));
     }
 
+    /**
+     * read an encrypted string and return its plain text form.
+     *
+     * @param reader
+     *            the reader of the document being parsed.
+     * @return the decrypted value.
+     * @throws IOException
+     *             if the value cannot be read.
+     */
     @Override
     public String read(JsonReader reader) throws IOException {
         return StrUtils.decrypt(reader.nextString());

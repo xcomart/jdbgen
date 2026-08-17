@@ -6,9 +6,9 @@
   <entry key="abbreviationMapper.jLabel1.text">약어 매핑</entry>
   <entry key="abbreviationMapper.tblMapping.toolTipText">객체(테이블, 컬럼) 이름에 적용되는 약어 매핑 규칙입니다.</entry>
   <entry key="abbreviationMapper.tblMapping.column.apply">적용</entry>
-  <entry key="abbreviationMapper.tblMapping.column.totalName">전체 이름</entry>
+  <entry key="abbreviationMapper.tblMapping.column.totalName">전체 이름 일치</entry>
   <entry key="abbreviationMapper.tblMapping.column.abbreviation">약어</entry>
-  <entry key="abbreviationMapper.tblMapping.column.replaceTo">바꿀 문자열</entry>
+  <entry key="abbreviationMapper.tblMapping.column.replaceTo">치환 결과</entry>
   <entry key="abbreviationMapper.btnDel.toolTipText">선택한 매핑을 삭제합니다</entry>
   <entry key="abbreviationMapper.btnOk.text">확인</entry>
 

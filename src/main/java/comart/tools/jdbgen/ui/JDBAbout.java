@@ -23,6 +23,7 @@
  */
 package comart.tools.jdbgen.ui;
 
+import comart.utils.AppDirs;
 import comart.utils.I18n;
 import comart.utils.PlatformUtils;
 import comart.utils.UIUtils;
@@ -35,7 +36,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -125,13 +125,13 @@ public class JDBAbout extends JDialog {
     }
     
     /**
-     * read the bundled application icon and show it in the image label. The
-     * image is scaled smoothly to the size of the label, a resource which
-     * cannot be read is logged and leaves the label empty.
+     * read the application icon shipped with the release and show it in the
+     * image label. The image is scaled smoothly to the size of the label, a
+     * file which cannot be read is logged and leaves the label empty.
      */
     private void loadAppIcon() {
-        try (InputStream is = getClass().getResourceAsStream("/icons/generic.png") ){
-            BufferedImage img = ImageIO.read(is);
+        try {
+            BufferedImage img = ImageIO.read(AppDirs.installResourceFile("resource/icon.png"));
             Image dimg = img.getScaledInstance(lblImage.getWidth(), lblImage.getHeight(),
                 Image.SCALE_SMOOTH);
             lblImage.setIcon(new ImageIcon(dimg));

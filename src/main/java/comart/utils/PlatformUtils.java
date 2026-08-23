@@ -231,19 +231,31 @@ public class PlatformUtils {
             Desktop desk = Desktop.getDesktop();
 
             if (about != null) {
-                desk.setAboutHandler(about);
+                if (desk.isSupported(Desktop.Action.APP_ABOUT))
+                    desk.setAboutHandler(about);
+                else
+                    log.debug("the about handler is not supported on this platform");
             }
 
             if (prefs != null) {
-                desk.setPreferencesHandler(prefs);
+                if (desk.isSupported(Desktop.Action.APP_PREFERENCES))
+                    desk.setPreferencesHandler(prefs);
+                else
+                    log.debug("the preferences handler is not supported on this platform");
             }
 
             if (print != null) {
-                desk.setPrintFileHandler(print);
+                if (desk.isSupported(Desktop.Action.APP_PRINT_FILE))
+                    desk.setPrintFileHandler(print);
+                else
+                    log.debug("the print file handler is not supported on this platform");
             }
 
             if (shut != null) {
-                desk.setQuitHandler(shut);
+                if (desk.isSupported(Desktop.Action.APP_QUIT_HANDLER))
+                    desk.setQuitHandler(shut);
+                else
+                    log.debug("the quit handler is not supported on this platform");
             }
         } catch(Exception e) {
             log.error(e.getLocalizedMessage(), e);

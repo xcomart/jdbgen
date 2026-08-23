@@ -1,5 +1,11 @@
 # jdbgen
 
+[![Build](https://github.com/xcomart/jdbgen/actions/workflows/build.yml/badge.svg)](https://github.com/xcomart/jdbgen/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/xcomart/jdbgen)](https://github.com/xcomart/jdbgen/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/xcomart/jdbgen/total)](https://github.com/xcomart/jdbgen/releases)
+[![Java](https://img.shields.io/badge/java-11%2B-blue)](https://adoptium.net/)
+[![License](https://img.shields.io/github/license/xcomart/jdbgen)](LICENSE)
+
 jdbgen generates text and source files from database table metadata, using a
 built-in template engine.
 

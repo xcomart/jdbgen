@@ -13,6 +13,11 @@ Point it at a database, pick some tables, pick some templates, and it writes one
 file per table per template — model classes, DML statements, mapper XML,
 documentation, or anything else you can express as text.
 
+> [!NOTE]
+> [rudbgen](https://github.com/xcomart/rudbgen) is a rewrite of `jdbgen` in Rust with JNI.
+> It's more intuitive and easier to use. `jdbgen` will no longer be updated;
+> all future development will continue in `rudbgen`.
+
 ![Generator main window](docs/images/generator_main.png "Generator Main Window")
 
 ## Why
